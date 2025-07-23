@@ -1,19 +1,47 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
   CircularProgress,
   Alert,
   Grid,
-} from '../../components/ui';
-import { Card } from '@mui/material';
+  Card,
+  CardContent,
+  CardActions,
+  Button,
+  Chip,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Divider,
+  LinearProgress,
+  IconButton,
+  Tooltip,
+} from '@mui/material';
 import {
   DirectionsCar as CarIcon,
   Business as BusinessIcon,
   LocationOn as LocationIcon,
   People as PeopleIcon,
+  EventNote as BookingIcon,
+  Star as ReviewIcon,
+  Article as ArticleIcon,
+  Email as EmailIcon,
+  Warning as WarningIcon,
+  Search as SeoIcon,
+  Notifications as NotificationIcon,
+  TrendingUp as TrendingUpIcon,
+  TrendingDown as TrendingDownIcon,
+  Add as AddIcon,
+  Refresh as RefreshIcon,
+  Dashboard as DashboardIcon,
+  Assessment as AnalyticsIcon,
+  Schedule as ScheduleIcon,
+  RateReview as ReviewManageIcon,
 } from '@mui/icons-material';
 import { getDashboardStyles } from '../../styles';
 import { 
@@ -22,39 +50,127 @@ import {
   useGetClientsQuery,
   useGetBookingsQuery
 } from '../../api';
-import { ApiResponse, Partner, ServicePoint, Client, Booking } from '../../types/models';
+import { useGetReviewsQuery } from '../../api/reviews.api';
+import { useGetArticlesQuery } from '../../api/articles.api';
+import { useGetNotificationStatsQuery } from '../../api/notifications.api';
+import { useGetBookingConflictStatisticsQuery } from '../../api/bookingConflicts.api';
+import { useGetSeoAnalyticsQuery } from '../../api/seoMetatags.api';
+import { useGetChannelStatisticsQuery } from '../../api/notificationChannelSettings.api';
+import { format, subDays, subWeeks } from 'date-fns';
 import StatCard from '../../components/StatCard';
-import BookingChart from '../../components/BookingChart';
-import ServicePointMap from '../../components/ServicePointMap';
 
 const DashboardPage: React.FC = () => {
   const theme = useTheme();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const dashboardStyles = getDashboardStyles(theme);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // RTK Query хуки с типизацией
-  const { data: partnersData, isLoading: partnersLoading, error: partnersError } = useGetPartnersQuery({
+  // Основные API запросы
+  const { data: partnersData, isLoading: partnersLoading, error: partnersError, refetch: refetchPartners } = useGetPartnersQuery({
     page: 1,
     per_page: 1
   });
 
-  const { data: servicePointsData, isLoading: servicePointsLoading, error: servicePointsError } = useGetServicePointsQuery({
+  const { data: servicePointsData, isLoading: servicePointsLoading, error: servicePointsError, refetch: refetchServicePoints } = useGetServicePointsQuery({
+    page: 1,
+    per_page: 100 // Загружаем больше для аналитики
+  });
+
+  const { data: clientsData, isLoading: clientsLoading, error: clientsError, refetch: refetchClients } = useGetClientsQuery({
     page: 1,
     per_page: 1
   });
 
-  const { data: clientsData, isLoading: clientsLoading, error: clientsError } = useGetClientsQuery({
+  const { data: bookingsData, isLoading: bookingsLoading, error: bookingsError, refetch: refetchBookings } = useGetBookingsQuery({
     page: 1,
-    per_page: 1
+    per_page: 100,
+    from_date: format(subWeeks(new Date(), 2), 'yyyy-MM-dd'),
   });
 
-  const { data: bookingsData, isLoading: bookingsLoading, error: bookingsError } = useGetBookingsQuery({
+  // Дополнительные API запросы для расширенной статистики
+  const { data: reviewsData, isLoading: reviewsLoading, refetch: refetchReviews } = useGetReviewsQuery({
     page: 1,
-    per_page: 1
+    per_page: 50
   });
 
-  // Статистика
-  const stats = [
+  const { data: articlesData, isLoading: articlesLoading, refetch: refetchArticles } = useGetArticlesQuery({
+    page: 1,
+    per_page: 50
+  });
+
+  const { data: notificationStats, isLoading: notificationStatsLoading, refetch: refetchNotificationStats } = useGetNotificationStatsQuery();
+
+  const { data: conflictStats, isLoading: conflictStatsLoading, refetch: refetchConflictStats } = useGetBookingConflictStatisticsQuery();
+
+  const { data: seoAnalytics, isLoading: seoLoading, refetch: refetchSeo } = useGetSeoAnalyticsQuery();
+
+  const { data: channelStats, isLoading: channelStatsLoading, refetch: refetchChannelStats } = useGetChannelStatisticsQuery();
+
+  // Функция обновления всех данных
+  const handleRefreshAll = () => {
+    setRefreshKey(prev => prev + 1);
+    refetchPartners();
+    refetchServicePoints();
+    refetchClients();
+    refetchBookings();
+    refetchReviews();
+    refetchArticles();
+    refetchNotificationStats();
+    refetchConflictStats();
+    refetchSeo();
+    refetchChannelStats();
+  };
+
+  // Проверка загрузки
+  const isLoading = partnersLoading || servicePointsLoading || clientsLoading || bookingsLoading;
+  const hasError = partnersError || servicePointsError || clientsError || bookingsError;
+
+  // Подготовка данных для статистики
+  const reviews = reviewsData?.data || [];
+  const articles = articlesData?.data || [];
+  const bookings = bookingsData?.data || [];
+  const servicePoints = servicePointsData?.data || [];
+
+  // Аналитика отзывов
+  const reviewsAnalytics = {
+    total: reviews.length,
+    pending: reviews.filter(r => r.status === 'pending').length,
+    published: reviews.filter(r => r.status === 'published').length,
+    rejected: reviews.filter(r => r.status === 'rejected').length,
+  };
+
+  // Аналитика статей
+  const articlesAnalytics = {
+    total: articles.length,
+    published: articles.filter(a => a.status === 'published').length,
+    draft: articles.filter(a => a.status === 'draft').length,
+    featured: articles.filter(a => a.featured).length,
+  };
+
+  // Аналитика бронирований за последние 2 недели
+  const bookingsAnalytics = {
+    total: bookings.length,
+    thisWeek: bookings.filter(b => new Date(b.booking_date) >= subWeeks(new Date(), 1)).length,
+    lastWeek: bookings.filter(b => {
+      const date = new Date(b.booking_date);
+      return date >= subWeeks(new Date(), 2) && date < subWeeks(new Date(), 1);
+    }).length,
+    pending: bookings.filter(b => b.status === 'pending').length,
+    confirmed: bookings.filter(b => b.status === 'confirmed').length,
+  };
+
+  // Топ сервисных точек по бронированиям
+  const topServicePoints = servicePoints
+    .map(sp => ({
+      ...sp,
+      bookingsCount: bookings.filter(b => b.service_point_id === sp.id).length
+    }))
+    .sort((a, b) => b.bookingsCount - a.bookingsCount)
+    .slice(0, 5);
+
+  // Основная статистика
+  const mainStats = [
     {
       title: t('forms.dashboard.stats.partners.title'),
       value: partnersData?.pagination?.total_count || 0,
@@ -76,18 +192,57 @@ const DashboardPage: React.FC = () => {
       color: '#e64a19',
       description: t('forms.dashboard.stats.clients.description'),
     },
+    {
+      title: t('forms.dashboard.stats.bookings.title'),
+      value: bookingsAnalytics.total,
+      icon: <BookingIcon />,
+      color: '#7b1fa2',
+      description: `${bookingsAnalytics.pending} ${t('forms.dashboard.stats.bookings.pending')}, ${bookingsAnalytics.confirmed} ${t('forms.dashboard.stats.bookings.confirmed')}`,
+    },
   ];
 
-  // Отображение состояний загрузки и ошибок
-  if (partnersLoading || servicePointsLoading || clientsLoading || bookingsLoading) {
+  // Дополнительная статистика
+  const additionalStats = [
+    {
+      title: t('forms.dashboard.stats.reviews.title'),
+      value: reviewsAnalytics.total,
+      icon: <ReviewIcon />,
+      color: '#f57c00',
+      description: `${reviewsAnalytics.pending} ${t('forms.dashboard.stats.reviews.pending')}`,
+    },
+    {
+      title: t('forms.dashboard.stats.articles.title'),
+      value: articlesAnalytics.total,
+      icon: <ArticleIcon />,
+      color: '#5d4037',
+      description: `${articlesAnalytics.published} ${t('forms.dashboard.stats.articles.published')}`,
+    },
+    {
+      title: t('forms.dashboard.stats.bookingConflicts.title'),
+      value: conflictStats?.statistics?.total_pending || 0,
+      icon: <WarningIcon />,
+      color: '#d32f2f',
+      description: `${conflictStats?.statistics?.total_pending || 0} ${t('forms.dashboard.stats.bookingConflicts.pending')}`,
+    },
+    {
+      title: t('forms.dashboard.stats.seoPages.title'),
+      value: seoAnalytics?.data?.total_pages || 0,
+      icon: <SeoIcon />,
+      color: '#303f9f',
+      description: `${seoAnalytics?.data?.good_pages || 0} ${t('forms.dashboard.stats.seoPages.optimized')}`,
+    },
+  ];
+
+  if (isLoading) {
     return (
       <Box sx={dashboardStyles.loadingContainer}>
         <CircularProgress />
+        <Typography sx={{ mt: 2 }}>{t('forms.dashboard.loadingMessage')}</Typography>
       </Box>
     );
   }
 
-  if (partnersError || servicePointsError || clientsError || bookingsError) {
+  if (hasError) {
     return (
       <Box sx={dashboardStyles.errorContainer}>
         <Alert severity="error" sx={dashboardStyles.errorAlert}>
@@ -99,38 +254,337 @@ const DashboardPage: React.FC = () => {
 
   return (
     <Box sx={dashboardStyles.pageContainer}>
-      <Typography variant="h4" sx={dashboardStyles.pageTitle}>
-        {t('forms.dashboard.title')}
-      </Typography>
-
-      {/* Статистика */}
-      <Box sx={dashboardStyles.statsContainer}>
-        <Grid container spacing={3}>
-          {stats.map((stat, index) => (
-            <Grid key={index} item xs={12} sm={6} md={4}>
-              <StatCard {...stat} />
-            </Grid>
-          ))}
-        </Grid>
+      {/* Заголовок с кнопкой обновления */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" sx={dashboardStyles.pageTitle}>
+          <DashboardIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+          {t('forms.dashboard.title')}
+        </Typography>
+        <Tooltip title={t('forms.dashboard.refreshTooltip')}>
+          <IconButton onClick={handleRefreshAll} color="primary">
+            <RefreshIcon />
+          </IconButton>
+        </Tooltip>
       </Box>
 
-      {/* Графики и карта */}
+      {/* Основная статистика */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        {mainStats.map((stat, index) => (
+          <Grid key={index} item xs={12} sm={6} md={3}>
+            <StatCard {...stat} />
+          </Grid>
+        ))}
+      </Grid>
+
+      {/* Дополнительная статистика */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        {additionalStats.map((stat, index) => (
+          <Grid key={index} item xs={12} sm={6} md={3}>
+            <StatCard {...stat} />
+          </Grid>
+        ))}
+      </Grid>
+
+      {/* Карточки с детальной информацией */}
       <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
-          <Card sx={dashboardStyles.chartCard}>
-            <Typography variant="h6" sx={dashboardStyles.chartTitle}>
-              {t('forms.dashboard.charts.bookingStats')}
-            </Typography>
-            <BookingChart data={bookingsData?.data || []} />
+        {/* Быстрые действия */}
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                🚀 {t('forms.dashboard.quickActions.title')}
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Button
+                  variant="outlined"
+                  startIcon={<AddIcon />}
+                  onClick={() => navigate('/admin/bookings/new')}
+                  fullWidth
+                >
+                  {t('forms.dashboard.quickActions.createBooking')}
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<AddIcon />}
+                  onClick={() => navigate('/admin/articles/new')}
+                  fullWidth
+                >
+                  {t('forms.dashboard.quickActions.writeArticle')}
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<ReviewManageIcon />}
+                  onClick={() => navigate('/admin/reviews')}
+                  fullWidth
+                >
+                  {t('forms.dashboard.quickActions.moderateReviews')}
+                  {reviewsAnalytics.pending > 0 && (
+                    <Chip 
+                      label={reviewsAnalytics.pending} 
+                      size="small" 
+                      color="warning" 
+                      sx={{ ml: 1 }} 
+                    />
+                  )}
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<ScheduleIcon />}
+                  onClick={() => navigate('/admin/calendar')}
+                  fullWidth
+                >
+                  {t('forms.dashboard.quickActions.calendar')}
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<AnalyticsIcon />}
+                  onClick={() => navigate('/admin/analytics')}
+                  fullWidth
+                >
+                  {t('forms.dashboard.quickActions.bookingAnalytics')}
+                </Button>
+              </Box>
+            </CardContent>
           </Card>
         </Grid>
-        
+
+        {/* Статистика уведомлений */}
         <Grid item xs={12} md={4}>
-          <Card sx={dashboardStyles.chartCard}>
-            <Typography variant="h6" sx={dashboardStyles.chartTitle}>
-              {t('forms.dashboard.charts.servicePointsMap')}
-            </Typography>
-            <ServicePointMap servicePoints={servicePointsData?.data || []} />
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                📧 {t('forms.dashboard.notificationStats.title')}
+              </Typography>
+              {channelStatsLoading ? (
+                <CircularProgress size={20} />
+              ) : (
+                <Box>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      {t('forms.dashboard.notificationStats.emailDelivery')}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <LinearProgress 
+                        variant="determinate" 
+                        value={channelStats?.statistics?.email?.delivery_rate || 0} 
+                        sx={{ flexGrow: 1, height: 8, borderRadius: 4 }}
+                      />
+                      <Typography variant="body2">
+                        {Math.round(channelStats?.statistics?.email?.delivery_rate || 0)}%
+                      </Typography>
+                    </Box>
+                  </Box>
+                  
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      {t('forms.dashboard.notificationStats.telegramDelivery')}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <LinearProgress 
+                        variant="determinate" 
+                        value={channelStats?.statistics?.telegram?.delivery_rate || 0} 
+                        sx={{ flexGrow: 1, height: 8, borderRadius: 4 }}
+                      />
+                      <Typography variant="body2">
+                        {Math.round(channelStats?.statistics?.telegram?.delivery_rate || 0)}%
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">
+                      {t('forms.dashboard.notificationStats.pushNotifications')}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <LinearProgress 
+                        variant="determinate" 
+                        value={channelStats?.statistics?.push?.delivery_rate || 0} 
+                        sx={{ flexGrow: 1, height: 8, borderRadius: 4 }}
+                      />
+                      <Typography variant="body2">
+                        {Math.round(channelStats?.statistics?.push?.delivery_rate || 0)}%
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  <Button
+                    size="small"
+                    onClick={() => navigate('/admin/notifications/channels')}
+                    sx={{ mt: 2 }}
+                  >
+                    {t('forms.dashboard.notificationStats.manageChannels')}
+                  </Button>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Топ сервисных точек */}
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                🏢 {t('forms.dashboard.topServicePoints.title')}
+              </Typography>
+              <List dense>
+                {topServicePoints.map((sp, index) => (
+                  <ListItem key={sp.id} divider={index < topServicePoints.length - 1}>
+                    <ListItemIcon>
+                      <LocationIcon color={index === 0 ? 'primary' : 'action'} />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={sp.name}
+                      secondary={`${sp.bookingsCount} ${t('forms.dashboard.topServicePoints.bookings')}`}
+                    />
+                    {index === 0 && (
+                      <Chip label="🏆 {t('forms.dashboard.topServicePoints.leader')}" size="small" color="primary" />
+                    )}
+                  </ListItem>
+                ))}
+              </List>
+              <Button
+                size="small"
+                onClick={() => navigate('/admin/service-points')}
+                sx={{ mt: 1 }}
+              >
+                {t('forms.dashboard.topServicePoints.allServicePoints')}
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Аналитика контента */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                📊 {t('forms.dashboard.contentAnalytics.title')}
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Box textAlign="center">
+                    <Typography variant="h4" color="primary">
+                      {articlesAnalytics.published}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {t('forms.dashboard.contentAnalytics.articlesPublished')}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={6}>
+                  <Box textAlign="center">
+                    <Typography variant="h4" color="warning.main">
+                      {articlesAnalytics.draft}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {t('forms.dashboard.contentAnalytics.draftArticles')}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={6}>
+                  <Box textAlign="center">
+                    <Typography variant="h4" color="success.main">
+                      {seoAnalytics?.data?.good_pages || 0}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {t('forms.dashboard.contentAnalytics.seoOptimized')}
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={6}>
+                  <Box textAlign="center">
+                    <Typography variant="h4" color="error.main">
+                      {seoAnalytics?.data?.error_pages || 0}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {t('forms.dashboard.contentAnalytics.requiresAttention')}
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+              <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+                <Button
+                  size="small"
+                  onClick={() => navigate('/admin/articles')}
+                >
+                  {t('forms.dashboard.contentAnalytics.manageArticles')}
+                </Button>
+                <Button
+                  size="small"
+                  onClick={() => navigate('/admin/seo')}
+                >
+                  {t('forms.dashboard.contentAnalytics.seoManagement')}
+                </Button>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Критические уведомления */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                ⚠️ {t('forms.dashboard.criticalNotifications.title')}
+              </Typography>
+              <List dense>
+                {reviewsAnalytics.pending > 0 && (
+                  <ListItem>
+                    <ListItemIcon>
+                      <ReviewIcon color="warning" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={`${reviewsAnalytics.pending} ${t('forms.dashboard.criticalNotifications.reviewsPending')}`}
+                      secondary={t('forms.dashboard.criticalNotifications.reviewsPendingDescription')}
+                    />
+                  </ListItem>
+                )}
+                {(conflictStats?.statistics?.total_pending || 0) > 0 && (
+                  <ListItem>
+                    <ListItemIcon>
+                      <WarningIcon color="error" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={`${conflictStats?.statistics?.total_pending || 0} ${t('forms.dashboard.criticalNotifications.bookingConflicts')}`}
+                      secondary={t('forms.dashboard.criticalNotifications.bookingConflictsDescription')}
+                    />
+                  </ListItem>
+                )}
+                {articlesAnalytics.draft > 0 && (
+                  <ListItem>
+                    <ListItemIcon>
+                      <ArticleIcon color="info" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={`${articlesAnalytics.draft} ${t('forms.dashboard.criticalNotifications.draftArticles')}`}
+                      secondary={t('forms.dashboard.criticalNotifications.draftArticlesDescription')}
+                    />
+                  </ListItem>
+                )}
+                {(seoAnalytics?.data?.error_pages || 0) > 0 && (
+                  <ListItem>
+                    <ListItemIcon>
+                      <SeoIcon color="error" />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={`${seoAnalytics?.data?.error_pages} ${t('forms.dashboard.criticalNotifications.seoPagesWithIssues')}`}
+                      secondary={t('forms.dashboard.criticalNotifications.seoPagesWithIssuesDescription')}
+                    />
+                  </ListItem>
+                )}
+              </List>
+              {reviewsAnalytics.pending === 0 && 
+               (conflictStats?.statistics?.total_pending || 0) === 0 && 
+               articlesAnalytics.draft === 0 && 
+               (seoAnalytics?.data?.error_pages || 0) === 0 && (
+                <Box textAlign="center" py={2}>
+                  <Typography variant="body2" color="success.main">
+                    ✅ {t('forms.dashboard.criticalNotifications.allGood')}
+                  </Typography>
+                </Box>
+              )}
+            </CardContent>
           </Card>
         </Grid>
       </Grid>

@@ -3,7 +3,10 @@
     "dashboard": {
       "title": "Панель управления",
       "loading": "Загрузка...",
+      "loadingMessage": "Загрузка данных дашборда...",
       "errorMessage": "Ошибка при загрузке данных для дашборда",
+      "refreshAll": "Обновить все данные",
+      "refreshTooltip": "Обновить все данные",
       "stats": {
         "partners": {
           "title": "Партнеры",
@@ -16,6 +19,92 @@
         "clients": {
           "title": "Клиенты",
           "description": "Зарегистрированных клиентов"
+        },
+        "bookings": {
+          "title": "Бронирования (2 недели)",
+          "description": "Записей за последние 2 недели",
+          "pending": "ожидают",
+          "confirmed": "подтверждены"
+        },
+        "reviews": {
+          "title": "Отзывы",
+          "description": "Всего отзывов в системе",
+          "pending": "на модерации"
+        },
+        "articles": {
+          "title": "Статьи",
+          "description": "Статей в базе знаний",
+          "published": "опубликовано"
+        },
+        "bookingConflicts": {
+          "title": "Конфликты бронирований",
+          "description": "Требуют решения",
+          "pending": "требуют решения"
+        },
+        "seoPages": {
+          "title": "SEO страницы",
+          "description": "Страниц с метатегами",
+          "optimized": "оптимизированы"
+        }
+      },
+      "quickActions": {
+        "title": "Быстрые действия",
+        "createBooking": "Создать бронирование",
+        "writeArticle": "Написать статью",
+        "moderateReviews": "Модерировать отзывы",
+        "calendar": "Календарь записей",
+        "bookingAnalytics": "Аналитика бронирований"
+      },
+      "notificationStats": {
+        "title": "Статистика уведомлений",
+        "emailDelivery": "Email доставка",
+        "telegramDelivery": "Telegram доставка",
+        "pushNotifications": "Push уведомления",
+        "manageChannels": "Управление каналами"
+      },
+      "topServicePoints": {
+        "title": "Топ сервисных точек",
+        "leader": "Лидер",
+        "bookings": "бронирований",
+        "allServicePoints": "Все сервисные точки"
+      },
+      "contentAnalytics": {
+        "title": "Аналитика контента",
+        "articlesPublished": "Статьи опубликованы",
+        "draftArticles": "Черновики",
+        "seoOptimized": "SEO оптимизированы",
+        "requiresAttention": "Требуют внимания",
+        "manageArticles": "Управление статьями",
+        "seoManagement": "SEO управление"
+      },
+      "criticalNotifications": {
+        "title": "Требует внимания",
+        "reviewsPending": "отзывов на модерации",
+        "reviewsPendingDescription": "Требуется проверка и одобрение",
+        "bookingConflicts": "конфликтов бронирований",
+        "bookingConflictsDescription": "Требуется разрешение",
+        "draftArticles": "черновиков статей",
+        "draftArticlesDescription": "Готовы к публикации",
+        "seoPagesWithIssues": "страниц с SEO проблемами",
+        "seoPagesWithIssuesDescription": "Требуется оптимизация",
+        "allGood": "Все в порядке! Критических проблем не обнаружено."
+      },
+      "analytics": {
+        "bookings": {
+          "thisWeek": "На этой неделе",
+          "lastWeek": "На прошлой неделе",
+          "pending": "ожидают",
+          "confirmed": "подтверждены"
+        },
+        "reviews": {
+          "onModeration": "на модерации",
+          "published": "опубликовано",
+          "rejected": "отклонено"
+        },
+        "articles": {
+          "published": "опубликовано",
+          "drafts": "черновики",
+          "featured": "рекомендуемые"
         }
       },
       "charts": {

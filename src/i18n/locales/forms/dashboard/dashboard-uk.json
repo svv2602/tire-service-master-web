@@ -3,7 +3,10 @@
     "dashboard": {
       "title": "Панель керування",
       "loading": "Завантаження...",
+      "loadingMessage": "Завантаження даних дашборда...",
       "errorMessage": "Помилка при завантаженні даних для дашборда",
+      "refreshAll": "Оновити всі дані",
+      "refreshTooltip": "Оновити всі дані",
       "stats": {
         "partners": {
           "title": "Партнери",
@@ -16,6 +19,92 @@
         "clients": {
           "title": "Клієнти",
           "description": "Зареєстрованих клієнтів"
+        },
+        "bookings": {
+          "title": "Бронювання (2 тижні)",
+          "description": "Записів за останні 2 тижні",
+          "pending": "очікують",
+          "confirmed": "підтверджені"
+        },
+        "reviews": {
+          "title": "Відгуки",
+          "description": "Всього відгуків в системі",
+          "pending": "на модерації"
+        },
+        "articles": {
+          "title": "Статті",
+          "description": "Статей в базі знань",
+          "published": "опубліковано"
+        },
+        "bookingConflicts": {
+          "title": "Конфлікти бронювань",
+          "description": "Потребують вирішення",
+          "pending": "потребують вирішення"
+        },
+        "seoPages": {
+          "title": "SEO сторінки",
+          "description": "Сторінок з метатегами",
+          "optimized": "оптимізовані"
+        }
+      },
+      "quickActions": {
+        "title": "Швидкі дії",
+        "createBooking": "Створити бронювання",
+        "writeArticle": "Написати статтю",
+        "moderateReviews": "Модерувати відгуки",
+        "calendar": "Календар записів",
+        "bookingAnalytics": "Аналітика бронювань"
+      },
+      "notificationStats": {
+        "title": "Статистика сповіщень",
+        "emailDelivery": "Email доставка",
+        "telegramDelivery": "Telegram доставка",
+        "pushNotifications": "Push сповіщення",
+        "manageChannels": "Управління каналами"
+      },
+      "topServicePoints": {
+        "title": "Топ сервісних точок",
+        "leader": "Лідер",
+        "bookings": "бронювань",
+        "allServicePoints": "Всі сервісні точки"
+      },
+      "contentAnalytics": {
+        "title": "Аналітика контенту",
+        "articlesPublished": "Статті опубліковані",
+        "draftArticles": "Чернетки",
+        "seoOptimized": "SEO оптимізовані",
+        "requiresAttention": "Потребують уваги",
+        "manageArticles": "Управління статтями",
+        "seoManagement": "SEO управління"
+      },
+      "criticalNotifications": {
+        "title": "Потребує уваги",
+        "reviewsPending": "відгуків на модерації",
+        "reviewsPendingDescription": "Потрібна перевірка та схвалення",
+        "bookingConflicts": "конфліктів бронювань",
+        "bookingConflictsDescription": "Потрібне вирішення",
+        "draftArticles": "чернеток статей",
+        "draftArticlesDescription": "Готові до публікації",
+        "seoPagesWithIssues": "сторінок з SEO проблемами",
+        "seoPagesWithIssuesDescription": "Потрібна оптимізація",
+        "allGood": "Все в порядку! Критичних проблем не виявлено."
+      },
+      "analytics": {
+        "bookings": {
+          "thisWeek": "На цьому тижні",
+          "lastWeek": "На минулому тижні",
+          "pending": "очікують",
+          "confirmed": "підтверджені"
+        },
+        "reviews": {
+          "onModeration": "на модерації",
+          "published": "опубліковано",
+          "rejected": "відхилено"
+        },
+        "articles": {
+          "published": "опубліковано",
+          "drafts": "чернетки",
+          "featured": "рекомендовані"
         }
       },
       "charts": {
