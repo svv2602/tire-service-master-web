@@ -102,12 +102,13 @@ const ArticleFilters: React.FC<ArticleFiltersProps> = ({
             variant={!selectedCategory ? 'filled' : 'outlined'}
             onClick={() => onCategoryChange('')}
             sx={{
-              backgroundColor: !selectedCategory ? colors.primary : 'transparent',
-              color: !selectedCategory ? 'white' : colors.textPrimary,
-              borderColor: colors.primary,
-              fontWeight: 500,
+              backgroundColor: !selectedCategory ? theme.palette.primary.main : theme.palette.grey[800],
+              color: 'white',
+              border: `1px solid ${!selectedCategory ? theme.palette.primary.main : theme.palette.grey[600]}`,
+              fontWeight: 600,
               '&:hover': {
-                backgroundColor: !selectedCategory ? colors.primary : colors.backgroundSecondary,
+                backgroundColor: !selectedCategory ? theme.palette.primary.dark : theme.palette.grey[700],
+                color: 'white',
               },
             }}
           />
@@ -120,12 +121,13 @@ const ArticleFilters: React.FC<ArticleFiltersProps> = ({
               variant={selectedCategory === category.key ? 'filled' : 'outlined'}
               onClick={() => onCategoryChange(category.key)}
               sx={{
-                backgroundColor: selectedCategory === category.key ? colors.primary : 'transparent',
-                color: selectedCategory === category.key ? 'white' : colors.textPrimary,
-                borderColor: colors.primary,
-                fontWeight: 500,
+                backgroundColor: selectedCategory === category.key ? theme.palette.primary.main : theme.palette.grey[800],
+                color: 'white',
+                border: `1px solid ${selectedCategory === category.key ? theme.palette.primary.main : theme.palette.grey[600]}`,
+                fontWeight: 600,
                 '&:hover': {
-                  backgroundColor: selectedCategory === category.key ? colors.primary : colors.backgroundSecondary,
+                  backgroundColor: selectedCategory === category.key ? theme.palette.primary.dark : theme.palette.grey[700],
+                  color: 'white',
                 },
               }}
             />

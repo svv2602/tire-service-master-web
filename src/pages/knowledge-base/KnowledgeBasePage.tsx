@@ -4,8 +4,6 @@ import {
   Box,
   Container,
   Typography,
-  TextField,
-  InputAdornment,
   Grid,
   Card,
   CardContent,
@@ -16,7 +14,6 @@ import {
   useTheme
 } from '@mui/material';
 import {
-  Search as SearchIcon,
   Build as BuildIcon,
   School as SchoolIcon,
   DirectionsCar as CarIcon
@@ -90,58 +87,27 @@ const KnowledgeBasePage: React.FC = () => {
       <SEOHead {...seoConfig} />
       <Box sx={{ minHeight: '100vh', backgroundColor: colors.backgroundPrimary }}>
         {/* Hero секция */}
-        <Box
-          sx={{
-            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-            color: 'white',
-            py: 8
-          }}
-        >
-          <Container maxWidth="lg">
-            <Box sx={{ textAlign: 'center', maxWidth: 800, mx: 'auto' }}>
-              <Typography variant="h2" component="h1" sx={{ fontWeight: 700, mb: 3 }}>
-                {t('forms.articles.knowledgeBase.title')}
-              </Typography>
-              <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
-                {t('forms.articles.knowledgeBase.subtitle')}
-              </Typography>
-              
-              {/* Быстрый поиск */}
-              <Box sx={{ maxWidth: 600, mx: 'auto' }}>
-                <TextField
-                  fullWidth
-                  variant="outlined"
-                  placeholder={t('forms.articles.knowledgeBase.searchPlaceholder')}
-                  value={searchQuery}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'white',
-                      borderRadius: 2,
-                      '& fieldset': {
-                        borderColor: 'transparent',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: 'transparent',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: theme.palette.primary.main,
-                        borderWidth: 2,
-                      },
-                    },
-                  }}
-                />
-              </Box>
-            </Box>
-          </Container>
-        </Box>
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          <Box sx={{ mb: 4, textAlign: 'center' }}>
+            <Typography variant="h3" component="h1" sx={{ fontWeight: 600, mb: 2, color: theme.palette.text.primary }}>
+              {t('forms.articles.knowledgeBase.title')}
+            </Typography>
+            <Typography variant="h6" sx={{ mb: 0, color: theme.palette.text.secondary }}>
+              {t('forms.articles.knowledgeBase.subtitle')}
+            </Typography>
+          </Box>
+
+          {/* Фильтры */}
+          <ArticleFilters
+            categories={categories}
+            selectedCategory={selectedCategory}
+            searchQuery={searchQuery}
+            onCategoryChange={handleCategoryChange}
+            onSearchChange={handleSearchChange}
+            onClearFilters={handleClearFilters}
+            loading={loading}
+          />
+        </Container>
 
         <Container maxWidth="lg" sx={{ py: 6 }}>
           {/* Рекомендуемые статьи */}
@@ -187,17 +153,6 @@ const KnowledgeBasePage: React.FC = () => {
               </Box>
             </Fade>
           )}
-
-          {/* Фильтры */}
-          <ArticleFilters
-            categories={categories}
-            selectedCategory={selectedCategory}
-            searchQuery={searchQuery}
-            onCategoryChange={handleCategoryChange}
-            onSearchChange={handleSearchChange}
-            onClearFilters={handleClearFilters}
-            loading={loading}
-          />
 
           {/* Результаты поиска или все статьи */}
           <Fade in timeout={400}>
