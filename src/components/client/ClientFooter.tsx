@@ -57,6 +57,10 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
 
   const serviceCategories = categoriesData?.data || [];
 
+  // Отладочная информация
+  console.log('Footer categories data:', categoriesData);
+  console.log('Service categories:', serviceCategories);
+
   // Генерация QR кода
   const generateQRCode = async () => {
     const botUrl = `https://t.me/${botUsername}`;
@@ -95,10 +99,10 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
           <Grid container spacing={4}>
             <Grid item xs={12} md={4}>
               <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: colors.textPrimary }}>
-                🚗 {t('client.footer.companyTitle')}
+                🚗 Твоя Шина
               </Typography>
               <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 2 }}>
-                {footerContent?.content || t('client.footer.companyDescription')}
+                Знайдіть найкращий автосервіс поруч з вами. Швидке бронювання, перевірені майстри.
               </Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <IconButton size="small" sx={{ color: colors.textSecondary }}>
@@ -116,7 +120,7 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
                       bgcolor: 'rgba(0, 136, 204, 0.1)'
                     }
                   }}
-                  title={t('client.footer.telegramSubscribe')}
+                  title="Підписатися на Telegram бота"
                 >
                   <TelegramIcon />
                 </IconButton>
@@ -125,13 +129,17 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
             
             <Grid item xs={12} md={4}>
               <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: colors.textPrimary }}>
-                {t('client.footer.servicesTitle')}
+                Послуги
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {serviceCategories.slice(0, 3).map((category) => (
+                {(serviceCategories.length > 0 ? serviceCategories : [
+                  { id: 1, name: 'Заміна шин' },
+                  { id: 2, name: 'Балансування' },
+                  { id: 3, name: 'Ремонт проколів' }
+                ]).slice(0, 3).map((category) => (
                   <Link 
                     key={category.id} 
-                    to={`/client/services?category=${category.id}`}
+                    to="/client/services"
                     style={{ 
                       color: colors.textSecondary, 
                       textDecoration: 'none'
@@ -145,7 +153,7 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
             
             <Grid item xs={12} md={4}>
               <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: colors.textPrimary }}>
-                {t('client.footer.informationTitle')}
+                Інформація
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Link 
@@ -155,7 +163,7 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
                     textDecoration: 'none'
                   }}
                 >
-                  {t('client.footer.knowledgeBase')}
+                  База знань
                 </Link>
                 <Link 
                   to="/client/profile" 
@@ -164,7 +172,7 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
                     textDecoration: 'none'
                   }}
                 >
-                  {t('client.footer.personalCabinet')}
+                  Особистий кабінет
                 </Link>
                 <Link 
                   to="/login" 
@@ -173,7 +181,7 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
                     textDecoration: 'none'
                   }}
                 >
-                  {t('client.footer.forBusiness')}
+                  Для бізнесу
                 </Link>
               </Box>
             </Grid>
@@ -186,7 +194,7 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
             borderTop: `1px solid ${colors.borderPrimary}` 
           }}>
             <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-              {footerContent?.settings?.copyright || t('client.footer.copyright')}
+              © 2025 Твоя Шина. Всі права захищені.
             </Typography>
           </Box>
         </Container>
@@ -196,7 +204,7 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
       <Dialog open={telegramQrOpen} onClose={() => setTelegramQrOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ textAlign: 'center' }}>
           <TelegramIcon sx={{ color: '#0088cc', mr: 1 }} />
-          {t('client.footer.telegramDialog.title')}
+          Підписка на Telegram бота
         </DialogTitle>
         <DialogContent>
           <Box sx={{ textAlign: 'center', p: 2 }}>
@@ -208,7 +216,7 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
               }}
             />
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              {t('client.footer.telegramDialog.description')}
+              Відскануйте QR код і отримуйте сповіщення про ваші записи
             </Typography>
             <Typography variant="caption" sx={{ mt: 1, fontFamily: 'monospace', display: 'block' }}>
               {qrCodeUrl || `https://t.me/${botUsername}`}
@@ -217,7 +225,7 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setTelegramQrOpen(false)}>
-            {t('client.footer.telegramDialog.close')}
+            Закрити
           </Button>
           <Button 
             variant="contained" 
@@ -226,7 +234,7 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
             startIcon={<TelegramIcon />}
             sx={{ bgcolor: '#0088cc' }}
           >
-            {t('client.footer.telegramDialog.openTelegram')}
+            Відкрити в Telegram
           </Button>
         </DialogActions>
       </Dialog>
