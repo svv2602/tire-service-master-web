@@ -179,6 +179,19 @@ export const telegramSettingsApi = baseApi.injectEndpoints({
       query: () => 'telegram_settings/webhook_info',
     }),
 
+    // Генерация ngrok webhook URL
+    generateNgrokWebhook: builder.mutation<{
+      success: boolean;
+      webhook_url?: string;
+      ngrok_url?: string;
+      message: string;
+    }, void>({
+      query: () => ({
+        url: 'telegram_settings/generate_ngrok_webhook',
+        method: 'POST',
+      }),
+    }),
+
     // Получение подписок
     getTelegramSubscriptions: builder.query<{
       data: TelegramSubscription[];
@@ -259,6 +272,7 @@ export const {
   useSendTestMessageMutation,
   useSetWebhookMutation,
   useGetWebhookInfoQuery,
+  useGenerateNgrokWebhookMutation,
   useGetTelegramSubscriptionsQuery,
   useUpdateTelegramSubscriptionMutation,
   useDeleteTelegramSubscriptionMutation,

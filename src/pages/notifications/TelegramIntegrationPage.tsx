@@ -48,6 +48,7 @@ import {
   useSendTestMessageMutation,
   useSetWebhookMutation,
   useGetWebhookInfoQuery,
+  useGenerateNgrokWebhookMutation,
   useGetTelegramSubscriptionsQuery,
   useUpdateTelegramSubscriptionMutation,
   useDeleteTelegramSubscriptionMutation,
@@ -77,6 +78,7 @@ export const TelegramIntegrationPage: React.FC = () => {
   const [testConnection, { isLoading: testLoading }] = useTestTelegramConnectionMutation();
   const [sendTestMessage] = useSendTestMessageMutation();
   const [setWebhook] = useSetWebhookMutation();
+  const [generateNgrokWebhook] = useGenerateNgrokWebhookMutation();
   const [updateSubscription] = useUpdateTelegramSubscriptionMutation();
   const [deleteSubscription] = useDeleteTelegramSubscriptionMutation();
   
@@ -319,36 +321,25 @@ export const TelegramIntegrationPage: React.FC = () => {
 
   const handleGenerateWebhookUrl = async () => {
     setGeneratingWebhook(true);
+    setSaveError(null);
     
     try {
-      // Попытка получить ngrok URL
-      const response = await fetch('http://localhost:4040/api/tunnels');
+      const result = await generateNgrokWebhook().unwrap();
       
-      if (response.ok) {
-        const data = await response.json();
-        const httpsTunnel = data.tunnels?.find((tunnel: any) => 
-          tunnel.proto === 'https' && tunnel.config?.addr?.includes('8000')
-        );
+      if (result.success && result.webhook_url) {
+        setSettings(prev => ({
+          ...prev,
+          webhookUrl: result.webhook_url || ''
+        }));
         
-        if (httpsTunnel) {
-          const ngrokUrl = httpsTunnel.public_url;
-          const webhookUrl = `${ngrokUrl}/api/v1/telegram_webhook`;
-          
-          setSettings(prev => ({
-            ...prev,
-            webhookUrl: webhookUrl
-          }));
-          
-          console.log('✅ Webhook URL сгенерирован:', webhookUrl);
-        } else {
-          setSaveError('Не найден HTTPS туннель ngrok для порта 8000.\nУбедитесь, что ngrok запущен: ngrok http 8000');
-        }
+        console.log('✅ Webhook URL сгенерирован:', result.webhook_url);
+        console.log('🔗 Ngrok URL:', result.ngrok_url);
       } else {
-        setSaveError('Не удалось подключиться к ngrok API.\nУбедитесь, что ngrok запущен и доступен на http://localhost:4040');
+        setSaveError(result.message);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Ошибка получения ngrok URL:', error);
-      setSaveError('Ошибка подключения к ngrok.\nУбедитесь, что ngrok запущен: ngrok http 8000');
+      setSaveError(error?.data?.message || 'Ошибка подключения к ngrok.\nУбедитесь, что ngrok запущен: ngrok http 8000');
     } finally {
       setGeneratingWebhook(false);
     }
