@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест кодировки Google OAuth</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        .test-section {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .test-result {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            font-family: monospace;
+        }
+        .error {
+            background: #ffe8e8;
+            border: 1px solid #f44336;
+            color: #d32f2f;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .profile-display {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #007bff;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .log {
+            background: #f1f3f4;
+            border: 1px solid #dadce0;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Тест кодировки Google OAuth</h1>
+            <p>Проверка отображения кириллицы в профиле пользователя</p>
+        </div>
+
+        <div class="test-section">
+            <h3>1. Тестовые данные пользователя</h3>
+            <div class="test-result">
+                <strong>Email:</strong> test@gmail.com<br>
+                <strong>Имя:</strong> Олександр<br>
+                <strong>Фамилия:</strong> Петренко<br>
+                <strong>Полное имя:</strong> Олександр Петренко
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Симуляция Google OAuth ответа</h3>
+            <button class="button" onclick="testGoogleOAuthResponse()">Тест Google OAuth</button>
+            <div id="oauth-result" class="test-result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Симуляция API ответа backend</h3>
+            <button class="button" onclick="testBackendResponse()">Тест Backend API</button>
+            <div id="backend-result" class="test-result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Отображение в профиле (как в реальном приложении)</h3>
+            <button class="button" onclick="testProfileDisplay()">Показать профиль</button>
+            <div id="profile-display" class="profile-display" style="display: none;">
+                <div class="avatar" id="user-avatar"></div>
+                <h2 id="user-name"></h2>
+                <p id="user-email"></p>
+                <p id="user-role">Клиент</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>5. Проверка кодировки строк</h3>
+            <button class="button" onclick="testStringEncoding()">Проверить кодировку</button>
+            <div id="encoding-result" class="test-result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>6. Лог операций</h3>
+            <div id="log" class="log"></div>
+            <button class="button" onclick="clearLog()">Очистить лог</button>
+        </div>
+    </div>
+
+    <script>
+        // Функция логирования
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            logElement.textContent += logEntry;
+            logElement.scrollTop = logElement.scrollHeight;
+            
+            console.log(`${type.toUpperCase()}: ${message}`);
+        }
+
+        function clearLog() {
+            document.getElementById('log').textContent = '';
+        }
+
+        // Тестовые данные пользователя
+        const testUserData = {
+            first_name: "Олександр",
+            last_name: "Петренко",
+            email: "test@gmail.com"
+        };
+
+        // 1. Тест Google OAuth ответа
+        function testGoogleOAuthResponse() {
+            log('🔐 Тестируем Google OAuth ответ');
+            
+            // Симулируем Google JWT payload
+            const googlePayload = {
+                sub: "123456789",
+                email: "test@gmail.com",
+                given_name: "Олександр",
+                family_name: "Петренко",
+                name: "Олександр Петренко"
+            };
+            
+            log(`Google payload: ${JSON.stringify(googlePayload)}`);
+            
+            // Извлекаем данные как в GoogleLoginButton
+            const userInfo = {
+                provider_user_id: googlePayload.sub,
+                email: googlePayload.email,
+                first_name: googlePayload.given_name || googlePayload.name?.split(' ')[0] || '',
+                last_name: googlePayload.family_name || googlePayload.name?.split(' ').slice(1).join(' ') || ''
+            };
+            
+            log(`Извлеченные данные: ${JSON.stringify(userInfo)}`);
+            
+            const resultDiv = document.getElementById('oauth-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `
+                <strong>Google OAuth данные:</strong><br>
+                Provider User ID: ${userInfo.provider_user_id}<br>
+                Email: ${userInfo.email}<br>
+                First Name: ${userInfo.first_name}<br>
+                Last Name: ${userInfo.last_name}<br>
+                <br>
+                <strong>Проверка кодировки:</strong><br>
+                First Name длина: ${userInfo.first_name.length} символов<br>
+                Last Name длина: ${userInfo.last_name.length} символов<br>
+                Отображение: "${userInfo.first_name} ${userInfo.last_name}"
+            `;
+            
+            log('✅ Google OAuth тест завершен');
+        }
+
+        // 2. Тест Backend API ответа
+        async function testBackendResponse() {
+            log('📡 Тестируем Backend API ответ');
+            
+            try {
+                // Симулируем ответ от /api/v1/clients/social_auth
+                const backendResponse = {
+                    auth_token: "test_token_12345",
+                    user: {
+                        id: 24,
+                        email: "test@gmail.com",
+                        first_name: "Олександр",
+                        last_name: "Петренко",
+                        phone: null,
+                        email_verified: true,
+                        phone_verified: false,
+                        role: "client",
+                        is_active: true,
+                        client_id: 15
+                    }
+                };
+                
+                log(`Backend ответ: ${JSON.stringify(backendResponse)}`);
+                
+                // Симулируем JSON.parse как в fetch response
+                const jsonString = JSON.stringify(backendResponse);
+                const parsedResponse = JSON.parse(jsonString);
+                
+                log(`После JSON.parse: ${JSON.stringify(parsedResponse)}`);
+                
+                const resultDiv = document.getElementById('backend-result');
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
+                    <strong>Backend API ответ:</strong><br>
+                    User ID: ${parsedResponse.user.id}<br>
+                    Email: ${parsedResponse.user.email}<br>
+                    First Name: ${parsedResponse.user.first_name}<br>
+                    Last Name: ${parsedResponse.user.last_name}<br>
+                    Role: ${parsedResponse.user.role}<br>
+                    <br>
+                    <strong>Полное имя:</strong> "${parsedResponse.user.first_name} ${parsedResponse.user.last_name}"
+                `;
+                
+                log('✅ Backend API тест завершен');
+                
+            } catch (error) {
+                log(`❌ Ошибка Backend API теста: ${error.message}`, 'error');
+            }
+        }
+
+        // 3. Тест отображения профиля
+        function testProfileDisplay() {
+            log('👤 Тестируем отображение профиля');
+            
+            const userData = {
+                first_name: "Олександр",
+                last_name: "Петренко",
+                email: "test@gmail.com",
+                role: "client"
+            };
+            
+            // Получаем инициалы как в ProfilePage
+            const getInitials = (firstName, lastName) => {
+                return `${firstName.charAt(0)}${lastName.charAt(0)}`;
+            };
+            
+            const initials = getInitials(userData.first_name, userData.last_name);
+            const fullName = `${userData.first_name} ${userData.last_name}`;
+            
+            log(`Инициалы: ${initials}`);
+            log(`Полное имя: ${fullName}`);
+            
+            // Отображаем профиль
+            const profileDiv = document.getElementById('profile-display');
+            const avatarDiv = document.getElementById('user-avatar');
+            const nameDiv = document.getElementById('user-name');
+            const emailDiv = document.getElementById('user-email');
+            
+            avatarDiv.textContent = initials;
+            nameDiv.textContent = fullName;
+            emailDiv.textContent = userData.email;
+            
+            profileDiv.style.display = 'block';
+            
+            log('✅ Профиль отображен');
+        }
+
+        // 4. Проверка кодировки строк
+        function testStringEncoding() {
+            log('🔍 Проверяем кодировку строк');
+            
+            const testStrings = [
+                "Олександр",
+                "Петренко", 
+                "Дмитро",
+                "Іванов",
+                "Анна",
+                "Шевченко"
+            ];
+            
+            let result = '<strong>Проверка кодировки кириллических строк:</strong><br><br>';
+            
+            testStrings.forEach((str, index) => {
+                const length = str.length;
+                const charCodes = [];
+                for (let i = 0; i < str.length; i++) {
+                    charCodes.push(str.charCodeAt(i));
+                }
+                
+                result += `${index + 1}. "${str}"<br>`;
+                result += `   Длина: ${length} символов<br>`;
+                result += `   Коды символов: [${charCodes.join(', ')}]<br><br>`;
+                
+                log(`Строка "${str}": длина ${length}, коды [${charCodes.join(', ')}]`);
+            });
+            
+            const resultDiv = document.getElementById('encoding-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = result;
+            
+            log('✅ Проверка кодировки завершена');
+        }
+
+        // Инициализация при загрузке
+        window.addEventListener('load', () => {
+            log('🚀 Страница загружена');
+            log('📋 Готов к тестированию кодировки Google OAuth');
+            
+            // Проверяем поддержку кириллицы в браузере
+            const testText = "Тест кириллицы: Олександр Петренко";
+            log(`Тест браузера: "${testText}"`);
+        });
+    </script>
+</body>
+</html> 

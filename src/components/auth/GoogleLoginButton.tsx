@@ -16,6 +16,28 @@ interface GoogleLoginButtonProps {
   disabled?: boolean;
 }
 
+// ✅ ИСПРАВЛЕНИЕ: Функция для корректного декодирования UTF-8 из base64
+const decodeBase64UTF8 = (base64String: string): string => {
+  try {
+    // Декодируем base64 в binary string
+    const binaryString = atob(base64String);
+    
+    // Конвертируем binary string в UTF-8
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    // Декодируем UTF-8 bytes в строку
+    const decoder = new TextDecoder('utf-8');
+    return decoder.decode(bytes);
+  } catch (error) {
+    console.error('❌ Ошибка декодирования UTF-8:', error);
+    // Fallback на стандартный atob
+    return atob(base64String);
+  }
+};
+
 const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
   onSuccess,
   onError,
@@ -44,17 +66,41 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
       // Google One Tap возвращает credential (JWT токен), который нужно декодировать
       let userInfo = {};
       if (response.credential) {
-        // Декодируем JWT токен (только payload, без проверки подписи для отладки)
+        // Декодируем JWT токен с корректной обработкой UTF-8
         try {
           const base64Payload = response.credential.split('.')[1];
-          const decodedPayload = JSON.parse(atob(base64Payload));
+          // ✅ ИСПРАВЛЕНИЕ: Используем новую функцию декодирования UTF-8
+          const decodedPayloadString = decodeBase64UTF8(base64Payload);
+          const decodedPayload = JSON.parse(decodedPayloadString);
+          
           console.log('🔍 Декодированный Google JWT:', decodedPayload);
+          console.log('🔍 given_name:', decodedPayload.given_name, 'encoding check:', typeof decodedPayload.given_name);
+          console.log('🔍 family_name:', decodedPayload.family_name, 'encoding check:', typeof decodedPayload.family_name);
+          
+          // ✅ ИСПРАВЛЕНИЕ: Дополнительная проверка и нормализация UTF-8
+          const normalizeUTF8 = (str: string): string => {
+            if (!str) return '';
+            // Проверяем, что строка корректно декодирована
+            try {
+              // Если строка содержит escape последовательности, декодируем их
+              return decodeURIComponent(escape(str));
+            } catch {
+              return str;
+            }
+          };
+          
+          const firstName = normalizeUTF8(decodedPayload.given_name || decodedPayload.name?.split(' ')[0] || '');
+          const lastName = normalizeUTF8(decodedPayload.family_name || decodedPayload.name?.split(' ').slice(1).join(' ') || '');
+          
+          console.log('🔧 После нормализации UTF-8:');
+          console.log('🔧 firstName:', firstName);
+          console.log('🔧 lastName:', lastName);
           
           userInfo = {
             provider_user_id: decodedPayload.sub,
             email: decodedPayload.email,
-            first_name: decodedPayload.given_name || decodedPayload.name?.split(' ')[0] || '',
-            last_name: decodedPayload.family_name || decodedPayload.name?.split(' ').slice(1).join(' ') || ''
+            first_name: firstName,
+            last_name: lastName
           };
         } catch (decodeError) {
           console.error('❌ Ошибка декодирования JWT:', decodeError);
@@ -80,7 +126,7 @@ const GoogleLoginButton: React.FC<GoogleLoginButtonProps> = ({
       const apiResponse = await fetch('/api/v1/clients/social_auth', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json; charset=utf-8', // ✅ ИСПРАВЛЕНИЕ: Явно указываем UTF-8
         },
         credentials: 'include', // Важно для HttpOnly куки
         body: JSON.stringify(requestData),
