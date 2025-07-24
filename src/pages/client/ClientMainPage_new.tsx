@@ -352,7 +352,12 @@ const ClientMainPage: React.FC = () => {
         </Box>
 
         {/* Футер */}
-        <Box sx={{ bgcolor: colors.backgroundCard, py: 4, borderTop: `1px solid ${colors.borderPrimary}` }}>
+        <Box sx={{ 
+          bgcolor: colors.backgroundCard, 
+          pt: 8, // ✅ УВЕЛИЧЕНО: Отступ сверху перед футером (64px)
+          pb: 4, // Отступ снизу остается прежним
+          borderTop: `1px solid ${colors.borderPrimary}` 
+        }}>
           <Container maxWidth="lg">
             <Grid container spacing={4}>
               <Grid item xs={12} md={4}>

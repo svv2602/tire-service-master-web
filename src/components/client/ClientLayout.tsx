@@ -118,6 +118,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         component="main" 
         sx={{ 
           pt: { xs: 7, sm: 8 }, // Отступ сверху для фиксированной навигации
+          pb: 8, // ✅ УВЕЛИЧЕНО: Отступ снизу перед футером (64px)
           flex: 1, // Занимаем все доступное место
           display: 'flex',
           flexDirection: 'column'
