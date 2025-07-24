@@ -45,6 +45,7 @@ import {
   useGetTelegramSettingsQuery,
   useUpdateTelegramSettingsMutation,
   useTestTelegramConnectionMutation,
+  useGetChatIdMutation,
   useSendTestMessageMutation,
   useSetWebhookMutation,
   useGetWebhookInfoQuery,
@@ -76,6 +77,7 @@ export const TelegramIntegrationPage: React.FC = () => {
   const { data: subscriptionsData, isLoading: subscriptionsLoading } = useGetTelegramSubscriptionsQuery({});
   const [updateSettings, { isLoading: updating }] = useUpdateTelegramSettingsMutation();
   const [testConnection, { isLoading: testLoading }] = useTestTelegramConnectionMutation();
+  const [getChatId, { isLoading: gettingChatId }] = useGetChatIdMutation();
   const [sendTestMessage] = useSendTestMessageMutation();
   const [setWebhook] = useSetWebhookMutation();
   const [generateNgrokWebhook] = useGenerateNgrokWebhookMutation();
@@ -345,6 +347,52 @@ export const TelegramIntegrationPage: React.FC = () => {
     }
   };
 
+  const handleGetChatId = async () => {
+    setSaveError(null);
+    setTestResult(null);
+    
+    try {
+      const response = await getChatId().unwrap();
+      
+      if (response.success && response.chat_id) {
+        // Автоматически обновляем поле adminChatId
+        handleSettingChange('adminChatId', response.chat_id);
+        
+        const userInfo = response.user_info;
+        const successMessage = `✅ Chat ID найден и установлен!\n\n` +
+          `🆔 Chat ID: ${response.chat_id}\n` +
+          `👤 Пользователь: ${userInfo?.first_name} ${userInfo?.last_name}\n` +
+          `📱 Username: @${userInfo?.username || 'не указан'}\n` +
+          `💬 Сообщение: "${userInfo?.message_text}"\n` +
+          `📅 Дата: ${userInfo?.date}`;
+        
+        setTestResult(successMessage);
+        setSaveSuccess(true);
+        setTimeout(() => {
+          setSaveSuccess(false);
+          setTestResult(null);
+        }, 8000);
+      }
+    } catch (error: any) {
+      const errorData = error?.data;
+      
+      if (errorData?.instruction) {
+        const instructionMessage = `${errorData.message}\n\n📋 Инструкция:\n` +
+          `1️⃣ ${errorData.instruction.step1}\n` +
+          `2️⃣ ${errorData.instruction.step2}\n` +
+          `3️⃣ ${errorData.instruction.step3}`;
+        setTestResult(instructionMessage);
+      } else {
+        setSaveError(errorData?.message || 'Ошибка получения Chat ID');
+      }
+      
+      setTimeout(() => {
+        setTestResult(null);
+        setSaveError(null);
+      }, 10000);
+    }
+  };
+
   const handleToggleSubscription = async (id: number, currentActive: boolean) => {
     try {
       await updateSubscription({
@@ -601,16 +649,31 @@ export const TelegramIntegrationPage: React.FC = () => {
                 </Button>
               </Box>
               
-              <TextField
-                fullWidth
-                label="Admin Chat ID"
-                value={settings.adminChatId}
-                onChange={(e) => handleSettingChange('adminChatId', e.target.value)}
-                sx={{ mb: 2 }}
-                size="small"
-                placeholder="123456789"
-                helperText="ID чата администратора (только цифры, может начинаться с -)"
-              />
+              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                <TextField
+                  fullWidth
+                  label="Admin Chat ID"
+                  value={settings.adminChatId}
+                  onChange={(e) => handleSettingChange('adminChatId', e.target.value)}
+                  size="small"
+                  placeholder="123456789"
+                  helperText="ID чата администратора (только цифры, может начинаться с -)"
+                />
+                <Button
+                  variant="outlined"
+                  onClick={handleGetChatId}
+                  disabled={gettingChatId || !settings.botToken}
+                  startIcon={gettingChatId ? <CircularProgress size={16} /> : <PersonIcon />}
+                  sx={{ 
+                    minWidth: 140,
+                    height: 40,
+                    mt: 0.5,
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {gettingChatId ? 'Получение...' : 'Получить Chat ID'}
+                </Button>
+              </Box>
               
               <FormControlLabel
                 control={

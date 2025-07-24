@@ -155,6 +155,32 @@ export const telegramSettingsApi = baseApi.injectEndpoints({
       }),
     }),
 
+    // Получение Chat ID администратора
+    getChatId: builder.mutation<{
+      success: boolean;
+      message: string;
+      chat_id?: string;
+      user_info?: {
+        first_name: string;
+        last_name: string;
+        username: string;
+        message_text: string;
+        date: string;
+      };
+      auto_set?: boolean;
+      instruction?: {
+        step1: string;
+        step2: string;
+        step3: string;
+      };
+    }, void>({
+      query: () => ({
+        url: 'telegram_settings/get_chat_id',
+        method: 'POST',
+      }),
+      invalidatesTags: ['TelegramSettings'],
+    }),
+
     // Отправка тестового сообщения
     sendTestMessage: builder.mutation<TestMessageResponse, TestMessageRequest>({
       query: (data) => ({
@@ -269,6 +295,7 @@ export const {
   useGetTelegramSettingsQuery,
   useUpdateTelegramSettingsMutation,
   useTestTelegramConnectionMutation,
+  useGetChatIdMutation,
   useSendTestMessageMutation,
   useSetWebhookMutation,
   useGetWebhookInfoQuery,
