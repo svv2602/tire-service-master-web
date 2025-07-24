@@ -234,6 +234,8 @@ const App: React.FC = () => {
                       
                       {/* Новые маршруты для управления записями клиента */}
           <Route path="/client/bookings" element={<MyBookingsPage />} />
+          <Route path="/client/bookings/:id" element={<BookingDetailsPage />} />
+          <Route path="/client/bookings/:id/reschedule" element={<RescheduleBookingPage />} />
           <Route path="/client/reviews" element={<ClientMyReviewsPage />} />
           <Route path="/client/reviews/new" element={<ClientReviewFormPage />} />
           <Route path="/my-bookings" element={<MyBookingsPage />} />
