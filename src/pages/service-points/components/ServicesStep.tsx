@@ -287,6 +287,46 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
     setActiveTabIndex(newValue);
   };
 
+  // ==================== ФУНКЦИИ ДЛЯ АВТОПОДТВЕРЖДЕНИЯ КАТЕГОРИЙ ====================
+  
+  // Получение настройки автоподтверждения для категории
+  const getCategoryAutoConfirmation = (categoryId: number): boolean => {
+    const settings = formik.values.service_point_category_settings || [];
+    const setting = settings.find(s => s.service_category_id === categoryId && !s._destroy);
+    return setting?.auto_confirmation || false;
+  };
+  
+  // Обработка изменения настройки автоподтверждения для категории
+  const handleCategoryAutoConfirmationChange = (categoryId: number, enabled: boolean) => {
+    const currentSettings = formik.values.service_point_category_settings || [];
+    const existingSettingIndex = currentSettings.findIndex(s => 
+      s.service_category_id === categoryId && !s._destroy
+    );
+    
+    if (existingSettingIndex >= 0) {
+      // Обновляем существующую настройку
+      const updatedSettings = [...currentSettings];
+      updatedSettings[existingSettingIndex] = {
+        ...updatedSettings[existingSettingIndex],
+        auto_confirmation: enabled
+      };
+      formik.setFieldValue('service_point_category_settings', updatedSettings);
+    } else {
+      // Создаем новую настройку
+      const newSetting = {
+        service_category_id: categoryId,
+        auto_confirmation: enabled,
+        service_point_id: formik.values.partner_id || 0 // Временно, будет заменено на сервере
+      };
+      formik.setFieldValue('service_point_category_settings', [
+        ...currentSettings,
+        newSetting
+      ]);
+    }
+    
+    console.log(`🔧 Автоподтверждение для категории ${categoryId}: ${enabled ? 'включено' : 'отключено'}`);
+  };
+
   // Если нет категорий из постов, показываем предупреждение
   if (categoriesFromPosts.length === 0) {
     return (
@@ -402,6 +442,36 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
                   </Typography>
                 )}
               </Box>
+
+              {/* Настройка автоподтверждения для категории */}
+              <Card sx={{ ...cardStyles, mb: 3, backgroundColor: theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.08)' : 'rgba(25, 118, 210, 0.04)' }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Box>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+                        {t('forms.servicePoint.bookingConfirmation.title')}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {getCategoryAutoConfirmation(category.id) 
+                          ? t('forms.servicePoint.bookingConfirmation.autoDescription')
+                          : t('forms.servicePoint.bookingConfirmation.manualDescription')
+                        }
+                      </Typography>
+                    </Box>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={getCategoryAutoConfirmation(category.id)}
+                          onChange={(e) => handleCategoryAutoConfirmationChange(category.id, e.target.checked)}
+                          color="primary"
+                        />
+                      }
+                      label={t('forms.servicePoint.bookingConfirmation.autoConfirmation')}
+                      sx={{ ml: 2 }}
+                    />
+                  </Box>
+                </CardContent>
+              </Card>
 
               {/* Выбранные услуги */}
               {selectedServicesByCategory[category.id]?.length > 0 && (

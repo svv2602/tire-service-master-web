@@ -88,6 +88,15 @@ export interface LocalizableItem {
   address_uk?: string;
 }
 
+// Настройки автоподтверждения для категории услуг
+export interface ServicePointCategorySetting {
+  id?: number;
+  service_point_id: number;
+  service_category_id: number;
+  auto_confirmation: boolean;
+  _destroy?: boolean;
+}
+
 // Модель сервисной точки
 export interface ServicePoint extends LocalizableItem {
   id: number;
@@ -114,7 +123,7 @@ export interface ServicePoint extends LocalizableItem {
   email?: string;
   is_active: boolean;
   work_status: 'working' | 'temporarily_closed' | 'maintenance' | 'suspended';
-  auto_confirmation: boolean; // Автоматическое подтверждение бронирований
+  category_confirmation_settings: { [categoryId: string]: boolean }; // Настройки автоподтверждения по категориям
   post_count: number;
   default_slot_duration: number;
   // Добавляем JSON поле для контактов по категориям
@@ -600,7 +609,7 @@ export interface ServicePointFormDataNew {
   contact_phone: string;
   is_active: boolean;
   work_status: 'working' | 'temporarily_closed' | 'maintenance' | 'suspended';
-  auto_confirmation: boolean; // Автоматическое подтверждение бронирований
+  service_point_category_settings?: ServicePointCategorySetting[]; // Настройки автоподтверждения по категориям
   working_hours: WorkingHoursSchedule;
   services?: ServicePointService[];
   photos?: ServicePointPhoto[];

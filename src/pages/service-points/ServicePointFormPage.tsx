@@ -370,7 +370,13 @@ const ServicePointFormPage: React.FC = () => {
       longitude: servicePoint?.longitude || null,
       is_active: servicePoint?.is_active ?? true,
       work_status: servicePoint?.work_status || 'working',
-      auto_confirmation: servicePoint?.auto_confirmation ?? false,
+      service_point_category_settings: servicePoint?.category_confirmation_settings 
+        ? Object.entries(servicePoint.category_confirmation_settings).map(([categoryId, autoConfirmation]) => ({
+            service_category_id: parseInt(categoryId),
+            auto_confirmation: autoConfirmation,
+            service_point_id: servicePoint.id
+          }))
+        : [],
       working_hours: normalizedWorkingHours,
       services: servicePoint?.services || [],
       photos: (servicePoint?.photos || []).filter(photo => !(photo as any)._destroy),
@@ -422,8 +428,13 @@ const ServicePointFormPage: React.FC = () => {
           longitude: values.longitude,
           is_active: values.is_active,
           work_status: values.work_status,
-          auto_confirmation: values.auto_confirmation,
           working_hours: values.working_hours,
+          service_point_category_settings_attributes: (values.service_point_category_settings || []).map(setting => ({
+            id: setting.id && typeof setting.id === 'number' && setting.id > 0 ? setting.id : undefined,
+            service_category_id: setting.service_category_id,
+            auto_confirmation: setting.auto_confirmation,
+            _destroy: setting._destroy || false,
+          })),
           service_posts_attributes: (values.service_posts || []).map(post => ({
             id: post.id && typeof post.id === 'number' && post.id > 0 && post.id < 1000000000 ? post.id : undefined,
             name: post.name,
@@ -745,7 +756,13 @@ const ServicePointFormPage: React.FC = () => {
         longitude: servicePoint?.longitude || null,
         is_active: servicePoint?.is_active ?? true,
         work_status: servicePoint?.work_status || 'working',
-        auto_confirmation: servicePoint?.auto_confirmation ?? false,
+        service_point_category_settings: servicePoint?.category_confirmation_settings 
+          ? Object.entries(servicePoint.category_confirmation_settings).map(([categoryId, autoConfirmation]) => ({
+              service_category_id: parseInt(categoryId),
+              auto_confirmation: autoConfirmation,
+              service_point_id: servicePoint.id
+            }))
+          : [],
         working_hours: normalizedWorkingHours,
         services: servicePoint?.services || [],
         photos: (servicePoint?.photos || []).filter(photo => !(photo as any)._destroy),
