@@ -84,10 +84,10 @@ const EmailTemplatesPageSimple: React.FC = () => {
   const templates = templatesData?.data || [];
   const totalCount = templatesData?.pagination?.total_count || 0;
   const templateTypes = templateTypesData?.data || [];
-  const stats = (templatesData as any)?.stats || {};
+  const stats = templatesData?.stats || {};
   
   // Статические данные для каналов (fallback если API не возвращает)
-  const availableChannels = (templatesData as any)?.available_channels || {
+  const availableChannels = templatesData?.available_channels || {
     'email': 'Email',
     'telegram': 'Telegram', 
     'push': 'Push уведомления'
@@ -142,11 +142,11 @@ const EmailTemplatesPageSimple: React.FC = () => {
   };
 
   const handleEdit = (id: number) => {
-    navigate(`/admin/notifications/email-templates/${id}/edit`);
+    navigate(`/admin/notifications/templates/${id}/edit`);
   };
 
   const handlePreview = (id: number) => {
-    navigate(`/admin/notifications/email-templates/${id}/preview`);
+    navigate(`/admin/notifications/templates/${id}/preview`);
   };
 
   // Обработка состояний загрузки и ошибок
@@ -173,11 +173,52 @@ const EmailTemplatesPageSimple: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() => navigate('/admin/notifications/email-templates/new')}
+          onClick={() => navigate('/admin/notifications/templates/new')}
         >
           Создать шаблон
         </Button>
       </Box>
+
+      {/* Статистика по каналам */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <EmailIcon sx={{ fontSize: 40, color: theme.palette.primary.main, mb: 1 }} />
+              <Typography variant="h4">{(stats as any)?.by_channel?.email || 0}</Typography>
+              <Typography variant="body2" color="text.secondary">Email шаблонов</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <TelegramIcon sx={{ fontSize: 40, color: theme.palette.info.main, mb: 1 }} />
+              <Typography variant="h4">{(stats as any)?.by_channel?.telegram || 0}</Typography>
+              <Typography variant="body2" color="text.secondary">Telegram шаблонов</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <PushIcon sx={{ fontSize: 40, color: theme.palette.success.main, mb: 1 }} />
+              <Typography variant="h4">{(stats as any)?.by_channel?.push || 0}</Typography>
+              <Typography variant="body2" color="text.secondary">Push шаблонов</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="h4" sx={{ color: theme.palette.text.primary, mb: 1 }}>
+                {(stats as any)?.total || 0}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">Всего шаблонов</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
       {/* Фильтры */}
       <Card sx={{ mb: 3 }}>
@@ -357,7 +398,7 @@ const EmailTemplatesPageSimple: React.FC = () => {
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            onClick={() => navigate('/admin/notifications/email-templates/new')}
+            onClick={() => navigate('/admin/notifications/templates/new')}
           >
             Создать первый шаблон
           </Button>

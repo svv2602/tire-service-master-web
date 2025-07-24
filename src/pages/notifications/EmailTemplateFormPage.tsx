@@ -197,7 +197,7 @@ const EmailTemplateFormPage: React.FC = () => {
         }
 
         setTimeout(() => {
-          navigate('/admin/notifications/email-templates');
+          navigate('/admin/notifications/templates');
         }, 1500);
       } catch (error: any) {
         setNotification({

@@ -474,7 +474,7 @@ export const TelegramIntegrationPage: React.FC = () => {
             <Button 
               variant="text" 
               size="small" 
-              onClick={() => window.open('/admin/notifications/email-templates?channel=telegram', '_blank')}
+              onClick={() => window.open('/admin/notifications/templates?channel=telegram', '_blank')}
               sx={{ p: 0, textTransform: 'none' }}
             >
               Шаблоны уведомлений

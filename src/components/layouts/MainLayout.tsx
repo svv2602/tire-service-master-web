@@ -436,13 +436,6 @@ const MainLayout: React.FC = () => {
             description: 'Управление всеми шаблонами уведомлений (Email, Telegram, Push)',
           },
           {
-            text: t('navigation.emailTemplates'),
-            icon: <EmailIcon />,
-            path: '/admin/notifications/email-templates',
-            roles: [UserRole.ADMIN],
-            description: t('navigation.descriptions.emailTemplates'),
-          },
-          {
             text: t('navigation.customVariables'),
             icon: <CodeIcon />,
             path: '/admin/notifications/custom-variables',
