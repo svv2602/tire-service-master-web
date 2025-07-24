@@ -378,7 +378,7 @@ const EmailTemplateFormPage: React.FC = () => {
         <Button
           variant="outlined"
           startIcon={<BackIcon />}
-          onClick={() => navigate('/admin/notifications/email-templates')}
+          onClick={() => navigate('/admin/notifications/templates')}
         >
           Назад к списку
         </Button>
