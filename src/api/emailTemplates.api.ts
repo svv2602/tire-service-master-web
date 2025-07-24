@@ -63,9 +63,12 @@ export interface EmailTemplateFilters {
 }
 
 export interface PreviewResponse {
-  subject: string;
-  body: string;
-  variables: string[];
+  preview: {
+    subject: string;
+    body: string;
+    variables_used: Record<string, string>;
+    available_variables: string[];
+  };
 }
 
 export interface TemplateType {

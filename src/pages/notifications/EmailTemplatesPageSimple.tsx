@@ -34,6 +34,7 @@ import { useNavigate } from 'react-router-dom';
 
 import Notification from '../../components/Notification';
 import { getTablePageStyles } from '../../styles';
+import EmailTemplatePreviewModal from '../../components/notifications/EmailTemplatePreviewModal';
 
 // Импорты API
 import {
@@ -56,6 +57,8 @@ const EmailTemplatesPageSimple: React.FC = () => {
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
   const [page, setPage] = useState(0);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
   const [notification, setNotification] = useState<{
     open: boolean;
     message: string;
@@ -146,7 +149,8 @@ const EmailTemplatesPageSimple: React.FC = () => {
   };
 
   const handlePreview = (id: number) => {
-    navigate(`/admin/notifications/templates/${id}/preview`);
+    setSelectedTemplateId(id);
+    setPreviewModalOpen(true);
   };
 
   // Обработка состояний загрузки и ошибок
@@ -410,6 +414,16 @@ const EmailTemplatesPageSimple: React.FC = () => {
         message={notification.message}
         severity={notification.severity}
         onClose={() => setNotification(prev => ({ ...prev, open: false }))}
+      />
+
+      {/* Модальное окно предварительного просмотра */}
+      <EmailTemplatePreviewModal
+        open={previewModalOpen}
+        onClose={() => {
+          setPreviewModalOpen(false);
+          setSelectedTemplateId(null);
+        }}
+        templateId={selectedTemplateId || undefined}
       />
     </Box>
   );

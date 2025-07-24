@@ -48,6 +48,7 @@ import * as Yup from 'yup';
 
 import Notification from '../../components/Notification';
 import { getTablePageStyles } from '../../styles';
+import EmailTemplatePreviewModal from '../../components/notifications/EmailTemplatePreviewModal';
 
 import {
   useGetEmailTemplateQuery,
@@ -106,10 +107,8 @@ const EmailTemplateFormPage: React.FC = () => {
   });
 
 
-  const [previewData, setPreviewData] = useState<any>(null);
-  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [variableDialog, setVariableDialog] = useState<{ open: boolean; variable: string }>({ open: false, variable: '' });
-  const previewRef = useRef<HTMLDivElement>(null);
   
   // Состояние для текущего канала (для динамической загрузки типов)
   const [selectedChannelType, setSelectedChannelType] = useState<string>('email');
@@ -281,86 +280,8 @@ const EmailTemplateFormPage: React.FC = () => {
       return;
     }
 
-    // Системные переменные
-    const systemVariables: Record<string, string> = {
-      // Клиент
-      'client_name': 'Іван Петренко',
-      'client_email': 'ivan.petrenko@example.com', 
-      'client_phone': '+38 (067) 123-45-67',
-      'client_first_name': 'Іван',
-      'client_last_name': 'Петренко',
-      
-      // Бронирование
-      'booking_id': '#12345',
-      'booking_date': '25.07.2025',
-      'booking_time': '14:30',
-      'booking_status': 'Підтверджено',
-      'booking_notes': 'Додаткові побажання клієнта',
-      
-      // Сервисная точка
-      'service_point_name': 'СТО Центральний',
-      'service_point_address': 'вул. Хрещатик, 1, Київ',
-      'service_point_phone': '+38 (044) 555-12-34',
-      'service_point_city': 'Київ',
-      
-      // Услуги
-      'service_name': 'Заміна шин',
-      'service_category': 'Шиномонтаж',
-      'service_price': '1200 грн',
-      'service_duration': '60 хвилин',
-      
-      // Автомобиль
-      'car_brand': 'Toyota',
-      'car_model': 'Camry',
-      'car_year': '2020',
-      'license_plate': 'АА1234ВВ',
-      
-      // Система
-      'company_name': 'Tire Service Master',
-      'support_email': 'support@tireservice.ua',
-      'support_phone': '+38 (044) 111-22-33',
-      'website_url': 'https://tireservice.ua',
-      'current_date': new Date().toLocaleDateString('uk-UA'),
-      'current_time': new Date().toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })
-    };
-    
-    // Кастомные переменные
-    const customVariablesMap: Record<string, string> = {};
-    customVariables.forEach(customVar => {
-      customVariablesMap[customVar.name] = customVar.example_value || `[${customVar.name}]`;
-    });
-    
-    // Объединяем все переменные (кастомные могут перезаписать системные)
-    const allVariables = { ...systemVariables, ...customVariablesMap };
-
-    // Локальная замена переменных
-    let previewSubject = formik.values.subject;
-    let previewBody = formik.values.body;
-
-    // Заменяем переменные в фигурных скобках
-    Object.entries(allVariables).forEach(([key, value]) => {
-      const placeholder = `{${key}}`;
-      previewSubject = previewSubject.replace(new RegExp(placeholder.replace(/[{}]/g, '\\$&'), 'g'), value);
-      previewBody = previewBody.replace(new RegExp(placeholder.replace(/[{}]/g, '\\$&'), 'g'), value);
-    });
-
-    setPreviewData({
-      subject: previewSubject,
-      body: previewBody,
-      variables: formik.values.variables,
-    });
-    setPreviewOpen(true);
-    
-    // Автоматический скролл к окну предварительного просмотра
-    setTimeout(() => {
-      if (previewRef.current) {
-        previewRef.current.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start' 
-        });
-        previewRef.current.focus();
-      }
-    }, 100); // Небольшая задержка для завершения рендеринга
+    // Открываем модальное окно предварительного просмотра
+    setPreviewModalOpen(true);
   };
 
   if (templateLoading) {
@@ -741,74 +662,23 @@ const EmailTemplateFormPage: React.FC = () => {
         </Grid>
       </form>
 
-      {/* Предварительный просмотр */}
-      {previewOpen && previewData && (
-        <Card 
-          ref={previewRef}
-          tabIndex={-1}
-          sx={{ 
-            mt: 3,
-            outline: 'none',
-            '&:focus': {
-              boxShadow: theme => `0 0 0 2px ${theme.palette.primary.main}`,
-            }
-          }}
-        >
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">
-                Предварительный просмотр
-              </Typography>
-              <Button onClick={() => setPreviewOpen(false)}>
-                Закрыть
-              </Button>
-            </Box>
-            
-            {/* Информация о переменных */}
-            {previewData.variables && previewData.variables.length > 0 && (
-              <Alert severity="info" sx={{ mb: 2 }}>
-                <Typography variant="body2" gutterBottom>
-                  <strong>Используемые переменные:</strong>
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {previewData.variables.map((variable: string) => (
-                    <Chip key={variable} label={`{${variable}}`} size="small" />
-                  ))}
-                </Box>
-              </Alert>
-            )}
-            
-            <Paper sx={{ 
-              p: 2, 
-              bgcolor: theme.palette.mode === 'dark' ? 'grey.800' : 'grey.50',
-              border: `1px solid ${theme.palette.divider}`
-            }}>
-              <Typography variant="h6" gutterBottom sx={{ 
-                color: theme.palette.mode === 'dark' ? 'grey.100' : 'grey.900'
-              }}>
-                <strong>Тема:</strong> {previewData.subject}
-              </Typography>
-              <Divider sx={{ my: 2 }} />
-              <Typography variant="subtitle1" gutterBottom sx={{ 
-                color: theme.palette.mode === 'dark' ? 'grey.100' : 'grey.900'
-              }}>
-                <strong>Содержимое:</strong>
-              </Typography>
-              <Typography
-                variant="body1"
-                component="div"
-                sx={{ 
-                  whiteSpace: 'pre-wrap', 
-                  lineHeight: 1.6,
-                  color: theme.palette.mode === 'dark' ? 'grey.200' : 'grey.800'
-                }}
-              >
-                {previewData.body}
-              </Typography>
-            </Paper>
-          </CardContent>
-        </Card>
-      )}
+      {/* Модальное окно предварительного просмотра */}
+      <EmailTemplatePreviewModal
+        open={previewModalOpen}
+        onClose={() => setPreviewModalOpen(false)}
+        templateId={isEditMode && id ? parseInt(id) : undefined}
+        templateData={!isEditMode ? {
+          subject: formik.values.subject,
+          body: formik.values.body,
+          template_type: formik.values.template_type,
+          channel_type: formik.values.channel_type,
+          variables: formik.values.variables,
+        } : undefined}
+        customVariables={customVariables.reduce((acc, cv) => {
+          acc[cv.name] = cv.example_value || `[${cv.name}]`;
+          return acc;
+        }, {} as Record<string, string>)}
+      />
 
       {/* Диалог переменной */}
       <Dialog
