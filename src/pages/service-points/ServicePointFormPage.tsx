@@ -370,6 +370,7 @@ const ServicePointFormPage: React.FC = () => {
       longitude: servicePoint?.longitude || null,
       is_active: servicePoint?.is_active ?? true,
       work_status: servicePoint?.work_status || 'working',
+      auto_confirmation: servicePoint?.auto_confirmation ?? false,
       working_hours: normalizedWorkingHours,
       services: servicePoint?.services || [],
       photos: (servicePoint?.photos || []).filter(photo => !(photo as any)._destroy),
@@ -421,6 +422,7 @@ const ServicePointFormPage: React.FC = () => {
           longitude: values.longitude,
           is_active: values.is_active,
           work_status: values.work_status,
+          auto_confirmation: values.auto_confirmation,
           working_hours: values.working_hours,
           service_posts_attributes: (values.service_posts || []).map(post => ({
             id: post.id && typeof post.id === 'number' && post.id > 0 && post.id < 1000000000 ? post.id : undefined,
@@ -743,6 +745,7 @@ const ServicePointFormPage: React.FC = () => {
         longitude: servicePoint?.longitude || null,
         is_active: servicePoint?.is_active ?? true,
         work_status: servicePoint?.work_status || 'working',
+        auto_confirmation: servicePoint?.auto_confirmation ?? false,
         working_hours: normalizedWorkingHours,
         services: servicePoint?.services || [],
         photos: (servicePoint?.photos || []).filter(photo => !(photo as any)._destroy),

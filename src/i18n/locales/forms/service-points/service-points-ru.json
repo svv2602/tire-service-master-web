@@ -450,6 +450,12 @@
         "totalServicesLabel": "Всего услуг",
         "availableServicesLabel": "Доступных услуг",
         "categoriesLabel": "Категорий"
+      },
+      "bookingConfirmation": {
+        "title": "Подтверждение бронирований",
+        "autoConfirmation": "Автоматическое подтверждение",
+        "autoDescription": "Бронирования клиентов подтверждаются автоматически без участия администрации",
+        "manualDescription": "Бронирования клиентов требуют ручного подтверждения администратором"
       }
     }
   },

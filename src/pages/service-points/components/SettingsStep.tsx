@@ -112,6 +112,56 @@ const SettingsStep: React.FC<SettingsStepProps> = ({ formik, isEditMode, service
             )}
           </FormControl>
         </Grid>
+        
+        {/* Настройки подтверждения бронирований */}
+        <Grid item xs={12}>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              mt: SIZES.spacing.lg,
+              mb: SIZES.spacing.md,
+              fontSize: SIZES.fontSize.md,
+              fontWeight: 600,
+              color: theme.palette.text.primary,
+            }}
+          >
+            {t('forms.servicePoint.bookingConfirmation.title')}
+          </Typography>
+        </Grid>
+        
+        <Grid item xs={12}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={formik.values.auto_confirmation || false}
+                onChange={(e) => {
+                  formik.setFieldValue('auto_confirmation', e.target.checked);
+                }}
+                name="auto_confirmation"
+                color="primary"
+              />
+            }
+            label={
+              <Box>
+                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                  {t('forms.servicePoint.bookingConfirmation.autoConfirmation')}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                  {formik.values.auto_confirmation 
+                    ? t('forms.servicePoint.bookingConfirmation.autoDescription')
+                    : t('forms.servicePoint.bookingConfirmation.manualDescription')
+                  }
+                </Typography>
+              </Box>
+            }
+            sx={{ 
+              alignItems: 'flex-start',
+              '& .MuiFormControlLabel-label': {
+                pt: 1
+              }
+            }}
+          />
+        </Grid>
       </Grid>
     </Box>
   );

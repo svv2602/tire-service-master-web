@@ -114,6 +114,7 @@ export interface ServicePoint extends LocalizableItem {
   email?: string;
   is_active: boolean;
   work_status: 'working' | 'temporarily_closed' | 'maintenance' | 'suspended';
+  auto_confirmation: boolean; // Автоматическое подтверждение бронирований
   post_count: number;
   default_slot_duration: number;
   // Добавляем JSON поле для контактов по категориям
@@ -599,6 +600,7 @@ export interface ServicePointFormDataNew {
   contact_phone: string;
   is_active: boolean;
   work_status: 'working' | 'temporarily_closed' | 'maintenance' | 'suspended';
+  auto_confirmation: boolean; // Автоматическое подтверждение бронирований
   working_hours: WorkingHoursSchedule;
   services?: ServicePointService[];
   photos?: ServicePointPhoto[];
