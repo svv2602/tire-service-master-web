@@ -237,7 +237,7 @@ const DashboardPage: React.FC = () => {
       icon: <SeoIcon />,
       color: '#00796b',
       description: `${seoAnalytics?.data?.good_pages || 0} ${t('forms.dashboard.stats.seo.optimized')}`,
-      navigateTo: '/admin/page-content'
+      navigateTo: '/admin/seo'
     },
   ];
 
