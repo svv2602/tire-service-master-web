@@ -30,6 +30,7 @@ const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 
 // Ленивая загрузка страниц панели управления
 const DashboardPage = lazy(() => import('./pages/dashboard/DashboardPage'));
+const OperatorDashboardPage = lazy(() => import('./pages/operator-dashboard/OperatorDashboardPage'));
 
 // Ленивая загрузка страниц партнеров
 const PartnersPage = lazy(() => import('./pages/partners/PartnersPage'));
@@ -259,6 +260,9 @@ const App: React.FC = () => {
                         {/* Главная страница админки */}
                         <Route index element={<DashboardPage />} />
                         <Route path="dashboard" element={<DashboardPage />} />
+                        
+                        {/* Дашборд оператора */}
+                        <Route path="operator-dashboard" element={<OperatorDashboardPage />} />
                         
                         {/* Управление пользователями */}
                         <Route path="users" element={<UsersPage />} />

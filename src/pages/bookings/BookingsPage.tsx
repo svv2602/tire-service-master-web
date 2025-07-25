@@ -46,6 +46,11 @@ import { ActionsMenu, ActionItem } from '../../components/ui/ActionsMenu/Actions
 import { useTranslation } from 'react-i18next';
 import { getStatusDisplayName, getStatusChipColor } from '../../utils/bookingStatus';
 
+// Импорт компонентов для операторов
+import { OperatorServicePointSwitcher } from '../../components/ui/OperatorServicePointSwitcher/OperatorServicePointSwitcher';
+import { useOperatorServicePoint } from '../../hooks/useOperatorServicePoint';
+import { useUserRole } from '../../hooks/useUserRole';
+
 
 const BookingsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -53,6 +58,10 @@ const BookingsPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
+  
+  // Хуки для операторов
+  const { isOperator } = useUserRole();
+  const { selectedPointId } = useOperatorServicePoint();
   
   // Состояния для интерактивного статуса
   const [statusMenuAnchor, setStatusMenuAnchor] = useState<null | HTMLElement>(null);
@@ -112,8 +121,13 @@ const BookingsPage: React.FC = () => {
     if (dateFromFilter) params.from_date = dateFromFilter;
     if (dateToFilter) params.to_date = dateToFilter;
     
+    // Автоматическая фильтрация для операторов по выбранной точке
+    if (isOperator && selectedPointId) {
+      params.service_point_id = selectedPointId;
+    }
+    
     return params;
-  }, [search, page, sortBy, sortOrder, statusFilter, cityFilter, servicePointFilter, serviceCategoryFilter, dateFromFilter, dateToFilter]);
+  }, [search, page, sortBy, sortOrder, statusFilter, cityFilter, servicePointFilter, serviceCategoryFilter, dateFromFilter, dateToFilter, isOperator, selectedPointId]);
   
   // RTK Query хуки
   const { 
@@ -672,6 +686,20 @@ const BookingsPage: React.FC = () => {
         <Alert severity="error" sx={{ mb: 2 }}>
           {t('forms.bookings.notifications.loadingFailed')}
         </Alert>
+      )}
+      
+      {/* Переключатель сервисных точек для операторов */}
+      {isOperator && (
+        <Box sx={{ mb: 3 }}>
+          <OperatorServicePointSwitcher 
+            variant="inline"
+            showStats={true}
+            onPointChange={() => {
+              // Сбрасываем страницу при смене точки
+              setPage(0);
+            }}
+          />
+        </Box>
       )}
       
       <PageTable<Booking>
