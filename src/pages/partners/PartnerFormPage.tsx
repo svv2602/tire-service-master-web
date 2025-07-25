@@ -64,6 +64,7 @@ import { TabPanel, Table, type Column, Pagination, PhoneField } from '../../comp
 import { phoneValidation } from '../../utils/validation';
 import { useGetOperatorsByPartnerQuery, useCreateOperatorMutation, useUpdateOperatorMutation, useDeleteOperatorMutation, Operator, UpdateOperatorRequest } from '../../api/operators.api';
 import { OperatorModal } from '../../components/partners/OperatorModal';
+import { PartnerOperatorsManager } from '../../components/partners/PartnerOperatorsManager';
 
 /**
  * Страница формы партнера - создание и редактирование партнеров
@@ -975,63 +976,25 @@ const PartnerFormPage: React.FC = () => {
   // Функция для смены вкладки
   const handleTabChange = (event: React.SyntheticEvent, value: any) => setActiveTab(Number(value));
 
-  // Вкладка "Сотрудники"
+  // Вкладка "Сотрудники" - новая улучшенная версия
   const renderOperatorsTab = () => (
     <Box sx={{ mt: 2 }}>
-      <Button variant="contained" color="primary" onClick={handleAddOperator} sx={{ mb: 2 }}>
-        {t('forms.partner.operators.addButton')}
-      </Button>
-      {/* Таблица сотрудников */}
-      <Table
-        columns={[
-                { id: 'fio', label: t('forms.partner.operatorTable.fullName'), format: (_: any, row: Operator) => row.user ? `${row.user.first_name} ${row.user.last_name}` : t('forms.partner.operatorTable.dataNotLoaded') },
-      { id: 'email', label: t('forms.partner.fields.email'), format: (_: any, row: Operator) => row.user?.email || t('forms.partner.operatorTable.notSpecified') },
-                { id: 'phone', label: t('forms.partner.operators.columns.phone'), format: (_: any, row: Operator) => row.user?.phone || t('forms.partner.operators.notSpecified') },
-      { id: 'position', label: t('forms.partner.operators.columns.position'), format: (_: any, row: Operator) => row.position },
-      { id: 'access_level', label: t('forms.partner.operators.columns.access'), format: (_: any, row: Operator) => row.access_level },
-      { id: 'status', label: t('forms.partner.operators.columns.status'), format: (_: any, row: Operator) => (
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={row.is_active}
-                  onChange={() => handleToggleOperatorStatus(row)}
-                  size="small"
-                />
-              }
-              label=""
-              sx={{ m: 0 }}
-            />
-          ) },
-          { id: 'actions', label: t('forms.partner.operators.columns.actions'), format: (_: any, row: Operator) => (
-            <Box sx={tablePageStyles.actionsContainer}>
-              <Tooltip title={t('forms.partner.operators.actions.edit')}>
-                <IconButton
-                  onClick={() => handleEditOperator(row)}
-                  size="small"
-                  color="primary"
-                  sx={tablePageStyles.actionButton}
-                >
-                  <EditIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title={row.is_active ? t('forms.partner.operators.actions.deactivate') : t('forms.partner.operators.actions.delete')}>
-                <IconButton
-                  onClick={() => handleDeleteOperator(row)}
-                  size="small"
-                  color="error"
-                  sx={tablePageStyles.actionButton}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          ) },
-        ]}
-        rows={operators}
-        loading={operatorsLoading}
+      <PartnerOperatorsManager
+        partnerId={Number(id)}
+        partnerName={partner?.company_name}
+        onOperatorChange={() => {
+          // Обновляем данные операторов при изменениях
+          refetchOperators();
+        }}
       />
-      {/* Модальное окно для добавления/редактирования сотрудника (реализовать отдельно) */}
-      <OperatorModal open={operatorModalOpen} onClose={() => setOperatorModalOpen(false)} onSave={handleSaveOperator} operator={editingOperator} />
+      
+      {/* Сохраняем старую модальную форму для совместимости */}
+      <OperatorModal 
+        open={operatorModalOpen} 
+        onClose={() => setOperatorModalOpen(false)} 
+        onSave={handleSaveOperator} 
+        operator={editingOperator} 
+      />
     </Box>
   );
 
