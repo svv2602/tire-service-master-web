@@ -446,20 +446,34 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     } catch (error: any) {
       console.error('❌ Ошибка при создании бронирования для авторизованного пользователя:', error);
       
-      // Улучшенная обработка ошибок
-      if (error && typeof error === 'object') {
-        console.error('❌ Детали ошибки:', JSON.stringify(error, null, 2));
-        if (error.data) {
-          console.error('❌ Данные ошибки:', error.data);
-          console.error('❌ Сообщение ошибки:', error.data.message);
+      // Безопасная обработка ошибок
+      try {
+        if (error && typeof error === 'object') {
+          // Пытаемся извлечь основные свойства ошибки
+          const errorInfo = {
+            message: error.message,
+            status: error.status,
+            data: error.data,
+            name: error.name
+          };
+          console.error('❌ Детали ошибки:', JSON.stringify(errorInfo, null, 2));
+          
+          if (error.data) {
+            console.error('❌ Данные ошибки:', error.data);
+            console.error('❌ Сообщение ошибки:', error.data.message);
+          }
+        } else {
+          console.error('❌ Простая ошибка:', error);
         }
-      } else {
-        console.error('❌ Простая ошибка:', error);
+      } catch (logError) {
+        console.error('❌ Ошибка при логировании:', logError);
+        console.error('❌ Исходная ошибка (строка):', String(error));
       }
       
       setIsSubmitting(false);
       setSubmitError(
         error?.data?.message || 
+        error?.message ||
         t('forms.bookings.form.messages.bookingCreateError')
       );
     }
@@ -506,22 +520,36 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     } catch (error: any) {
       console.error('❌ Ошибка при создании гостевого бронирования:', error);
       
-      // Улучшенная обработка ошибок
-      if (error && typeof error === 'object') {
-        console.error('❌ Детали ошибки:', JSON.stringify(error, null, 2));
-        if (error.data) {
-          console.error('❌ Данные ошибки:', error.data);
-          console.error('❌ Сообщение ошибки:', error.data.message);
-          console.error('❌ Детали ошибки:', error.data.details);
+      // Безопасная обработка ошибок
+      try {
+        if (error && typeof error === 'object') {
+          // Пытаемся извлечь основные свойства ошибки
+          const errorInfo = {
+            message: error.message,
+            status: error.status,
+            data: error.data,
+            name: error.name
+          };
+          console.error('❌ Детали ошибки:', JSON.stringify(errorInfo, null, 2));
+          
+          if (error.data) {
+            console.error('❌ Данные ошибки:', error.data);
+            console.error('❌ Сообщение ошибки:', error.data.message);
+            console.error('❌ Детали ошибки:', error.data.details);
+          }
+        } else {
+          console.error('❌ Простая ошибка:', error);
         }
-      } else {
-        console.error('❌ Простая ошибка:', error);
+      } catch (logError) {
+        console.error('❌ Ошибка при логировании:', logError);
+        console.error('❌ Исходная ошибка (строка):', String(error));
       }
       
       setIsSubmitting(false);
       setSubmitError(
         error?.data?.message || 
         error?.data?.error ||
+        error?.message ||
         t('forms.bookings.form.messages.bookingCreateError')
       );
     }

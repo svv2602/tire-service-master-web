@@ -286,14 +286,27 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
     } catch (err: any) {
       console.error('❌ Ошибка создания бронирования:', err);
       
-      // Улучшенная обработка ошибок
-      if (err && typeof err === 'object') {
-        console.log('❌ Детали ошибки:', JSON.stringify(err, null, 2));
-        if (err.data) {
-          console.log('❌ Данные ошибки:', JSON.stringify(err.data, null, 2));
+      // Безопасная обработка ошибок
+      try {
+        if (err && typeof err === 'object') {
+          // Пытаемся извлечь основные свойства ошибки
+          const errorInfo = {
+            message: err.message,
+            status: err.status,
+            data: err.data,
+            name: err.name
+          };
+          console.log('❌ Детали ошибки:', JSON.stringify(errorInfo, null, 2));
+          
+          if (err.data) {
+            console.log('❌ Данные ошибки:', err.data);
+          }
+        } else {
+          console.log('❌ Простая ошибка:', err);
         }
-      } else {
-        console.log('❌ Простая ошибка:', err);
+      } catch (logError) {
+        console.error('❌ Ошибка при логировании:', logError);
+        console.error('❌ Исходная ошибка (строка):', String(err));
       }
       
       setError(`${t('bookingModals.createAccountAndBooking.errors.bookingCreation')}: ${err?.data?.error || err?.message || t('bookingModals.createAccountAndBooking.errors.unknown')}`);
