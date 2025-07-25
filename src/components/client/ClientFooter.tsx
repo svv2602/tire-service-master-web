@@ -58,8 +58,8 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
   const serviceCategories = categoriesData?.data || [];
 
   // Отладочная информация
-  console.log('Footer categories data:', categoriesData);
-  console.log('Service categories:', serviceCategories);
+  console.log('Footer categories data:', JSON.stringify(categoriesData, null, 2));
+  console.log('Service categories:', JSON.stringify(serviceCategories, null, 2));
 
   // Генерация QR кода
   const generateQRCode = async () => {

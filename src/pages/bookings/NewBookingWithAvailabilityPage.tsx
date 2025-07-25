@@ -94,7 +94,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   
   // Отладочная информация в самом начале
   console.log('📍 location.pathname:', location.pathname);
-  console.log('📍 location.state:', location.state);
+  console.log('📍 location.state:', JSON.stringify(location.state, null, 2));
   console.log('📍 location.search:', location.search);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -113,12 +113,12 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   // 🚀 НОВАЯ ЛОГИКА: Определяем тип пользователя для фильтрации слотов
   const isServiceUser = currentUser && ['admin', 'partner', 'manager', 'operator'].includes(currentUser.role);
   
-  console.log('🔍 Тип пользователя:', {
+  console.log('🔍 Тип пользователя:', JSON.stringify({
     isAuthenticated,
     userRole: currentUser?.role,
     isServiceUser,
     shouldShowAllSlots: isServiceUser
-  });
+  }, null, 2));
   
   // Состояние формы
   const [activeStep, setActiveStep] = useState(0);
@@ -445,6 +445,18 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
 
     } catch (error: any) {
       console.error('❌ Ошибка при создании бронирования для авторизованного пользователя:', error);
+      
+      // Улучшенная обработка ошибок
+      if (error && typeof error === 'object') {
+        console.error('❌ Детали ошибки:', JSON.stringify(error, null, 2));
+        if (error.data) {
+          console.error('❌ Данные ошибки:', error.data);
+          console.error('❌ Сообщение ошибки:', error.data.message);
+        }
+      } else {
+        console.error('❌ Простая ошибка:', error);
+      }
+      
       setIsSubmitting(false);
       setSubmitError(
         error?.data?.message || 
@@ -493,10 +505,19 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
 
     } catch (error: any) {
       console.error('❌ Ошибка при создании гостевого бронирования:', error);
-      console.error('❌ Детали ошибки:', JSON.stringify(error, null, 2));
-      console.error('❌ Данные ошибки:', error?.data);
-      console.error('❌ Сообщение ошибки:', error?.data?.message);
-      console.error('❌ Детали ошибки:', error?.data?.details);
+      
+      // Улучшенная обработка ошибок
+      if (error && typeof error === 'object') {
+        console.error('❌ Детали ошибки:', JSON.stringify(error, null, 2));
+        if (error.data) {
+          console.error('❌ Данные ошибки:', error.data);
+          console.error('❌ Сообщение ошибки:', error.data.message);
+          console.error('❌ Детали ошибки:', error.data.details);
+        }
+      } else {
+        console.error('❌ Простая ошибка:', error);
+      }
+      
       setIsSubmitting(false);
       setSubmitError(
         error?.data?.message || 
