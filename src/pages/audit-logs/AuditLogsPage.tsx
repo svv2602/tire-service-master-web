@@ -13,7 +13,6 @@ import {
 } from '@mui/material';
 import {
   Visibility as ViewIcon,
-  Download as DownloadIcon,
   Assessment as StatsIcon,
   Refresh as RefreshIcon,
   Security as SecurityIcon,
@@ -24,7 +23,6 @@ import { ru } from 'date-fns/locale';
 import {
   useGetAuditLogsQuery,
   useGetAuditStatsQuery,
-  useLazyExportAuditLogsQuery,
   type AuditLog,
   type AuditLogsQueryParams,
 } from '../../api/auditLogs.api';
@@ -33,6 +31,7 @@ import type { Column } from '../../components/common/PageTable';
 import { AuditLogFilters } from './components/AuditLogFilters';
 import { AuditLogDetailModal } from './components/AuditLogDetailModal';
 import { AuditStatsModal } from './components/AuditStatsModal';
+import { ExportButton } from './components/ExportButton';
 import { useDebounce } from '../../hooks/useDebounce';
 import { getTablePageStyles } from '../../styles';
 import { useTheme } from '@mui/material/styles';
@@ -71,7 +70,7 @@ const AuditLogsPage: React.FC = () => {
     isLoading: isLoadingStats,
   } = useGetAuditStatsQuery({ days: 30 });
 
-  const [exportLogs, { isLoading: isExporting }] = useLazyExportAuditLogsQuery();
+  // Экспорт теперь обрабатывается компонентом ExportButton
 
   // Данные из API
   const logs = logsData?.data || [];
@@ -100,24 +99,7 @@ const AuditLogsPage: React.FC = () => {
     setDetailModal({ open: true, logId: log.id });
   }, []);
 
-  const handleExport = useCallback(async () => {
-    try {
-      const result = await exportLogs(debouncedFilters);
-      if ('data' in result && result.data) {
-        // Создаем ссылку для скачивания
-        const url = window.URL.createObjectURL(result.data);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `audit_logs_${format(new Date(), 'yyyy-MM-dd_HH-mm', { locale: ru })}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-      }
-    } catch (error) {
-      console.error('Ошибка экспорта:', error);
-    }
-  }, [exportLogs, debouncedFilters]);
+  // Экспорт теперь обрабатывается компонентом ExportButton
 
   // Функции для отображения
   const getActionColor = (action: string): 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' => {
@@ -172,15 +154,8 @@ const AuditLogsPage: React.FC = () => {
         onClick: () => setStatsModal(true),
         variant: 'outlined' as const,
       },
-      {
-        label: 'Экспорт CSV',
-        icon: <DownloadIcon />,
-        onClick: handleExport,
-        variant: 'contained' as const,
-        disabled: isExporting,
-      },
     ],
-  }), [meta.total_count, refetch, handleExport, isExporting]);
+  }), [meta.total_count, refetch]);
 
   // Конфигурация колонок
   const columns: Column[] = useMemo(() => [
@@ -374,6 +349,14 @@ const AuditLogsPage: React.FC = () => {
         onFiltersChange={handleFiltersChange}
         appliedFiltersCount={Object.keys(meta.filters_applied).length}
       />
+
+      {/* Кнопка экспорта */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <ExportButton 
+          filters={debouncedFilters}
+          disabled={isLoading || logs.length === 0}
+        />
+      </Box>
 
       {/* Основная таблица */}
       <PageTable<AuditLog>

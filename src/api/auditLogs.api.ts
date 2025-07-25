@@ -48,6 +48,10 @@ export interface AuditLogsQueryParams {
   ip_address?: string;
 }
 
+export interface ExportParams extends Omit<AuditLogsQueryParams, 'page' | 'per_page'> {
+  format?: 'csv' | 'xlsx';
+}
+
 export interface AuditStatsResponse {
   data: {
     period: {
@@ -228,21 +232,22 @@ export const auditLogsApi = baseApi.injectEndpoints({
       providesTags: ['AuditLog'],
     }),
 
-    exportAuditLogs: builder.query<Blob, AuditLogsQueryParams>({
+    exportAuditLogs: builder.query<Blob, ExportParams>({
       query: (params = {}) => {
+        const { format = 'csv', ...queryParams } = params;
         const searchParams = new URLSearchParams();
         
-        if (params.user_id) searchParams.append('user_id', params.user_id.toString());
-        if (params.user_email) searchParams.append('user_email', params.user_email);
-        if (params.action) searchParams.append('action', params.action);
-        if (params.resource_type) searchParams.append('resource_type', params.resource_type);
-        if (params.resource_id) searchParams.append('resource_id', params.resource_id.toString());
-        if (params.date_from) searchParams.append('date_from', params.date_from);
-        if (params.date_to) searchParams.append('date_to', params.date_to);
-        if (params.ip_address) searchParams.append('ip_address', params.ip_address);
+        if (queryParams.user_id) searchParams.append('user_id', queryParams.user_id.toString());
+        if (queryParams.user_email) searchParams.append('user_email', queryParams.user_email);
+        if (queryParams.action) searchParams.append('action', queryParams.action);
+        if (queryParams.resource_type) searchParams.append('resource_type', queryParams.resource_type);
+        if (queryParams.resource_id) searchParams.append('resource_id', queryParams.resource_id.toString());
+        if (queryParams.date_from) searchParams.append('date_from', queryParams.date_from);
+        if (queryParams.date_to) searchParams.append('date_to', queryParams.date_to);
+        if (queryParams.ip_address) searchParams.append('ip_address', queryParams.ip_address);
         
         return {
-          url: `audit_logs/export.csv${searchParams.toString() ? '?' + searchParams.toString() : ''}`,
+          url: `audit_logs/export.${format}${searchParams.toString() ? '?' + searchParams.toString() : ''}`,
           responseHandler: (response: Response) => response.blob(),
         };
       },
