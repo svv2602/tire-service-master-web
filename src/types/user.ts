@@ -15,6 +15,21 @@ export interface User {
   created_at: string;
   updated_at: string;
   client_id?: number;
+  
+  // Связанные сущности для ролей
+  partner?: {
+    id: number;
+    name: string;
+  };
+  operator?: {
+    id: number;
+    access_level: number;
+    service_point_ids?: number[];
+  };
+  client?: {
+    id: number;
+    preferred_notification_method?: string;
+  };
 }
 
 export interface UserFormData {

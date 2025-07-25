@@ -69,6 +69,8 @@ import {
   Telegram as TelegramIcon,
   SmartToy as BotIcon,
   Google as GoogleIcon,
+  Security as SecurityIcon,
+  Block as BlockIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -305,6 +307,13 @@ const MainLayout: React.FC = () => {
             roles: [UserRole.ADMIN, UserRole.MANAGER],
             description: t('navigation.descriptions.clients'),
           },
+          {
+            text: t('navigation.operators'),
+            icon: <PeopleIcon />,
+            path: '/admin/operators',
+            roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.PARTNER],
+            description: t('navigation.descriptions.operators'),
+          },
         ],
       },
       {
@@ -502,6 +511,25 @@ const MainLayout: React.FC = () => {
             path: '/admin/services',
             roles: [UserRole.ADMIN],
             description: t('navigation.descriptions.services'),
+          },
+        ],
+      },
+      {
+        title: t('navigation.sections.security'),
+        items: [
+          {
+            text: t('navigation.auditLogs'),
+            icon: <SecurityIcon />,
+            path: '/admin/audit-logs',
+            roles: [UserRole.ADMIN, UserRole.MANAGER],
+            description: t('navigation.descriptions.auditLogs'),
+          },
+          {
+            text: t('navigation.userSuspensions'),
+            icon: <BlockIcon />,
+            path: '/admin/users/suspensions',
+            roles: [UserRole.ADMIN, UserRole.MANAGER],
+            description: t('navigation.descriptions.userSuspensions'),
           },
         ],
       },
