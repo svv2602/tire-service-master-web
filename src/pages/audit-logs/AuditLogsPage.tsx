@@ -26,13 +26,13 @@ import {
   type AuditLog,
   type AuditLogsQueryParams,
 } from '../../api/auditLogs.api';
-import { PageTable } from '../../components/PageTable';
-import type { Column } from '../../components/PageTable';
+import { PageTable } from '../../components/common/PageTable';
+import type { Column } from '../../components/common/PageTable';
 import { AuditLogFilters } from './components/AuditLogFilters';
 import { AuditLogDetailModal } from './components/AuditLogDetailModal';
 import { AuditStatsModal } from './components/AuditStatsModal';
 import { useDebounce } from '../../hooks/useDebounce';
-import { getTablePageStyles } from '../../styles/tablePageStyles';
+import { getTablePageStyles } from '../../styles';
 import { useTheme } from '@mui/material/styles';
 
 const AuditLogsPage: React.FC = () => {
@@ -359,6 +359,13 @@ const AuditLogsPage: React.FC = () => {
         </Grid>
       )}
 
+      {/* Фильтры */}
+      <AuditLogFilters
+        filters={filters}
+        onFiltersChange={handleFiltersChange}
+        appliedFiltersCount={Object.keys(meta.filters_applied).length}
+      />
+
       {/* Основная таблица */}
       <PageTable<AuditLog>
         header={headerConfig}
@@ -367,13 +374,6 @@ const AuditLogsPage: React.FC = () => {
         loading={isLoading}
         pagination={paginationConfig}
         responsive={true}
-        customFilters={
-          <AuditLogFilters
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-            appliedFiltersCount={Object.keys(meta.filters_applied).length}
-          />
-        }
         empty={
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <Typography variant="body1" color="text.secondary">

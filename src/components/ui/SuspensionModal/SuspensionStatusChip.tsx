@@ -6,7 +6,7 @@ import { useGetSuspensionInfoQuery, type SuspensionInfo } from '../../../api/use
 
 interface SuspensionStatusChipProps {
   userId: number;
-  variant?: 'default' | 'outlined';
+  variant?: 'filled' | 'outlined';
   size?: 'small' | 'medium';
   showTooltip?: boolean;
   onClick?: () => void;
@@ -14,7 +14,7 @@ interface SuspensionStatusChipProps {
 
 export const SuspensionStatusChip: React.FC<SuspensionStatusChipProps> = ({
   userId,
-  variant = 'default',
+  variant = 'filled',
   size = 'small',
   showTooltip = true,
   onClick,
