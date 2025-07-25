@@ -86,6 +86,9 @@ const UserForm = lazy(() => import('./pages/users/UserForm'));
 
 // Ленивая загрузка страниц аудита
 const AuditLogsPage = lazy(() => import('./pages/audit-logs/AuditLogsPage'));
+const SuspiciousActivityPage = lazy(() => import('./pages/audit-logs/SuspiciousActivityPage'));
+const UserTimelinePage = lazy(() => import('./pages/audit-logs/UserTimelinePage'));
+const ResourceHistoryPage = lazy(() => import('./pages/audit-logs/ResourceHistoryPage'));
 
 // Ленивая загрузка страниц регионов и городов
 const RegionsPage = lazy(() => import('./pages/regions/RegionsPage'));
@@ -274,6 +277,9 @@ const App: React.FC = () => {
                         
                         {/* Аудит системы */}
                         <Route path="audit-logs" element={<AuditLogsPage />} />
+                        <Route path="audit-logs/suspicious-activity" element={<SuspiciousActivityPage />} />
+                        <Route path="audit-logs/user-timeline/:userId" element={<UserTimelinePage />} />
+                        <Route path="audit-logs/resource-history/:resourceType/:resourceId" element={<ResourceHistoryPage />} />
                         
                         {/* Управление клиентами */}
                         <Route path="clients" element={<ClientsPage />} />

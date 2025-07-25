@@ -16,6 +16,8 @@ import {
   Download as DownloadIcon,
   Assessment as StatsIcon,
   Refresh as RefreshIcon,
+  Security as SecurityIcon,
+  Timeline as TimelineIcon,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -156,6 +158,13 @@ const AuditLogsPage: React.FC = () => {
         icon: <RefreshIcon />,
         onClick: refetch,
         variant: 'outlined' as const,
+      },
+      {
+        label: 'Подозрительная активность',
+        icon: <SecurityIcon />,
+        onClick: () => window.open('/admin/audit-logs/suspicious-activity', '_blank'),
+        variant: 'outlined' as const,
+        color: 'warning' as const,
       },
       {
         label: 'Статистика',

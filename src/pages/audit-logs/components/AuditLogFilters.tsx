@@ -28,6 +28,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ru } from 'date-fns/locale';
 import { format } from 'date-fns';
 import type { AuditLogsQueryParams } from '../../../api/auditLogs.api';
+import { AutocompleteSearchField } from './AutocompleteSearchField';
 
 interface AuditLogFiltersProps {
   filters: AuditLogsQueryParams;
@@ -139,48 +140,34 @@ export const AuditLogFilters: React.FC<AuditLogFiltersProps> = ({
           <Box mt={2}>
             <Grid container spacing={2} alignItems="center">
               <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  fullWidth
-                  size="small"
+                <AutocompleteSearchField
+                  field="user_email"
                   label="Email пользователя"
                   placeholder="user@example.com"
                   value={localFilters.user_email || ''}
-                  onChange={(e) => handleLocalFilterChange('user_email', e.target.value)}
+                  onChange={(value) => handleLocalFilterChange('user_email', value)}
+                  helperText="Минимум 2 символа для автокомплита"
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Действие</InputLabel>
-                  <Select
-                    value={localFilters.action || ''}
-                    label="Действие"
-                    onChange={(e) => handleLocalFilterChange('action', e.target.value)}
-                  >
-                    <MenuItem value="">Все действия</MenuItem>
-                    {ACTION_OPTIONS.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <AutocompleteSearchField
+                  field="action"
+                  label="Действие"
+                  placeholder="Введите действие"
+                  value={localFilters.action || ''}
+                  onChange={(value) => handleLocalFilterChange('action', value)}
+                  helperText="Поиск по действиям"
+                />
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Тип ресурса</InputLabel>
-                  <Select
-                    value={localFilters.resource_type || ''}
-                    label="Тип ресурса"
-                    onChange={(e) => handleLocalFilterChange('resource_type', e.target.value)}
-                  >
-                    <MenuItem value="">Все ресурсы</MenuItem>
-                    {RESOURCE_TYPE_OPTIONS.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <AutocompleteSearchField
+                  field="resource_type"
+                  label="Тип ресурса"
+                  placeholder="Введите тип ресурса"
+                  value={localFilters.resource_type || ''}
+                  onChange={(value) => handleLocalFilterChange('resource_type', value)}
+                  helperText="Поиск по типам ресурсов"
+                />
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
                 <Button
@@ -253,13 +240,13 @@ export const AuditLogFilters: React.FC<AuditLogFiltersProps> = ({
                   />
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-                  <TextField
-                    fullWidth
-                    size="small"
+                  <AutocompleteSearchField
+                    field="ip_address"
                     label="IP адрес"
                     placeholder="192.168.1.1"
                     value={localFilters.ip_address || ''}
-                    onChange={(e) => handleLocalFilterChange('ip_address', e.target.value)}
+                    onChange={(value) => handleLocalFilterChange('ip_address', value)}
+                    helperText="Поиск по IP адресам"
                   />
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>

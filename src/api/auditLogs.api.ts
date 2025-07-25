@@ -82,6 +82,118 @@ export interface AuditStatsResponse {
   generated_at: string;
 }
 
+// Новые типы для расширенного API
+export interface AutocompleteResponse {
+  field: string;
+  query: string;
+  suggestions: string[];
+}
+
+export interface SuspiciousActivityResponse {
+  period: {
+    days: number;
+    from: string;
+    to: string;
+  };
+  suspicious_activity: {
+    frequent_failed_logins: Array<{
+      ip_address: string;
+      hour: string;
+      failed_attempts: number;
+      severity: 'high' | 'medium';
+    }>;
+    multiple_ip_logins: Array<{
+      user_id: number;
+      user_email: string;
+      date: string;
+      unique_ips: number;
+      severity: 'high' | 'medium';
+    }>;
+    bulk_data_changes: Array<{
+      user_id: number;
+      user_email: string;
+      hour: string;
+      changes_count: number;
+      severity: 'high' | 'medium';
+    }>;
+    suspicious_ips: Array<{
+      ip_address: string;
+      total_requests: number;
+      unique_users: number;
+      severity: 'high' | 'medium';
+    }>;
+    off_hours_activity: Array<{
+      user_id: number;
+      user_email: string;
+      off_hours_activity: number;
+      severity: 'high' | 'medium';
+    }>;
+    unusual_access_patterns: Array<{
+      user_id: number;
+      user_email: string;
+      resource_type: string;
+      recent_access_count: number;
+      pattern: string;
+      severity: 'high' | 'medium';
+    }>;
+  };
+  generated_at: string;
+}
+
+export interface UserTimelineResponse {
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  };
+  period: {
+    days: number;
+    from: string;
+    to: string;
+  };
+  timeline: Record<string, Array<{
+    id: number;
+    time: string;
+    date: string;
+    action: string;
+    resource: string;
+    ip_address: string | null;
+    details: {
+      resource_type: string | null;
+      resource_id: number | null;
+      changes: any;
+    };
+  }>>;
+  total_events: number;
+}
+
+export interface ResourceHistoryResponse {
+  resource: {
+    type: string;
+    id: string;
+    name: string;
+    status: string;
+    exists: boolean;
+    error?: string;
+  };
+  history: AuditLogDetailed[];
+  total_changes: number;
+}
+
+export interface ManualLogRequest {
+  action?: string;
+  resource_type?: string;
+  resource_id?: string;
+  description?: string;
+  additional_data?: any;
+}
+
+export interface ManualLogResponse {
+  message: string;
+  status: string;
+}
+
 export const auditLogsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getAuditLogs: builder.query<AuditLogsResponse, AuditLogsQueryParams>({
@@ -135,6 +247,40 @@ export const auditLogsApi = baseApi.injectEndpoints({
         };
       },
     }),
+
+    // Новые endpoints для расширенного API
+    getSearchAutocomplete: builder.query<AutocompleteResponse, { field: string; query: string }>({
+      query: ({ field, query }) => `audit_logs/search_autocomplete?field=${field}&query=${encodeURIComponent(query)}`,
+      keepUnusedDataFor: 60, // Кэшируем автокомплит на 1 минуту
+    }),
+
+    getSuspiciousActivity: builder.query<SuspiciousActivityResponse, { days?: number }>({
+      query: ({ days = 7 } = {}) => `audit_logs/suspicious_activity?days=${days}`,
+      providesTags: ['AuditLog'],
+    }),
+
+    getUserTimeline: builder.query<UserTimelineResponse, { userId: number; days?: number }>({
+      query: ({ userId, days = 30 }) => `audit_logs/user_timeline/${userId}?days=${days}`,
+      providesTags: (result, error, { userId }) => [
+        { type: 'AuditLog', id: `timeline-${userId}` },
+      ],
+    }),
+
+    getResourceHistory: builder.query<ResourceHistoryResponse, { resourceType: string; resourceId: string }>({
+      query: ({ resourceType, resourceId }) => `audit_logs/resource_history/${resourceType}/${resourceId}`,
+      providesTags: (result, error, { resourceType, resourceId }) => [
+        { type: 'AuditLog', id: `history-${resourceType}-${resourceId}` },
+      ],
+    }),
+
+    createManualLog: builder.mutation<ManualLogResponse, ManualLogRequest>({
+      query: (data) => ({
+        url: 'audit_logs/manual_log',
+        method: 'POST',
+        body: { log: data },
+      }),
+      invalidatesTags: ['AuditLog'],
+    }),
   }),
 });
 
@@ -143,4 +289,11 @@ export const {
   useGetAuditLogDetailQuery,
   useGetAuditStatsQuery,
   useLazyExportAuditLogsQuery,
+  // Новые хуки для расширенного API
+  useGetSearchAutocompleteQuery,
+  useLazyGetSearchAutocompleteQuery,
+  useGetSuspiciousActivityQuery,
+  useGetUserTimelineQuery,
+  useGetResourceHistoryQuery,
+  useCreateManualLogMutation,
 } = auditLogsApi; 
