@@ -16,6 +16,7 @@ import { useGetClientByIdQuery, useCreateClientMutation, useUpdateClientMutation
 import { ClientFormData, ClientUpdateData, ClientCreateData } from '../../types/client';
 import { clientToFormData } from '../../utils/clientExtensions';
 import { phoneValidation } from '../../utils/validation';
+import { extractErrorMessage } from '../../utils/errorUtils';
 
 // Импорты UI компонентов
 import {

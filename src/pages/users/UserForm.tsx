@@ -34,6 +34,7 @@ import {
 import { UserFormData } from '../../types/user';
 import { PhoneField } from '../../components/ui/PhoneField';
 import { phoneValidation } from '../../utils/validation';
+import { extractErrorMessage } from '../../utils/errorUtils';
 
 // Импорт централизованной системы стилей
 import { getCardStyles, getButtonStyles, getTextFieldStyles, SIZES, getTablePageStyles } from '../../styles';
