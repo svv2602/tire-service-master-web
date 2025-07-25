@@ -59,6 +59,47 @@
         "statusError": "Помилка при зміні статусу клієнта",
         "deleteError": "Помилка при видаленні клієнта"
       },
+      "form": {
+        "title": {
+          "create": "Новий клієнт",
+          "edit": "Редагувати клієнта"
+        },
+        "fields": {
+          "firstNameRequired": "Ім'я *",
+          "lastNameRequired": "Прізвище *",
+          "middleName": "По батькові",
+          "email": "Email",
+          "emailPlaceholder": "example@email.com (необов'язково)",
+          "phone": "Телефон *",
+          "activeClient": "Активний клієнт"
+        },
+        "validation": {
+          "firstNameRequired": "Ім'я обов'язкове",
+          "firstNameMin": "Ім'я повинно містити мінімум 2 символи",
+          "lastNameRequired": "Прізвище обов'язкове",
+          "lastNameMin": "Прізвище повинно містити мінімум 2 символи",
+          "emailInvalid": "Некоректна email адреса"
+        },
+        "requiredFields": {
+          "firstName": "Ім'я",
+          "lastName": "Прізвище",
+          "phone": "Телефон"
+        },
+        "alerts": {
+          "fillRequiredFields": "Заповніть всі обов'язкові поля:",
+          "allFieldsFilled": "Всі поля заповнені коректно",
+          "unknownError": "Сталася невідома помилка"
+        },
+        "buttons": {
+          "cancel": "Скасування",
+          "save": "Зберегти",
+          "create": "Створити"
+        },
+        "messages": {
+          "clientUpdated": "Клієнт успішно оновлений",
+          "clientCreated": "Клієнт успішно створений"
+        }
+      },
       "carsManagement": {
         "pageTitle": "Автомобілі клієнта {{name}}",
         "addCar": "Додати автомобіль",

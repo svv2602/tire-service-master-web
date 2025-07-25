@@ -59,6 +59,47 @@
         "statusError": "Ошибка при изменении статуса клиента",
         "deleteError": "Ошибка при удалении клиента"
       },
+      "form": {
+        "title": {
+          "create": "Новый клиент",
+          "edit": "Редактировать клиента"
+        },
+        "fields": {
+          "firstNameRequired": "Имя *",
+          "lastNameRequired": "Фамилия *",
+          "middleName": "Отчество",
+          "email": "Email",
+          "emailPlaceholder": "example@email.com (необязательно)",
+          "phone": "Телефон *",
+          "activeClient": "Активный клиент"
+        },
+        "validation": {
+          "firstNameRequired": "Имя обязательно",
+          "firstNameMin": "Имя должно содержать минимум 2 символа",
+          "lastNameRequired": "Фамилия обязательна",
+          "lastNameMin": "Фамилия должна содержать минимум 2 символа",
+          "emailInvalid": "Некорректный email адрес"
+        },
+        "requiredFields": {
+          "firstName": "Имя",
+          "lastName": "Фамилия", 
+          "phone": "Телефон"
+        },
+        "alerts": {
+          "fillRequiredFields": "Заполните все обязательные поля:",
+          "allFieldsFilled": "Все поля заполнены корректно",
+          "unknownError": "Произошла неизвестная ошибка"
+        },
+        "buttons": {
+          "cancel": "Отмена",
+          "save": "Сохранить",
+          "create": "Создать"
+        },
+        "messages": {
+          "clientUpdated": "Клиент успешно обновлен",
+          "clientCreated": "Клиент успешно создан"
+        }
+      },
       "carsManagement": {
         "pageTitle": "Автомобили клиента {{name}}",
         "addCar": "Добавить автомобиль",
