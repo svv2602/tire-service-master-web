@@ -7,7 +7,7 @@ export interface User {
   first_name: string;
   last_name: string;
   middle_name?: string;
-  role: UserRole;
+  role: string;
   role_id: number;
   is_active: boolean;
   email_verified: boolean;
@@ -15,6 +15,14 @@ export interface User {
   created_at: string;
   updated_at: string;
   client_id?: number;
+  
+  // Поля блокировки
+  is_suspended?: boolean;
+  suspension_reason?: string;
+  suspended_at?: string;
+  suspended_until?: string;
+  suspended_by_name?: string;
+  full_name?: string;
   
   // Связанные сущности для ролей
   partner?: {

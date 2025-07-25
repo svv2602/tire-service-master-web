@@ -79,6 +79,7 @@ const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'));
 
 // Ленивая загрузка страниц пользователей
 const UsersPage = lazy(() => import('./pages/users/UsersPage'));
+const UserSuspensionsPage = lazy(() => import('./pages/users/UserSuspensionsPage'));
 
 // Ленивая загрузка страниц операторов
 const OperatorsPage = lazy(() => import('./pages/operators/OperatorsPage'));
@@ -269,6 +270,7 @@ const App: React.FC = () => {
                         
                         {/* Управление пользователями */}
                         <Route path="users" element={<UsersPage />} />
+                <Route path="users/suspensions" element={<UserSuspensionsPage />} />
                         <Route path="users/new" element={<UserForm />} />
                         <Route path="users/:id/edit" element={<UserForm />} />
                         

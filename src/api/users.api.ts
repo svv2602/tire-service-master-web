@@ -9,12 +9,21 @@ export interface ApiUser {
   first_name: string;
   last_name: string;
   middle_name?: string;
+  role: string;
   role_id: number;
   is_active: boolean;
   email_verified: boolean;
   phone_verified: boolean;
   created_at: string;
   updated_at: string;
+  
+  // Поля блокировки
+  is_suspended?: boolean;
+  suspension_reason?: string;
+  suspended_at?: string;
+  suspended_until?: string;
+  suspended_by_name?: string;
+  full_name?: string;
 }
 
 // Интерфейс для ответа API (как приходит с бэкенда)
@@ -43,9 +52,11 @@ export interface UsersResponse {
 export interface UsersQueryParams {
   page?: number;
   per_page?: number;
+  search?: string;
   query?: string;
   role?: string;
   active?: boolean;
+  is_suspended?: boolean;
 }
 
 // Типы для управления блокировкой пользователей
@@ -79,9 +90,11 @@ export const usersApi = baseApi.injectEndpoints({
         params: {
           page: params.page || 1,
           per_page: params.per_page || 25,
+          ...(params.search && { search: params.search }),
           ...(params.query && { query: params.query }),
           ...(params.role && { role: params.role }),
-          ...(params.active !== undefined && { active: params.active })
+          ...(params.active !== undefined && { active: params.active }),
+          ...(params.is_suspended !== undefined && { is_suspended: params.is_suspended })
         },
       }),
       transformResponse: (response: ApiUsersResponse): UsersResponse => ({
@@ -92,13 +105,19 @@ export const usersApi = baseApi.injectEndpoints({
           first_name: user.first_name,
           last_name: user.last_name,
           middle_name: user.middle_name || '',
-          role: getRoleFromId(user.role_id),
+          role: user.role,
           role_id: user.role_id,
           is_active: user.is_active,
           email_verified: user.email_verified,
           phone_verified: user.phone_verified,
           created_at: user.created_at,
           updated_at: user.updated_at,
+          is_suspended: user.is_suspended,
+          suspension_reason: user.suspension_reason,
+          suspended_at: user.suspended_at,
+          suspended_until: user.suspended_until,
+          suspended_by_name: user.suspended_by_name,
+          full_name: user.full_name || `${user.first_name} ${user.last_name}`,
         })),
         pagination: response.pagination,
         totalItems: response.pagination.total_count,

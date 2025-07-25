@@ -144,11 +144,11 @@ export const UsersPage: React.FC = () => {
   // Мемоизированные вспомогательные функции
   const getRoleName = useCallback((role: string): string => {    
     switch(role) {
-      case 'admin': return t('forms.user.roles.admin');
-      case 'manager': return t('forms.user.roles.manager');
-      case 'partner': return t('forms.user.roles.partner');
-      case 'operator': return t('forms.user.roles.operator');
-      case 'client': return t('forms.user.roles.client');
+      case 'admin': return t('admin.users.roles.admin');
+      case 'manager': return t('admin.users.roles.manager');
+      case 'partner': return t('admin.users.roles.partner');
+      case 'operator': return t('admin.users.roles.operator');
+      case 'client': return t('admin.users.roles.client');
       default: return t('common.unknown');
     }
   }, [t]);
@@ -311,11 +311,11 @@ export const UsersPage: React.FC = () => {
     },
     {
       id: 'manage-suspension',
-      label: 'Управление блокировкой',
+      label: t('admin.users.manageSuspension.label'),
       icon: <PersonIcon />,
       onClick: (user: User) => setSuspensionModal({ open: true, user }),
       color: 'warning',
-      tooltip: 'Заблокировать или разблокировать пользователя'
+      tooltip: t('admin.users.manageSuspension.tooltip')
     }
   ], [handleEdit, handleDeactivate, handleToggleStatus, navigate, t]);
 

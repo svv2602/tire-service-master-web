@@ -407,11 +407,11 @@ const MainLayout: React.FC = () => {
             description: t('navigation.descriptions.analyticsReports'),
           },
           {
-            text: 'Конфликты бронирований',
+            text: t('navigation.bookingConflicts'),
             icon: <ReportIcon />,
             path: '/admin/booking-conflicts',
             roles: [UserRole.ADMIN, UserRole.PARTNER],
-            description: 'Управление конфликтами бронирований',
+            description: t('navigation.descriptions.bookingConflicts'),
           },
           {
             text: t('navigation.myBookings'),
@@ -438,11 +438,11 @@ const MainLayout: React.FC = () => {
         title: t('navigation.sections.notificationManagement'),
         items: [
           {
-            text: 'Шаблоны уведомлений',
+            text: t('navigation.notificationTemplates'),
             icon: <EmailIcon />,
             path: '/admin/notifications/templates',
             roles: [UserRole.ADMIN],
-            description: 'Управление всеми шаблонами уведомлений (Email, Telegram, Push)',
+            description: t('navigation.descriptions.notificationTemplates'),
           },
           {
             text: t('navigation.customVariables'),
@@ -473,18 +473,18 @@ const MainLayout: React.FC = () => {
             description: t('navigation.descriptions.channelSettings'),
           },
           {
-            text: '📧 Настройки почты',
+            text: t('navigation.emailSettings'),
             icon: <EmailIcon />,
             path: '/admin/notifications/email',
             roles: [UserRole.ADMIN],
-            description: 'Управление SMTP сервером и настройками email уведомлений',
+            description: t('navigation.descriptions.emailSettings'),
           },
           {
-            text: '🔑 Google OAuth',
+            text: t('navigation.googleOAuth'),
             icon: <GoogleIcon />,
             path: '/admin/notifications/google-oauth',
             roles: [UserRole.ADMIN],
-            description: 'Настройка интеграции с Google OAuth для входа через Google аккаунты',
+            description: t('navigation.descriptions.googleOAuth'),
           },
         ],
       },
@@ -569,8 +569,9 @@ const MainLayout: React.FC = () => {
       return [];
     }
 
-    // Получаем роль пользователя
-    const userRole = (user as User).role;
+    // Получаем роль пользователя и приводим к enum
+    const userRoleString = (user as User).role;
+    const userRole = userRoleString as UserRole;
     console.log('Роль пользователя:', userRole);
     
     // Получаем все секции меню

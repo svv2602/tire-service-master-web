@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogTitle,
@@ -39,35 +40,37 @@ interface SuspensionModalProps {
 
 type SuspensionDuration = 'custom' | '1day' | '3days' | '1week' | '2weeks' | '1month' | 'permanent';
 
-const DURATION_OPTIONS: Array<{ value: SuspensionDuration; label: string; days?: number }> = [
-  { value: '1day', label: '1 день', days: 1 },
-  { value: '3days', label: '3 дня', days: 3 },
-  { value: '1week', label: '1 неделя', days: 7 },
-  { value: '2weeks', label: '2 недели', days: 14 },
-  { value: '1month', label: '1 месяц', days: 30 },
-  { value: 'permanent', label: 'Постоянно' },
-  { value: 'custom', label: 'Выбрать дату' },
-];
-
-const COMMON_REASONS = [
-  'Нарушение правил использования',
-  'Спам или неподобающее поведение',
-  'Подозрительная активность',
-  'Запрос пользователя',
-  'Технические причины',
-  'Другое',
-];
-
 export const SuspensionModal: React.FC<SuspensionModalProps> = ({
   open,
   onClose,
   user,
   onSuccess,
 }) => {
+  const { t } = useTranslation();
   const [reason, setReason] = useState('');
   const [duration, setDuration] = useState<SuspensionDuration>('1week');
   const [customDate, setCustomDate] = useState<Date | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
+
+  // Переводы для длительности и причин
+  const getDurationOptions = () => [
+    { value: '1day', label: t('admin.users.suspensionModal.durations.1day'), days: 1 },
+    { value: '3days', label: t('admin.users.suspensionModal.durations.3days'), days: 3 },
+    { value: '1week', label: t('admin.users.suspensionModal.durations.1week'), days: 7 },
+    { value: '2weeks', label: t('admin.users.suspensionModal.durations.2weeks'), days: 14 },
+    { value: '1month', label: t('admin.users.suspensionModal.durations.1month'), days: 30 },
+    { value: 'permanent', label: t('admin.users.suspensionModal.durations.permanent') },
+    { value: 'custom', label: t('admin.users.suspensionModal.durations.custom') },
+  ];
+
+  const getCommonReasons = () => [
+    t('admin.users.suspensionModal.commonReasons.rulesViolation'),
+    t('admin.users.suspensionModal.commonReasons.spam'),
+    t('admin.users.suspensionModal.commonReasons.suspicious'),
+    t('admin.users.suspensionModal.commonReasons.userRequest'),
+    t('admin.users.suspensionModal.commonReasons.technical'),
+    t('admin.users.suspensionModal.commonReasons.other'),
+  ];
 
   // API хуки
   const [suspendUser, { isLoading: isSuspending }] = useSuspendUserMutation();
@@ -99,15 +102,15 @@ export const SuspensionModal: React.FC<SuspensionModalProps> = ({
 
     if (!isCurrentlySuspended) {
       if (!reason.trim()) {
-        newErrors.push('Причина блокировки обязательна');
+        newErrors.push(t('admin.users.suspensionModal.validation.reasonRequired'));
       }
 
       if (duration === 'custom' && !customDate) {
-        newErrors.push('Выберите дату окончания блокировки');
+        newErrors.push(t('admin.users.suspensionModal.validation.dateRequired'));
       }
 
       if (duration === 'custom' && customDate && customDate <= new Date()) {
-        newErrors.push('Дата окончания должна быть в будущем');
+        newErrors.push(t('admin.users.suspensionModal.validation.dateFuture'));
       }
     }
 
@@ -124,7 +127,7 @@ export const SuspensionModal: React.FC<SuspensionModalProps> = ({
       return customDate ? customDate.toISOString() : undefined;
     }
 
-    const option = DURATION_OPTIONS.find(opt => opt.value === duration);
+    const option = getDurationOptions().find(opt => opt.value === duration);
     if (option?.days) {
       return addDays(new Date(), option.days).toISOString();
     }
@@ -149,7 +152,7 @@ export const SuspensionModal: React.FC<SuspensionModalProps> = ({
       onSuccess?.('suspend', user);
       onClose();
     } catch (error: any) {
-      setErrors([error?.data?.message || 'Ошибка при блокировке пользователя']);
+      setErrors([error?.data?.message || t('admin.users.suspensionModal.errors.suspend')]);
     }
   };
 
@@ -161,7 +164,7 @@ export const SuspensionModal: React.FC<SuspensionModalProps> = ({
       onSuccess?.('unsuspend', user);
       onClose();
     } catch (error: any) {
-      setErrors([error?.data?.message || 'Ошибка при разблокировке пользователя']);
+      setErrors([error?.data?.message || t('admin.users.suspensionModal.errors.unsuspend')]);
     }
   };
 
@@ -170,7 +173,7 @@ export const SuspensionModal: React.FC<SuspensionModalProps> = ({
   };
 
   const formatSuspensionInfo = (info: SuspensionInfo) => {
-    const suspendedAt = info.suspended_at ? format(new Date(info.suspended_at), 'dd.MM.yyyy HH:mm', { locale: ru }) : 'Неизвестно';
+    const suspendedAt = info.suspended_at ? format(new Date(info.suspended_at), 'dd.MM.yyyy HH:mm', { locale: ru }) : t('admin.users.suspensionModal.errors.unknown');
     const suspendedUntil = info.suspended_until ? format(new Date(info.suspended_until), 'dd.MM.yyyy HH:mm', { locale: ru }) : null;
     
     return {
@@ -178,8 +181,8 @@ export const SuspensionModal: React.FC<SuspensionModalProps> = ({
       suspendedUntil,
       isPermanent: info.is_permanent,
       daysRemaining: info.days_remaining,
-      suspendedBy: info.suspended_by || 'Неизвестно',
-      reason: info.reason || 'Причина не указана',
+      suspendedBy: info.suspended_by || t('admin.users.suspensionModal.errors.unknown'),
+      reason: info.reason || t('admin.users.suspensionModal.errors.noReason'),
     };
   };
 
@@ -200,9 +203,13 @@ export const SuspensionModal: React.FC<SuspensionModalProps> = ({
       >
         <DialogTitle>
           <Box display="flex" alignItems="center" gap={2}>
-            {isCurrentlySuspended ? '🔓 Разблокировка пользователя' : '🔒 Блокировка пользователя'}
+            {isCurrentlySuspended 
+              ? t('admin.users.suspensionModal.titles.unsuspend') 
+              : t('admin.users.suspensionModal.titles.suspend')}
             <Chip 
-              label={isCurrentlySuspended ? 'Заблокирован' : 'Активен'} 
+              label={isCurrentlySuspended 
+                ? t('admin.users.suspensionModal.status.suspended') 
+                : t('admin.users.suspensionModal.status.active')} 
               color={isCurrentlySuspended ? 'error' : 'success'}
               size="small"
             />
@@ -234,27 +241,27 @@ export const SuspensionModal: React.FC<SuspensionModalProps> = ({
               {isCurrentlySuspended && suspensionInfo && (
                 <Alert severity="warning" sx={{ mb: 3 }}>
                   <Typography variant="body2" fontWeight="bold" gutterBottom>
-                    Пользователь заблокирован
+                    {t('admin.users.suspensionModal.currentSuspension.title')}
                   </Typography>
                   {(() => {
                     const info = formatSuspensionInfo(suspensionInfo);
                     return (
                       <Box>
                         <Typography variant="body2">
-                          <strong>Причина:</strong> {info.reason}
+                          <strong>{t('admin.users.suspensionModal.currentSuspension.reason')}</strong> {info.reason}
                         </Typography>
                         <Typography variant="body2">
-                          <strong>Заблокирован:</strong> {info.suspendedAt} пользователем {info.suspendedBy}
+                          <strong>{t('admin.users.suspensionModal.currentSuspension.suspendedAt')}</strong> {info.suspendedAt} {t('admin.users.suspensionModal.currentSuspension.suspendedBy')} {info.suspendedBy}
                         </Typography>
                         {info.isPermanent ? (
                           <Typography variant="body2">
-                            <strong>Срок:</strong> Постоянная блокировка
+                            <strong>{t('admin.users.suspensionModal.currentSuspension.duration')}</strong> {t('admin.users.suspensionModal.currentSuspension.permanent')}
                           </Typography>
                         ) : info.suspendedUntil ? (
                           <Typography variant="body2">
-                            <strong>До:</strong> {info.suspendedUntil}
+                            <strong>{t('admin.users.suspensionModal.currentSuspension.until')}</strong> {info.suspendedUntil}
                             {info.daysRemaining !== undefined && info.daysRemaining > 0 && (
-                              <span> (осталось {info.daysRemaining} дн.)</span>
+                              <span> ({t('admin.users.suspensionModal.currentSuspension.remaining', { days: info.daysRemaining })})</span>
                             )}
                           </Typography>
                         ) : null}
@@ -270,16 +277,16 @@ export const SuspensionModal: React.FC<SuspensionModalProps> = ({
                   {/* Причина блокировки */}
                   <Box mb={3}>
                     <Typography variant="body1" fontWeight="bold" gutterBottom>
-                      Причина блокировки *
+                      {t('admin.users.suspensionModal.form.reasonLabel')}
                     </Typography>
                     
                     {/* Быстрые причины */}
                     <Box mb={2}>
                       <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Выберите готовую причину или введите свою:
+                        {t('admin.users.suspensionModal.form.reasonHelper')}
                       </Typography>
                       <Box display="flex" flexWrap="wrap" gap={1}>
-                        {COMMON_REASONS.map((commonReason) => (
+                        {getCommonReasons().map((commonReason) => (
                           <Chip
                             key={commonReason}
                             label={commonReason}
@@ -299,9 +306,9 @@ export const SuspensionModal: React.FC<SuspensionModalProps> = ({
                       rows={3}
                       value={reason}
                       onChange={(e) => setReason(e.target.value)}
-                      placeholder="Укажите причину блокировки пользователя..."
+                      placeholder={t('admin.users.suspensionModal.form.reasonPlaceholder')}
                       variant="outlined"
-                      error={errors.some(err => err.includes('Причина'))}
+                      error={errors.some(err => err.includes(t('admin.users.suspensionModal.validation.reasonRequired')))}
                     />
                   </Box>
 
@@ -310,14 +317,14 @@ export const SuspensionModal: React.FC<SuspensionModalProps> = ({
                     <FormControl component="fieldset">
                       <FormLabel component="legend">
                         <Typography variant="body1" fontWeight="bold">
-                          Срок блокировки
+                          {t('admin.users.suspensionModal.form.durationLabel')}
                         </Typography>
                       </FormLabel>
                       <RadioGroup
                         value={duration}
                         onChange={(e) => setDuration(e.target.value as SuspensionDuration)}
                       >
-                        {DURATION_OPTIONS.map((option) => (
+                        {getDurationOptions().map((option) => (
                           <FormControlLabel
                             key={option.value}
                             value={option.value}
@@ -332,14 +339,14 @@ export const SuspensionModal: React.FC<SuspensionModalProps> = ({
                     {duration === 'custom' && (
                       <Box mt={2}>
                         <DatePicker
-                          label="Дата окончания блокировки"
+                          label={t('admin.users.suspensionModal.form.customDateLabel')}
                           value={customDate}
                           onChange={(newValue) => setCustomDate(newValue)}
                           minDate={new Date()}
                           slotProps={{
                             textField: {
                               fullWidth: true,
-                              error: errors.some(err => err.includes('дату')),
+                              error: errors.some(err => err.includes(t('admin.users.suspensionModal.validation.dateRequired'))),
                             },
                           }}
                         />
@@ -353,8 +360,7 @@ export const SuspensionModal: React.FC<SuspensionModalProps> = ({
               {isCurrentlySuspended && (
                 <Alert severity="info">
                   <Typography variant="body2">
-                    Вы уверены, что хотите разблокировать этого пользователя? 
-                    После разблокировки пользователь снова получит полный доступ к системе.
+                    {t('admin.users.suspensionModal.unsuspendConfirm.message')}
                   </Typography>
                 </Alert>
               )}
@@ -368,7 +374,7 @@ export const SuspensionModal: React.FC<SuspensionModalProps> = ({
             disabled={isLoading}
             color="inherit"
           >
-            Отмена
+            {t('admin.users.suspensionModal.buttons.cancel')}
           </Button>
           
           {isCurrentlySuspended ? (
@@ -379,7 +385,9 @@ export const SuspensionModal: React.FC<SuspensionModalProps> = ({
               color="success"
               startIcon={isUnsuspending ? <CircularProgress size={16} /> : null}
             >
-              {isUnsuspending ? 'Разблокировка...' : 'Разблокировать'}
+              {isUnsuspending 
+                ? t('admin.users.suspensionModal.buttons.unsuspending') 
+                : t('admin.users.suspensionModal.buttons.unsuspend')}
             </Button>
           ) : (
             <Button
@@ -389,7 +397,9 @@ export const SuspensionModal: React.FC<SuspensionModalProps> = ({
               color="error"
               startIcon={isSuspending ? <CircularProgress size={16} /> : null}
             >
-              {isSuspending ? 'Блокировка...' : 'Заблокировать'}
+              {isSuspending 
+                ? t('admin.users.suspensionModal.buttons.suspending') 
+                : t('admin.users.suspensionModal.buttons.suspend')}
             </Button>
           )}
         </DialogActions>

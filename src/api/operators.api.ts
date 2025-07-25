@@ -5,6 +5,7 @@ export interface OperatorUser {
   id: number;
   first_name: string;
   last_name: string;
+  full_name: string;
   email: string;
   phone: string;
   is_active: boolean;
@@ -12,10 +13,15 @@ export interface OperatorUser {
 
 export interface Operator {
   id: number;
+  partner_id: number;
+  partner_name?: string;
   user: OperatorUser;
-  position: string;
+  position?: string;
   access_level: number;
   is_active: boolean;
+  service_point_ids?: number[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CreateOperatorRequest {
@@ -127,6 +133,35 @@ export interface UpdateAssignmentRequest {
 
 export const operatorsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
+    // Получить всех операторов (для админов)
+    getAllOperators: build.query<{
+      data: Operator[];
+      pagination: {
+        current_page: number;
+        total_pages: number;
+        total_count: number;
+        per_page: number;
+      };
+    }, {
+      page?: number;
+      per_page?: number;
+      search?: string;
+      partner_id?: number;
+      is_active?: boolean;
+    }>({
+      query: (params = {}) => {
+        const searchParams = new URLSearchParams();
+        if (params.page) searchParams.append('page', params.page.toString());
+        if (params.per_page) searchParams.append('per_page', params.per_page.toString());
+        if (params.search) searchParams.append('search', params.search);
+        if (params.partner_id) searchParams.append('partner_id', params.partner_id.toString());
+        if (params.is_active !== undefined) searchParams.append('is_active', params.is_active.toString());
+        
+        return `operators${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+      },
+      providesTags: [{ type: 'Operator', id: 'LIST' }],
+    }),
+    
     getOperatorsByPartner: build.query<Operator[], number>({
       query: (partnerId) => `/partners/${partnerId}/operators`,
       providesTags: (result, error, partnerId) => [
@@ -141,6 +176,7 @@ export const operatorsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, { partnerId }) => [
         { type: 'Partner', id: partnerId },
+        { type: 'Operator', id: 'LIST' },
       ],
     }),
     updateOperator: build.mutation<Operator, { id: number; data: UpdateOperatorRequest }>({
@@ -151,6 +187,7 @@ export const operatorsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, { id }) => [
         { type: 'Partner', id: 'LIST' },
+        { type: 'Operator', id: 'LIST' },
       ],
     }),
     deleteOperator: build.mutation<{ message: string }, { id: number; partnerId: number }>({
@@ -160,6 +197,7 @@ export const operatorsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, { partnerId }) => [
         { type: 'Partner', id: partnerId },
+        { type: 'Operator', id: 'LIST' },
       ],
     }),
 
@@ -235,6 +273,7 @@ export const operatorsApi = baseApi.injectEndpoints({
 });
 
 export const {
+  useGetAllOperatorsQuery,
   useGetOperatorsByPartnerQuery,
   useCreateOperatorMutation,
   useUpdateOperatorMutation,
