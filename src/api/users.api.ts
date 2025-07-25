@@ -48,6 +48,27 @@ export interface UsersQueryParams {
   active?: boolean;
 }
 
+// Типы для управления блокировкой пользователей
+export interface SuspensionInfo {
+  is_suspended: boolean;
+  reason?: string;
+  suspended_at?: string;
+  suspended_until?: string;
+  suspended_by?: string;
+  is_permanent: boolean;
+  days_remaining?: number;
+}
+
+export interface SuspendUserRequest {
+  reason: string;
+  until_date?: string; // ISO date string или пустая строка для постоянной блокировки
+}
+
+export interface SuspensionResponse {
+  data: SuspensionInfo;
+  message: string;
+}
+
 // Функция перенесена в utils/roles.utils.ts
 
 export const usersApi = baseApi.injectEndpoints({
@@ -211,6 +232,37 @@ export const usersApi = baseApi.injectEndpoints({
       }),
       keepUnusedDataFor: 0, // Не кэшируем результаты проверки
     }),
+
+    // API для блокировки пользователей
+    suspendUser: builder.mutation<SuspensionResponse, { userId: number; data: SuspendUserRequest }>({
+      query: ({ userId, data }) => ({
+        url: `users/${userId}/suspend`,
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { userId }) => [
+        { type: 'User', id: userId },
+        { type: 'User', id: 'LIST' },
+      ],
+    }),
+
+    unsuspendUser: builder.mutation<SuspensionResponse, number>({
+      query: (userId) => ({
+        url: `users/${userId}/unsuspend`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: (result, error, userId) => [
+        { type: 'User', id: userId },
+        { type: 'User', id: 'LIST' },
+      ],
+    }),
+
+    getSuspensionInfo: builder.query<{ data: SuspensionInfo }, number>({
+      query: (userId) => `users/${userId}/suspension_info`,
+      providesTags: (result, error, userId) => [
+        { type: 'User', id: userId },
+      ],
+    }),
   }),
 });
 
@@ -221,4 +273,9 @@ export const {
   useUpdateUserMutation,
   useDeleteUserMutation,
   useCheckUserExistsQuery,
+  
+  // Хуки для блокировки пользователей
+  useSuspendUserMutation,
+  useUnsuspendUserMutation,
+  useGetSuspensionInfoQuery,
 } = usersApi;
