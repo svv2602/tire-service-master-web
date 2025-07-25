@@ -82,7 +82,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'default' 
     return (
       <Card 
         component={Link}
-        to={`/knowledge-base/${article.id}`}
+        to={`/knowledge-base/articles/${article.id}`}
         onClick={handleClick}
         sx={{
           ...cardStyles,
@@ -160,7 +160,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'default' 
   return (
     <Card 
       component={Link}
-      to={`/knowledge-base/${article.id}`}
+      to={`/knowledge-base/articles/${article.id}`}
       onClick={handleClick}
       sx={{
         ...cardStyles,

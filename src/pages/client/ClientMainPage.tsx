@@ -334,7 +334,7 @@ const ClientMainPage: React.FC = () => {
                         <Button 
                           size="small" 
                           sx={{ color: theme.palette.primary.main }}
-                          onClick={() => navigate(`/knowledge-base/${article.id}`)}
+                          onClick={() => navigate(`/knowledge-base/articles/${article.id}`)}
                         >
                           {t('forms.clientPages.mainPage.readMore')}
                         </Button>

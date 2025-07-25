@@ -22,7 +22,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'default' 
   if (variant === 'featured') {
     return (
       <Link 
-        to={`/knowledge-base/${article.id}`}
+        to={`/knowledge-base/articles/${article.id}`}
         className="group block"
       >
         <article className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:-translate-y-1">
@@ -103,7 +103,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'default' 
   if (variant === 'compact') {
     return (
       <Link 
-        to={`/knowledge-base/${article.id}`}
+                      to={`/knowledge-base/articles/${article.id}`}
         className="group block mb-4"
       >
         <article className="flex space-x-3">
@@ -149,7 +149,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article, variant = 'default' 
   // Обычный вариант
   return (
     <Link 
-      to={`/knowledge-base/${article.id}`}
+      to={`/knowledge-base/articles/${article.id}`}
       className="group block"
     >
       <article className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-200 transform hover:-translate-y-1">

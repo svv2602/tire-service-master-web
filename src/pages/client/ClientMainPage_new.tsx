@@ -277,7 +277,7 @@ const ClientMainPage: React.FC = () => {
                         <Button 
                           size="small" 
                           sx={{ color: theme.palette.primary.main }}
-                          onClick={() => navigate(`/knowledge-base/${index}`)}
+                          onClick={() => navigate(`/knowledge-base/articles/${index}`)}
                         >
                           Читати далі
                         </Button>
