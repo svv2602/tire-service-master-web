@@ -131,11 +131,33 @@ const MyBookingsPage: React.FC = () => {
   // Определяем client_id из API данных или из Redux
   const clientId = clientFromApi?.client?.id || userFromApi?.user?.client_id || currentUser?.client_id;
   
+  // Отладочная информация
+  console.log('🔍 MyBookingsPage - отладка clientId:', {
+    currentUser,
+    clientFromApi,
+    userFromApi,
+    clientId,
+    isLoadingClient,
+    isLoadingUser,
+    clientError,
+    userError
+  });
+  
   // Запрос на получение записей клиента
   const { data: bookingsData, isLoading, isError, error, refetch } = useGetBookingsByClientQuery(
     clientId ? String(clientId) : '', 
     { skip: !clientId }
   );
+  
+  // Отладочная информация для бронирований
+  console.log('📋 MyBookingsPage - отладка бронирований:', {
+    clientId,
+    bookingsData,
+    isLoading,
+    isError,
+    error,
+    skip: !clientId
+  });
 
   // Обработчик изменения вкладки
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {

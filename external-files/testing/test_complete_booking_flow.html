@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест полного процесса бронирования</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        .step { margin: 10px 0; padding: 10px; background: #f8f9fa; border-left: 4px solid #007bff; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест полного процесса бронирования</h1>
+    <p><strong>Цель:</strong> Проверить весь процесс от создания аккаунта до просмотра бронирований</p>
+
+    <div class="test-section info">
+        <h3>📋 План тестирования:</h3>
+        <ol>
+            <li>✅ Проверка существования пользователя (должен вернуть false)</li>
+            <li>✅ Регистрация нового клиента</li>
+            <li>✅ Создание бронирования</li>
+            <li>✅ Получение списка бронирований клиента</li>
+            <li>✅ Проверка refresh токена</li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h3>🔍 Шаг 1: Проверка существования пользователя</h3>
+        <button onclick="checkUserExists()">Проверить пользователя</button>
+        <div id="checkUserResult"></div>
+    </div>
+
+    <div class="step">
+        <h3>👤 Шаг 2: Регистрация клиента</h3>
+        <button onclick="registerClient()">Зарегистрировать клиента</button>
+        <div id="registerResult"></div>
+    </div>
+
+    <div class="step">
+        <h3>📅 Шаг 3: Создание бронирования</h3>
+        <button onclick="createBooking()">Создать бронирование</button>
+        <div id="bookingResult"></div>
+    </div>
+
+    <div class="step">
+        <h3>📋 Шаг 4: Получение бронирований</h3>
+        <button onclick="getBookings()">Получить бронирования</button>
+        <div id="bookingsResult"></div>
+    </div>
+
+    <div class="step">
+        <h3>🔄 Шаг 5: Тест refresh токена</h3>
+        <button onclick="testRefreshToken()">Проверить refresh</button>
+        <div id="refreshResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>🏆 Результаты тестирования:</h3>
+        <div id="finalResults"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        let testData = {
+            user: null,
+            client: null,
+            tokens: null,
+            booking: null
+        };
+
+        const testPhone = `38050${Math.floor(Math.random() * 1000000).toString().padStart(7, '0')}`;
+        const testEmail = `test${Date.now()}@example.com`;
+
+        async function apiCall(endpoint, options = {}) {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                return { success: response.ok, status: response.status, data };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        function displayResult(elementId, result, stepName) {
+            const element = document.getElementById(elementId);
+            const className = result.success ? 'success' : 'error';
+            
+            element.innerHTML = `
+                <div class="test-section ${className}">
+                    <h4>${result.success ? '✅' : '❌'} ${stepName}</h4>
+                    <p><strong>Статус:</strong> ${result.status || 'N/A'}</p>
+                    <pre>${JSON.stringify(result.data || result.error, null, 2)}</pre>
+                </div>
+            `;
+        }
+
+        async function checkUserExists() {
+            console.log('🔍 Проверяем существование пользователя:', testPhone, testEmail);
+            
+            const result = await apiCall(`/users/check_exists?phone=${testPhone}&email=${testEmail}`);
+            displayResult('checkUserResult', result, 'Проверка существования пользователя');
+            
+            if (result.success && !result.data.exists) {
+                console.log('✅ Пользователь не найден, можно регистрировать');
+            }
+        }
+
+        async function registerClient() {
+            console.log('👤 Регистрируем клиента');
+            
+            const userData = {
+                user: {
+                    first_name: "Тест",
+                    last_name: "Пользователь",
+                    phone: testPhone,
+                    email: testEmail,
+                    password: "password123",
+                    password_confirmation: "password123"
+                }
+            };
+
+            const result = await apiCall('/clients/register', {
+                method: 'POST',
+                body: JSON.stringify(userData)
+            });
+
+            displayResult('registerResult', result, 'Регистрация клиента');
+
+            if (result.success) {
+                testData.user = result.data.user;
+                testData.client = result.data.client;
+                testData.tokens = result.data.tokens;
+                console.log('✅ Клиент зарегистрирован:', testData);
+            }
+        }
+
+        async function createBooking() {
+            if (!testData.tokens) {
+                alert('Сначала зарегистрируйте клиента!');
+                return;
+            }
+
+            console.log('📅 Создаем бронирование');
+
+            const bookingData = {
+                client_booking: {
+                    service_point_id: 1,
+                    category_id: 1,
+                    booking_date: "2025-08-01",
+                    booking_time: "10:00",
+                    car_brand: "Toyota",
+                    car_model: "Camry",
+                    car_year: 2020,
+                    license_plate: "AA1234BB",
+                    client_first_name: testData.user.first_name,
+                    client_last_name: testData.user.last_name,
+                    client_phone: testData.user.phone,
+                    client_email: testData.user.email,
+                    service_recipient_first_name: testData.user.first_name,
+                    service_recipient_last_name: testData.user.last_name,
+                    service_recipient_phone: testData.user.phone,
+                    notes: "Тестовое бронирование"
+                }
+            };
+
+            const result = await apiCall('/client_bookings', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${testData.tokens.access}`
+                },
+                body: JSON.stringify(bookingData)
+            });
+
+            displayResult('bookingResult', result, 'Создание бронирования');
+
+            if (result.success) {
+                testData.booking = result.data;
+                console.log('✅ Бронирование создано:', testData.booking);
+            }
+        }
+
+        async function getBookings() {
+            if (!testData.client || !testData.tokens) {
+                alert('Сначала зарегистрируйте клиента!');
+                return;
+            }
+
+            console.log('📋 Получаем бронирования клиента');
+
+            const result = await apiCall(`/clients/${testData.client.id}/bookings`, {
+                headers: {
+                    'Authorization': `Bearer ${testData.tokens.access}`
+                }
+            });
+
+            displayResult('bookingsResult', result, 'Получение списка бронирований');
+        }
+
+        async function testRefreshToken() {
+            console.log('🔄 Тестируем refresh токен');
+
+            const result = await apiCall('/auth/refresh', {
+                method: 'POST',
+                body: JSON.stringify({})
+            });
+
+            displayResult('refreshResult', result, 'Тест refresh токена');
+        }
+
+        function updateFinalResults() {
+            const results = document.getElementById('finalResults');
+            results.innerHTML = `
+                <div class="info">
+                    <h4>📊 Сводка:</h4>
+                    <p><strong>Телефон:</strong> ${testPhone}</p>
+                    <p><strong>Email:</strong> ${testEmail}</p>
+                    <p><strong>Пользователь ID:</strong> ${testData.user?.id || 'N/A'}</p>
+                    <p><strong>Клиент ID:</strong> ${testData.client?.id || 'N/A'}</p>
+                    <p><strong>Токен:</strong> ${testData.tokens?.access ? 'Получен' : 'Отсутствует'}</p>
+                    <p><strong>Бронирование:</strong> ${testData.booking ? 'Создано' : 'Не создано'}</p>
+                </div>
+            `;
+        }
+
+        // Автоматическое обновление результатов
+        setInterval(updateFinalResults, 1000);
+
+        // Инструкции
+        console.log(`
+🧪 ИНСТРУКЦИИ ПО ТЕСТИРОВАНИЮ:
+
+1. Откройте DevTools (F12) для просмотра логов
+2. Нажимайте кнопки по порядку
+3. Проверяйте результаты каждого шага
+4. Убедитесь что все шаги проходят успешно
+
+📞 Тестовые данные:
+- Телефон: ${testPhone}
+- Email: ${testEmail}
+
+🎯 Ожидаемые результаты:
+- Шаг 1: {"exists": false}
+- Шаг 2: 201 Created с токенами
+- Шаг 3: 201 Created с данными бронирования
+- Шаг 4: 200 OK со списком бронирований
+- Шаг 5: Зависит от наличия refresh токена в cookies
+        `);
+    </script>
+</body>
+</html> 
