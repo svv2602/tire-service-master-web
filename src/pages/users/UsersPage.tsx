@@ -48,6 +48,7 @@ import {
   ActionsMenu,
 } from '../../components/ui';
 import type { ActionItem } from '../../components/ui';
+import { SuspensionModal, SuspensionStatusChip } from '../../components/ui/SuspensionModal';
 
 // Импорт PageTable компонента
 import { PageTable } from '../../components/common/PageTable';
@@ -83,8 +84,33 @@ export const UsersPage: React.FC = () => {
     severity: 'info'
   });
 
+  // Состояние для модального окна блокировки
+  const [suspensionModal, setSuspensionModal] = useState<{
+    open: boolean;
+    user: User | null;
+  }>({
+    open: false,
+    user: null,
+  });
+
   // Дебаунс для поиска
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
+  // Обработчик успешной блокировки/разблокировки
+  const handleSuspensionSuccess = useCallback((action: 'suspend' | 'unsuspend', user: User) => {
+    const message = action === 'suspend' 
+      ? `Пользователь ${user.first_name} ${user.last_name} заблокирован`
+      : `Пользователь ${user.first_name} ${user.last_name} разблокирован`;
+    
+    setNotification({
+      open: true,
+      message,
+      severity: 'success'
+    });
+
+    // Закрываем модальное окно
+    setSuspensionModal({ open: false, user: null });
+  }, []);
 
   // Сброс страницы при изменении фильтра
   React.useEffect(() => {
@@ -282,6 +308,14 @@ export const UsersPage: React.FC = () => {
         confirmLabel: t('common.confirm'),
         cancelLabel: t('common.cancel')
       }
+    },
+    {
+      id: 'manage-suspension',
+      label: 'Управление блокировкой',
+      icon: <PersonIcon />,
+      onClick: (user: User) => setSuspensionModal({ open: true, user }),
+      color: 'warning',
+      tooltip: 'Заблокировать или разблокировать пользователя'
     }
   ], [handleEdit, handleDeactivate, handleToggleStatus, navigate, t]);
 
@@ -402,6 +436,18 @@ export const UsersPage: React.FC = () => {
       )
     },
     {
+      id: 'suspension_status',
+      label: 'Статус блокировки',
+      align: 'center',
+      minWidth: 140,
+      format: (_value: any, row: User) => (
+        <SuspensionStatusChip
+          userId={row.id}
+          onClick={() => setSuspensionModal({ open: true, user: row })}
+        />
+      )
+    },
+    {
       id: 'actions',
       label: t('tables.columns.actions'),
       align: 'center',
@@ -482,6 +528,14 @@ export const UsersPage: React.FC = () => {
         message={notification.message}
         severity={notification.severity}
         onClose={handleCloseNotification}
+      />
+
+      {/* Модальное окно блокировки */}
+      <SuspensionModal
+        open={suspensionModal.open}
+        onClose={() => setSuspensionModal({ open: false, user: null })}
+        user={suspensionModal.user}
+        onSuccess={handleSuspensionSuccess}
       />
     </Box>
   );
