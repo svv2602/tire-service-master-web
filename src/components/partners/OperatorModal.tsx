@@ -9,7 +9,8 @@ import {
   Grid,
   Switch,
   FormControlLabel,
-  Alert
+  Alert,
+  CircularProgress,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -41,11 +42,13 @@ export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onS
   const isEdit = Boolean(operator);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
   
   React.useEffect(() => {
     if (open) {
       setSuccessMessage(null);
       setErrorMessage(null);
+      setIsLoading(false);
     }
   }, [open]);
   
@@ -64,6 +67,7 @@ export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onS
     validationSchema: createValidationSchema(isEdit, t),
     onSubmit: async (values) => {
       try {
+        setIsLoading(true);
         setSuccessMessage(null);
         setErrorMessage(null);
         
@@ -104,6 +108,8 @@ export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onS
         }
         
         setErrorMessage(message);
+      } finally {
+        setIsLoading(false);
       }
     },
   });
@@ -244,9 +250,22 @@ export const OperatorModal: React.FC<OperatorModalProps> = ({ open, onClose, onS
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>{t('forms.common.cancel')}</Button>
-          <Button type="submit" variant="contained" color="primary">
-            {isEdit ? t('forms.common.save') : t('forms.common.add')}
+          <Button onClick={onClose} disabled={isLoading}>
+            {t('forms.common.cancel')}
+          </Button>
+          <Button 
+            type="submit" 
+            variant="contained" 
+            color="primary" 
+            disabled={isLoading}
+            startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : undefined}
+          >
+            {isLoading 
+              ? t('forms.common.saving') 
+              : isEdit 
+                ? t('forms.common.save') 
+                : t('forms.common.add')
+            }
           </Button>
         </DialogActions>
       </form>
