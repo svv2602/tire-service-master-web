@@ -34,11 +34,13 @@ import { useTranslation } from 'react-i18next';
 
 // Импорт хуков и утилит
 import { useArticle, useRelatedArticles } from '../../hooks/useArticles';
+import { useRoleAccess } from '../../hooks/useRoleAccess';
 
 // Импорт централизованной системы стилей
 import { getCardStyles, getButtonStyles } from '../../styles/components';
 import { getThemeColors } from '../../styles/theme';
 import { useLocalizedArticleTitle, useLocalizedArticleExcerpt } from '../../utils/articleLocalizationHelpers';
+import ClientLayout from '../../components/client/ClientLayout';
 
 const ArticleViewPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -50,6 +52,9 @@ const ArticleViewPage: React.FC = () => {
   // Хуки для локализации
   const localizedTitle = useLocalizedArticleTitle();
   const localizedExcerpt = useLocalizedArticleExcerpt();
+  
+  // Права доступа
+  const { canManageAllData } = useRoleAccess();
   
   const { article, loading, error } = useArticle(id || null);
   const { articles: relatedArticles } = useRelatedArticles(article?.id || null);
@@ -85,54 +90,59 @@ const ArticleViewPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="xl" sx={{ py: 3 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: 'column',
-          alignItems: 'center', 
-          justifyContent: 'center',
-          py: 8
-        }}>
-          <CircularProgress size={48} sx={{ mb: 2 }} />
-          <Typography variant="body1" sx={{ color: colors.textSecondary }}>
-            {t('forms.articles.loadingArticles')}
-          </Typography>
-        </Box>
-      </Container>
+      <ClientLayout>
+        <Container maxWidth="xl" sx={{ py: 3 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column',
+            alignItems: 'center', 
+            justifyContent: 'center',
+            py: 8
+          }}>
+            <CircularProgress size={48} sx={{ mb: 2 }} />
+            <Typography variant="body1" sx={{ color: colors.textSecondary }}>
+              {t('forms.articles.loadingArticles')}
+            </Typography>
+          </Box>
+        </Container>
+      </ClientLayout>
     );
   }
 
   if (error || !article) {
     return (
-      <Container maxWidth="xl" sx={{ py: 3 }}>
-        <Box sx={{ textAlign: 'center', py: 8 }}>
-          <Alert severity="error" sx={{ mb: 3, display: 'inline-block' }}>
-            {error || t('forms.articles.articlesNotFound')}
-          </Alert>
-          <Box>
-            <Button
-              variant="outlined"
-              startIcon={<ArrowBackIcon />}
-              onClick={() => navigate('/articles')}
-              sx={secondaryButtonStyles}
-            >
-              {t('common.back')} к списку статей
-            </Button>
+      <ClientLayout>
+        <Container maxWidth="xl" sx={{ py: 3 }}>
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <Alert severity="error" sx={{ mb: 3, display: 'inline-block' }}>
+              {error || t('forms.articles.articlesNotFound')}
+            </Alert>
+            <Box>
+              <Button
+                variant="outlined"
+                startIcon={<ArrowBackIcon />}
+                onClick={() => navigate('/knowledge-base')}
+                sx={secondaryButtonStyles}
+              >
+                {t('common.back')} к списку статей
+              </Button>
+            </Box>
           </Box>
-        </Box>
-      </Container>
+        </Container>
+      </ClientLayout>
     );
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 3 }}>
+    <ClientLayout>
+      <Container maxWidth="xl" sx={{ py: 3 }}>
       {/* Навигация */}
       <Fade in timeout={300}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
           <Button
             variant="outlined"
             startIcon={<ArrowBackIcon />}
-            onClick={() => navigate('/articles')}
+            onClick={() => navigate('/knowledge-base')}
             sx={secondaryButtonStyles}
           >
             {t('common.back')} к списку статей
@@ -149,15 +159,17 @@ const ArticleViewPage: React.FC = () => {
                 <PrintIcon />
               </IconButton>
             </Tooltip>
-            <Button
-              variant="contained"
-              startIcon={<EditIcon />}
-              onClick={() => navigate(`/admin/articles/${article.id}/edit`)}
-              sx={buttonStyles}
-              size="small"
-            >
-              {t('common.edit')}
-            </Button>
+            {canManageAllData && (
+              <Button
+                variant="contained"
+                startIcon={<EditIcon />}
+                onClick={() => navigate(`/admin/articles/${article.id}/edit`)}
+                sx={buttonStyles}
+                size="small"
+              >
+                {t('common.edit')}
+              </Button>
+            )}
           </Box>
         </Box>
       </Fade>
@@ -408,7 +420,7 @@ const ArticleViewPage: React.FC = () => {
                             boxShadow: theme.shadows[4]
                           }
                         }}
-                        onClick={() => navigate(`/admin/articles/${relatedArticle.id}`)}
+                        onClick={() => navigate(`/knowledge-base/articles/${relatedArticle.id}`)}
                       >
                         {relatedArticle.image_url && (
                           <CardMedia
@@ -448,6 +460,7 @@ const ArticleViewPage: React.FC = () => {
         </Grid>
       </Grid>
     </Container>
+    </ClientLayout>
   );
 };
 
