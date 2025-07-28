@@ -95,7 +95,7 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
 export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['User', 'Client', 'Partner', 'Booking', 'ServicePoint', 'Review', 'CarType', 'Service', 'City', 'Region', 'Article', 'ServiceCategory', 'Settings', 'CarBrands', 'Availability', 'CarModels', 'Notification', 'NotificationStats', 'ClientCars', 'PageContent', 'Partners', 'Schedule', 'ServicePointService', 'ServicePointPhoto', 'ServicePost', 'SchedulePreview', 'FavoritePoints', 'SeasonalSchedule', 'BookingConflict', 'BookingConflictStatistics', 'EmailTemplate', 'CustomVariable', 'TelegramSettings', 'TelegramSubscriptions', 'TelegramNotifications', 'NotificationChannelSettings', 'ChannelStatistics', 'SeoMetatag', 'Operator', 'OperatorAssignment', 'AuditLog'],
+  tagTypes: ['User', 'Client', 'Partner', 'Booking', 'ServicePoint', 'Review', 'CarType', 'Service', 'City', 'Region', 'Article', 'ServiceCategory', 'Settings', 'CarBrands', 'Availability', 'CarModels', 'Notification', 'NotificationStats', 'ClientCars', 'PageContent', 'Partners', 'Schedule', 'ServicePointService', 'ServicePointPhoto', 'ServicePost', 'SchedulePreview', 'FavoritePoints', 'SeasonalSchedule', 'BookingConflict', 'BookingConflictStatistics', 'EmailTemplate', 'CustomVariable', 'TelegramSettings', 'TelegramSubscriptions', 'TelegramNotifications', 'NotificationChannelSettings', 'ChannelStatistics', 'SeoMetatag', 'Operator', 'OperatorAssignment', 'AuditLog', 'Order'],
   endpoints: () => ({}),
 });
 
@@ -132,7 +132,7 @@ export const clearAllCacheData = (dispatch: any) => {
     'Settings', 'CarBrands', 'Availability', 'CarModels', 'Notification', 
     'NotificationStats', 'ClientCars', 'PageContent', 'Partners', 'Schedule', 
     'ServicePointService', 'ServicePointPhoto', 'ServicePost', 'SchedulePreview', 
-    'FavoritePoints', 'SeasonalSchedule', 'BookingConflict', 'BookingConflictStatistics'
+    'FavoritePoints', 'SeasonalSchedule', 'BookingConflict', 'BookingConflictStatistics', 'Order'
   ] as const;
   
   // Инвалидируем каждый тег по отдельности

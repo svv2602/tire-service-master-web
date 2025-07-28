@@ -1,0 +1,548 @@
+import React, { useState, useMemo } from 'react';
+import {
+  Box,
+  TextField,
+  InputAdornment,
+  MenuItem,
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import {
+  Search as SearchIcon,
+  ShoppingCart as OrderIcon,
+  CheckCircle as ReadyIcon,
+  LocalShipping as DeliveredIcon,
+  Cancel as CancelIcon,
+  Visibility as ViewIcon,
+} from '@mui/icons-material';
+import { useTheme } from '@mui/material/styles';
+
+// Компоненты UI
+import { Table } from '../../components/ui/Table/Table';
+import { Button } from '../../components/ui/Button/Button';
+import { Snackbar } from '../../components/ui/Snackbar/Snackbar';
+import { Pagination } from '../../components/ui/Pagination/Pagination';
+
+// API и типы
+import {
+  useGetOrdersQuery,
+  useMarkOrderAsReadyMutation,
+  useMarkOrderAsDeliveredMutation,
+  useCancelOrderMutation,
+} from '../../api/orders.api';
+import { Order, OrderFilters } from '../../types/order';
+
+const OrdersPage: React.FC = () => {
+  const theme = useTheme();
+
+  // Стили страницы
+  const pageStyles = {
+    pageContainer: {
+      padding: theme.spacing(2),
+      maxWidth: '100%',
+    },
+    headerContainer: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing(3),
+    },
+    titleContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: theme.spacing(1),
+    },
+    titleIcon: {
+      fontSize: '2rem',
+      color: theme.palette.primary.main,
+    },
+    filtersContainer: {
+      display: 'flex',
+      gap: theme.spacing(2),
+      marginBottom: theme.spacing(3),
+      flexWrap: 'wrap' as const,
+    },
+    tableContainer: {
+      marginBottom: theme.spacing(3),
+    },
+    paginationContainer: {
+      display: 'flex',
+      justifyContent: 'center',
+      marginTop: theme.spacing(2),
+    },
+  };
+
+  // Состояние
+  const [page, setPage] = useState(0);
+  const [rowsPerPage] = useState(20);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'warning' | 'info';
+  }>({ open: false, message: '', severity: 'info' });
+
+  // Фильтры для API
+  const filters: OrderFilters = useMemo(() => {
+    const result: OrderFilters = {};
+    if (statusFilter) result.status = statusFilter;
+    if (searchQuery.trim()) {
+      // Определяем тип поиска
+      if (searchQuery.includes('+')) {
+        result.phone = searchQuery.trim();
+      } else if (/^\d+$/.test(searchQuery.trim())) {
+        result.ttn = searchQuery.trim();
+      } else {
+        result.customer = searchQuery.trim();
+      }
+    }
+    return result;
+  }, [statusFilter, searchQuery]);
+
+  // API запросы
+  const { data: ordersData, isLoading, error, refetch } = useGetOrdersQuery({
+    ...filters,
+    page: page + 1,
+    per_page: rowsPerPage,
+  });
+
+  // Мутации
+  const [markAsReady] = useMarkOrderAsReadyMutation();
+  const [markAsDelivered] = useMarkOrderAsDeliveredMutation();
+  const [cancelOrder] = useCancelOrderMutation();
+
+  const orders = ordersData?.orders || [];
+  const totalCount = ordersData?.meta?.total_count || 0;
+
+  // Конфигурация колонок таблицы
+  const columns = [
+    {
+      id: 'ttn',
+      label: 'ТТН',
+      format: (value: any, order: Order) => (
+        <Box>
+          <Box sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+            {order.ttn}
+          </Box>
+          {order.number && (
+            <Box sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
+              №{order.number}
+            </Box>
+          )}
+        </Box>
+      ),
+    },
+    {
+      id: 'status',
+      label: 'Статус',
+      format: (value: any, order: Order) => (
+        <Chip
+          label={order.status_label}
+          size="small"
+          sx={{
+            backgroundColor: order.status_color,
+            color: 'white',
+            fontWeight: 'bold',
+          }}
+        />
+      ),
+    },
+    {
+      id: 'customer',
+      label: 'Клиент',
+      format: (value: any, order: Order) => (
+        <Box>
+          <Box sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+            {order.customer_name}
+          </Box>
+          <Box sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
+            {order.formatted_phone}
+          </Box>
+        </Box>
+      ),
+    },
+    {
+      id: 'service_point',
+      label: 'Точка выдачи',
+      format: (value: any, order: Order) => (
+        <Box>
+          <Box sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+            {order.point_name}
+          </Box>
+          {order.third_party_point && (
+            <Chip
+              label="Сторонняя"
+              size="small"
+              color="warning"
+              variant="outlined"
+              sx={{ mt: 0.5, fontSize: '0.7rem' }}
+            />
+          )}
+        </Box>
+      ),
+    },
+    {
+      id: 'order_info',
+      label: 'Заказ',
+      format: (value: any, order: Order) => (
+        <Box>
+          <Box sx={{ fontSize: '0.9rem' }}>
+            {order.total_quantity} шт.
+          </Box>
+          <Box sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+            {order.total_amount} ₴
+          </Box>
+        </Box>
+      ),
+    },
+    {
+      id: 'order_date',
+      label: 'Дата заказа',
+      hideOnMobile: true,
+      format: (value: any, order: Order) => (
+        <Box sx={{ fontSize: '0.9rem' }}>
+          {order.formatted_order_date}
+        </Box>
+      ),
+    },
+    {
+      id: 'actions',
+      label: 'Действия',
+      format: (value: any, order: Order) => (
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Tooltip title="Просмотр">
+            <Button
+              size="small"
+              variant="outlined"
+              color="primary"
+              startIcon={<ViewIcon />}
+              onClick={() => handleViewOrder(order)}
+            >
+              Просмотр
+            </Button>
+          </Tooltip>
+          
+          {order.can_mark_as_ready && (
+            <Tooltip title="Отметить как готов">
+              <Button
+                size="small"
+                variant="contained"
+                color="success"
+                startIcon={<ReadyIcon />}
+                onClick={() => handleMarkAsReady(order.id)}
+              >
+                Готов
+              </Button>
+            </Tooltip>
+          )}
+          
+          {order.can_mark_as_delivered && (
+            <Tooltip title="Отметить как выдан">
+              <Button
+                size="small"
+                variant="contained"
+                color="primary"
+                startIcon={<DeliveredIcon />}
+                onClick={() => handleMarkAsDelivered(order.id)}
+              >
+                Выдать
+              </Button>
+            </Tooltip>
+          )}
+          
+          {order.can_cancel && (
+            <Tooltip title="Отменить заказ">
+              <Button
+                size="small"
+                variant="outlined"
+                color="error"
+                startIcon={<CancelIcon />}
+                onClick={() => handleCancelOrder(order.id)}
+              >
+                Отмена
+              </Button>
+            </Tooltip>
+          )}
+        </Box>
+      ),
+    },
+  ];
+
+  // Обработчики событий
+  const handleViewOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleMarkAsReady = async (orderId: number) => {
+    try {
+      await markAsReady(orderId).unwrap();
+      setNotification({
+        open: true,
+        message: 'Заказ отмечен как готовый к выдаче',
+        severity: 'success',
+      });
+      refetch();
+    } catch (error) {
+      setNotification({
+        open: true,
+        message: 'Ошибка при изменении статуса заказа',
+        severity: 'error',
+      });
+    }
+  };
+
+  const handleMarkAsDelivered = async (orderId: number) => {
+    try {
+      await markAsDelivered(orderId).unwrap();
+      setNotification({
+        open: true,
+        message: 'Заказ отмечен как выданный',
+        severity: 'success',
+      });
+      refetch();
+    } catch (error) {
+      setNotification({
+        open: true,
+        message: 'Ошибка при изменении статуса заказа',
+        severity: 'error',
+      });
+    }
+  };
+
+  const handleCancelOrder = async (orderId: number) => {
+    try {
+      await cancelOrder({ id: orderId, reason: 'Отменен оператором' }).unwrap();
+      setNotification({
+        open: true,
+        message: 'Заказ отменен',
+        severity: 'success',
+      });
+      refetch();
+    } catch (error) {
+      setNotification({
+        open: true,
+        message: 'Ошибка при отмене заказа',
+        severity: 'error',
+      });
+    }
+  };
+
+  const statusOptions = [
+    { value: '', label: 'Все статусы' },
+    { value: 'received', label: 'Получен' },
+    { value: 'processing', label: 'В обработке' },
+    { value: 'ready', label: 'Готов к выдаче' },
+    { value: 'delivered', label: 'Выдан' },
+    { value: 'canceled', label: 'Отменен' },
+  ];
+
+  if (isLoading) {
+    return (
+      <Box sx={pageStyles.pageContainer}>
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <Typography>Загрузка заказов...</Typography>
+        </Box>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={pageStyles.pageContainer}>
+      {/* Заголовок */}
+      <Box sx={pageStyles.headerContainer}>
+        <Box sx={pageStyles.titleContainer}>
+          <OrderIcon sx={pageStyles.titleIcon} />
+          <Box>
+            <Typography variant="h4" component="h1">
+              Заказы интернет-магазинов
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {totalCount > 0 && `Всего заказов: ${totalCount}`}
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Фильтры */}
+      <Box sx={pageStyles.filtersContainer}>
+        <TextField
+          placeholder="Поиск по ТТН, имени клиента или телефону..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          variant="outlined"
+          size="small"
+          sx={{ minWidth: 300 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
+        
+        <TextField
+          select
+          label="Статус"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          variant="outlined"
+          size="small"
+          sx={{ minWidth: 200 }}
+        >
+          {statusOptions.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </TextField>
+      </Box>
+
+      {/* Таблица */}
+      <Box sx={pageStyles.tableContainer}>
+        {orders.length > 0 ? (
+          <Table
+            columns={columns}
+            rows={orders}
+            loading={isLoading}
+            onRowClick={(order) => handleViewOrder(order)}
+          />
+        ) : (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography color="text.secondary">
+              Заказы не найдены
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
+      {/* Пагинация */}
+      {totalCount > rowsPerPage && (
+        <Box sx={pageStyles.paginationContainer}>
+          <Pagination
+            count={Math.ceil(totalCount / rowsPerPage)}
+            page={page + 1}
+            onChange={(newPage) => setPage(newPage - 1)}
+            color="primary"
+            showFirstButton
+            showLastButton
+          />
+        </Box>
+      )}
+
+      {/* Диалог просмотра заказа */}
+      <Dialog
+        open={isViewDialogOpen}
+        onClose={() => setIsViewDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Заказ {selectedOrder?.ttn}
+        </DialogTitle>
+        <DialogContent>
+          {selectedOrder && (
+            <Box sx={{ pt: 1 }}>
+              {/* Информация о заказе */}
+              <Box sx={{ mb: 3 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
+                      Клиент:
+                    </Typography>
+                    <Typography>{selectedOrder.customer_name}</Typography>
+                    <Typography>{selectedOrder.formatted_phone}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
+                      Статус:
+                    </Typography>
+                    <Chip
+                      label={selectedOrder.status_label}
+                      sx={{
+                        backgroundColor: selectedOrder.status_color,
+                        color: 'white',
+                      }}
+                    />
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* Товары */}
+              <Box>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2 }}>
+                  Товары:
+                </Typography>
+                {selectedOrder.order_items?.map((item, index) => (
+                  <Box
+                    key={index}
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      p: 2,
+                      mb: 1,
+                      backgroundColor: 'grey.50',
+                      borderRadius: 1,
+                    }}
+                  >
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                        Артикул: {item.artikul}
+                      </Typography>
+                      {item.name && <Typography variant="body2">{item.name}</Typography>}
+                    </Box>
+                    <Box sx={{ textAlign: 'right' }}>
+                      <Typography variant="body2">{item.unit_description}</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                        {item.formatted_sum}
+                      </Typography>
+                    </Box>
+                  </Box>
+                ))}
+                
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  fontWeight: 'bold', 
+                  fontSize: '1.1rem',
+                  mt: 2,
+                  pt: 2,
+                  borderTop: '1px solid',
+                  borderColor: 'divider'
+                }}>
+                  <Typography variant="h6">Итого:</Typography>
+                  <Typography variant="h6">{selectedOrder.total_amount} ₴</Typography>
+                </Box>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsViewDialogOpen(false)}>
+            Закрыть
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Уведомления */}
+      <Snackbar
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={() => setNotification({ ...notification, open: false })}
+      />
+    </Box>
+  );
+};
+
+export default OrdersPage; 
