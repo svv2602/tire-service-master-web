@@ -50,6 +50,12 @@ import {
 import { Order, OrderFilters } from '../../types/order';
 import { UserRole } from '../../types';
 
+// Утилитарная функция для безопасного форматирования числовых значений
+const formatCurrency = (value: number | string): string => {
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  return isNaN(numValue) ? '0.00' : numValue.toFixed(2);
+};
+
 const MyOrdersPage: React.FC = () => {
   const theme = useTheme();
   const { user } = useSelector((state: RootState) => state.auth);
@@ -344,9 +350,9 @@ const MyOrdersPage: React.FC = () => {
       id: 'total_amount',
       key: 'total_amount',
       label: 'Сумма',
-      format: (value: number) => (
+      format: (value: number | string) => (
         <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-          {value.toFixed(2)} ₴
+          {formatCurrency(value)} ₴
         </Typography>
       ),
     },
@@ -497,7 +503,7 @@ const MyOrdersPage: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Typography variant="h6" color="success.main">₴</Typography>
                 <Box>
-                  <Typography variant="h6">{stats.total_revenue.toFixed(2)}</Typography>
+                  <Typography variant="h6">{formatCurrency(stats.total_revenue)}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     Общая выручка
                   </Typography>
@@ -624,7 +630,7 @@ const MyOrdersPage: React.FC = () => {
                     <strong>Дата заказа:</strong> {new Date(selectedOrder.order_date).toLocaleDateString('ru-RU')}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Сумма:</strong> {selectedOrder.total_amount.toFixed(2)} ₴
+                    <strong>Сумма:</strong> {formatCurrency(selectedOrder.total_amount)} ₴
                   </Typography>
                 </Grid>
                 
@@ -654,7 +660,7 @@ const MyOrdersPage: React.FC = () => {
                           <strong>{item.name}</strong> (Артикул: {item.artikul})
                         </Typography>
                         <Typography variant="body2">
-                          Количество: {item.quantity} × {item.price.toFixed(2)} ₴ = {item.sum.toFixed(2)} ₴
+                          Количество: {item.quantity} × {formatCurrency(item.price)} ₴ = {formatCurrency(item.sum)} ₴
                         </Typography>
                       </Box>
                     ))}
