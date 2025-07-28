@@ -40,6 +40,7 @@ import Rating from '../../components/ui/Rating/Rating';
 import { Alert } from '../../components/ui/Alert';
 import { ActionsMenu, ActionItem } from '../../components/ui/ActionsMenu/ActionsMenu';
 import Notification from '../../components/Notification';
+import { useRoleAccess } from '../../hooks/useRoleAccess';
 
 // Расширяем интерфейс для отображения с полными данными от сериализатора
 interface ReviewWithClient {
@@ -92,6 +93,9 @@ const ReviewsPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const theme = useTheme();
+  
+  // Хук для управления правами доступа по ролям
+  const { isPartner, partnerId } = useRoleAccess();
 
   // Статусы отзывов с типизацией (теперь внутри компонента, чтобы использовать t)
   const REVIEW_STATUSES: Record<ReviewStatus, {
@@ -122,6 +126,7 @@ const ReviewsPage: React.FC = () => {
     search: search || undefined,
     status: statusFilter || undefined,
     service_point_id: servicePointId ? Number(servicePointId) : undefined,
+    partner_id: isPartner ? partnerId : undefined, // Автоматическая фильтрация для партнеров
     page: page + 1, // Backend ожидает 1-based страницы
     per_page: rowsPerPage,
   } as ReviewFilter);
@@ -309,22 +314,27 @@ const ReviewsPage: React.FC = () => {
   };
 
   // Конфигурация фильтров
-  const filtersConfig: FilterConfig[] = [
-    {
-      id: 'status',
-      label: t('tables.columns.status'),
-      type: 'select',
-      value: statusFilter,
-      onChange: (value: string | number) => setStatusFilter(value as ReviewStatus | ''),
-      options: [
-        { value: '', label: t('admin.reviews.allStatuses') },
-        ...Object.entries(REVIEW_STATUSES).map(([value, { label }]) => ({
-          value,
-          label
-        }))
-      ]
-    },
-    {
+  const filtersConfig: FilterConfig[] = useMemo(() => {
+    const filters: FilterConfig[] = [
+      {
+        id: 'status',
+        label: t('tables.columns.status'),
+        type: 'select',
+        value: statusFilter,
+        onChange: (value: string | number) => setStatusFilter(value as ReviewStatus | ''),
+        options: [
+          { value: '', label: t('admin.reviews.allStatuses') },
+          ...Object.entries(REVIEW_STATUSES).map(([value, { label }]) => ({
+            value,
+            label
+          }))
+        ]
+      },
+    ];
+
+    // Фильтр сервисных точек - для партнеров только их точки уже фильтруются на backend
+    // Но мы все равно показываем фильтр для удобства навигации
+    filters.push({
       id: 'service_point',
       label: t('tables.columns.servicePoint'),
       type: 'select',
@@ -337,8 +347,10 @@ const ReviewsPage: React.FC = () => {
           label: point.name
         }))
       ]
-    }
-  ];
+    });
+
+    return filters;
+  }, [statusFilter, servicePointId, servicePoints, REVIEW_STATUSES, t]);
 
   // Конфигурация колонок
   const columns: Column[] = [

@@ -42,4 +42,5 @@ export interface ReviewFilter {
   status?: ReviewStatus;
   date_from?: string;
   date_to?: string;
+  partner_id?: number; // Добавлено для фильтрации по партнеру
 } 
