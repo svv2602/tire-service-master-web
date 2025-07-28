@@ -66,6 +66,10 @@ interface FullUserResponse {
     completed_bookings: number;
     average_rating_given: number;
   };
+  partner?: {
+    id: number;
+    name: string;
+  };
   admin_info?: {
     role_permissions: string[];
     last_login: string;

@@ -22,6 +22,9 @@ import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { useSelector } from 'react-redux';
 
+// Импорт API хуков
+import { useGetCurrentUserQuery } from '../../api/auth.api';
+
 // Импорты стилей
 import { SIZES, getButtonStyles, getCardStyles, getTablePageStyles } from '../../styles';
 
@@ -130,9 +133,16 @@ const ServicePointFormPage: React.FC = () => {
   const authToken = useSelector((state: any) => state.auth?.accessToken);
   const currentUser = useSelector((state: any) => state.auth?.user);
   
-  // Если partnerId все еще undefined, попробуем получить его напрямую из Redux
-  const finalPartnerId = partnerId || (isPartner && currentUser ? 
-    (currentUser.partner?.id?.toString() || (currentUser as any).partner_id?.toString()) : undefined);
+  // Получаем данные партнера из API
+  const { data: currentUserData } = useGetCurrentUserQuery(undefined, {
+    skip: !isPartner,
+  });
+
+  // Если partnerId все еще undefined, попробуем получить его из API или Redux
+  const finalPartnerId = partnerId || (isPartner ? 
+    (currentUserData?.partner?.id?.toString() || 
+     currentUser?.partner?.id?.toString() || 
+     (currentUser as any)?.partner_id?.toString()) : undefined);
   
   // Определяем откуда пришел пользователь для правильного возврата
   const getReturnPath = () => {
