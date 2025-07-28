@@ -9,7 +9,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Tooltip,
   Typography,
 } from '@mui/material';
 import {
@@ -27,6 +26,7 @@ import { Table } from '../../components/ui/Table/Table';
 import { Button } from '../../components/ui/Button/Button';
 import { Snackbar } from '../../components/ui/Snackbar/Snackbar';
 import { Pagination } from '../../components/ui/Pagination/Pagination';
+import { ActionsMenu, ActionItem } from '../../components/ui/ActionsMenu/ActionsMenu';
 
 // API и типы
 import {
@@ -122,13 +122,62 @@ const OrdersPage: React.FC = () => {
   const orders = ordersData?.orders || [];
   const totalCount = ordersData?.meta?.total_count || 0;
 
+  // Конфигурация действий для ActionsMenu
+  const orderActions: ActionItem<Order>[] = useMemo(() => [
+    {
+      id: 'view',
+      label: 'Просмотр',
+      icon: <ViewIcon />,
+      onClick: (order: Order) => handleViewOrder(order),
+      color: 'primary',
+      tooltip: 'Просмотр заказа'
+    },
+    {
+      id: 'mark_ready',
+      label: 'Готов',
+      icon: <ReadyIcon />,
+      onClick: (order: Order) => handleMarkAsReady(order.id),
+      color: 'success',
+      tooltip: 'Отметить как готов',
+      visible: (order: Order) => order.can_mark_as_ready
+    },
+    {
+      id: 'mark_delivered',
+      label: 'Выдать',
+      icon: <DeliveredIcon />,
+      onClick: (order: Order) => handleMarkAsDelivered(order.id),
+      color: 'primary',
+      tooltip: 'Отметить как выдан',
+      visible: (order: Order) => order.can_mark_as_delivered
+    },
+    {
+      id: 'cancel',
+      label: 'Отмена',
+      icon: <CancelIcon />,
+      onClick: (order: Order) => handleCancelOrder(order.id),
+      color: 'error',
+      tooltip: 'Отменить заказ',
+      visible: (order: Order) => order.can_cancel,
+      requireConfirmation: true,
+      confirmationConfig: {
+        title: 'Подтвердите действие',
+        message: 'Вы уверены, что хотите отменить этот заказ?',
+        confirmLabel: 'Отменить заказ',
+        cancelLabel: 'Отмена',
+      }
+    }
+  ], []);
+
   // Конфигурация колонок таблицы
   const columns = [
     {
       id: 'ttn',
       label: 'ТТН',
+      minWidth: 120,
+      maxWidth: 180,
+      wrap: true,
       format: (value: any, order: Order) => (
-        <Box>
+        <Box sx={{ wordBreak: 'break-word' }}>
           <Box sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
             {order.ttn}
           </Box>
@@ -143,6 +192,9 @@ const OrdersPage: React.FC = () => {
     {
       id: 'status',
       label: 'Статус',
+      minWidth: 100,
+      maxWidth: 140,
+      align: 'center' as const,
       format: (value: any, order: Order) => (
         <Chip
           label={order.status_label}
@@ -158,22 +210,29 @@ const OrdersPage: React.FC = () => {
     {
       id: 'customer',
       label: 'Клиент',
+      minWidth: 180,
+      maxWidth: 250,
+      wrap: true,
       format: (value: any, order: Order) => (
-        <Box>
+        <Box sx={{ wordBreak: 'break-word' }}>
           <Box sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
             {order.customer_name}
           </Box>
-          <Box sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
-            {order.formatted_phone}
-          </Box>
+          <Typography variant="body2" sx={{ wordBreak: 'break-word', color: 'text.secondary' }}>
+            {order.formatted_phone || 'Не указан'}
+          </Typography>
         </Box>
       ),
     },
     {
       id: 'service_point',
       label: 'Точка выдачи',
+      minWidth: 160,
+      maxWidth: 220,
+      wrap: true,
+      hideOnMobile: true,
       format: (value: any, order: Order) => (
-        <Box>
+        <Box sx={{ wordBreak: 'break-word' }}>
           <Box sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
             {order.point_name}
           </Box>
@@ -192,8 +251,11 @@ const OrdersPage: React.FC = () => {
     {
       id: 'order_info',
       label: 'Заказ',
+      minWidth: 100,
+      maxWidth: 120,
+      align: 'right' as const,
       format: (value: any, order: Order) => (
-        <Box>
+        <Box sx={{ wordBreak: 'break-word' }}>
           <Box sx={{ fontSize: '0.9rem' }}>
             {order.total_quantity} шт.
           </Box>
@@ -206,9 +268,11 @@ const OrdersPage: React.FC = () => {
     {
       id: 'order_date',
       label: 'Дата заказа',
+      minWidth: 120,
+      maxWidth: 150,
       hideOnMobile: true,
       format: (value: any, order: Order) => (
-        <Box sx={{ fontSize: '0.9rem' }}>
+        <Box sx={{ fontSize: '0.9rem', wordBreak: 'break-word' }}>
           {order.formatted_order_date}
         </Box>
       ),
@@ -216,62 +280,16 @@ const OrdersPage: React.FC = () => {
     {
       id: 'actions',
       label: 'Действия',
+      minWidth: 120,
+      maxWidth: 150,
+      align: 'center' as const,
       format: (value: any, order: Order) => (
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          <Tooltip title="Просмотр">
-            <Button
-              size="small"
-              variant="outlined"
-              color="primary"
-              startIcon={<ViewIcon />}
-              onClick={() => handleViewOrder(order)}
-            >
-              Просмотр
-            </Button>
-          </Tooltip>
-          
-          {order.can_mark_as_ready && (
-            <Tooltip title="Отметить как готов">
-              <Button
-                size="small"
-                variant="contained"
-                color="success"
-                startIcon={<ReadyIcon />}
-                onClick={() => handleMarkAsReady(order.id)}
-              >
-                Готов
-              </Button>
-            </Tooltip>
-          )}
-          
-          {order.can_mark_as_delivered && (
-            <Tooltip title="Отметить как выдан">
-              <Button
-                size="small"
-                variant="contained"
-                color="primary"
-                startIcon={<DeliveredIcon />}
-                onClick={() => handleMarkAsDelivered(order.id)}
-              >
-                Выдать
-              </Button>
-            </Tooltip>
-          )}
-          
-          {order.can_cancel && (
-            <Tooltip title="Отменить заказ">
-              <Button
-                size="small"
-                variant="outlined"
-                color="error"
-                startIcon={<CancelIcon />}
-                onClick={() => handleCancelOrder(order.id)}
-              >
-                Отмена
-              </Button>
-            </Tooltip>
-          )}
-        </Box>
+        <ActionsMenu 
+          actions={orderActions} 
+          item={order} 
+          menuThreshold={1}
+          sx={{ display: 'flex', justifyContent: 'center' }}
+        />
       ),
     },
   ];
@@ -291,10 +309,11 @@ const OrdersPage: React.FC = () => {
         severity: 'success',
       });
       refetch();
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error?.data?.error || error?.message || 'Ошибка при изменении статуса заказа';
       setNotification({
         open: true,
-        message: 'Ошибка при изменении статуса заказа',
+        message: errorMessage,
         severity: 'error',
       });
     }
@@ -309,10 +328,11 @@ const OrdersPage: React.FC = () => {
         severity: 'success',
       });
       refetch();
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error?.data?.error || error?.message || 'Ошибка при изменении статуса заказа';
       setNotification({
         open: true,
-        message: 'Ошибка при изменении статуса заказа',
+        message: errorMessage,
         severity: 'error',
       });
     }
@@ -327,10 +347,11 @@ const OrdersPage: React.FC = () => {
         severity: 'success',
       });
       refetch();
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage = error?.data?.error || error?.message || 'Ошибка при отмене заказа';
       setNotification({
         open: true,
-        message: 'Ошибка при отмене заказа',
+        message: errorMessage,
         severity: 'error',
       });
     }
@@ -491,7 +512,7 @@ const OrdersPage: React.FC = () => {
                       alignItems: 'center',
                       p: 2,
                       mb: 1,
-                      backgroundColor: 'grey.50',
+                      backgroundColor: theme.palette.mode === 'dark' ? 'grey.800' : 'grey.50',
                       borderRadius: 1,
                     }}
                   >
