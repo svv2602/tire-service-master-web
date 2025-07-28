@@ -45,6 +45,7 @@ import {
   getCardStyles
 } from '../../styles/components';
 import { useLocalizedArticleTitle, useLocalizedArticleExcerpt } from '../../utils/articleLocalizationHelpers';
+import { useRoleAccess } from '../../hooks/useRoleAccess';
 
 // Status constants
 const ArticlesPage: React.FC = () => {
@@ -59,6 +60,9 @@ const ArticlesPage: React.FC = () => {
   
   // Redux state
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  
+  // Права доступа
+  const { canManageAllData } = useRoleAccess();
 
   // Function to get status translations
   const getStatusLabel = (status: string) => {
@@ -303,15 +307,17 @@ const ArticlesPage: React.FC = () => {
               <ViewIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title={t('tables.actions.edit')}>
-            <IconButton
-              size="small"
-              onClick={() => navigate(`/admin/articles/${row.id}/edit`)}
-              sx={{ color: theme.palette.success.main }}
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+          {canManageAllData && (
+            <Tooltip title={t('tables.actions.edit')}>
+              <IconButton
+                size="small"
+                onClick={() => navigate(`/admin/articles/${row.id}/edit`)}
+                sx={{ color: theme.palette.success.main }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
           <Tooltip title={t('tables.actions.delete')}>
             <IconButton
               size="small"
