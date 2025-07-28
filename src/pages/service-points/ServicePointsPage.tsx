@@ -268,9 +268,8 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
               state: { from: `/admin/partners/${partnerId}/service-points` }
             });
           } else {
-            // Для админов без partnerId - выбор партнера
-            showNotification(t('admin.servicePoints.selectPartnerFirst'), 'warning');
-            navigate('/admin/partners');
+            // Для админов - переход на общую страницу создания сервисной точки
+            navigate('/admin/service-points/new');
           }
         },
         variant: 'contained' as const,

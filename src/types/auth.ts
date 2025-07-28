@@ -48,6 +48,21 @@ export interface AuthTokens {
 export interface LoginResponse {
   tokens: AuthTokens;
   user: User;
+  // Дополнительные поля для разных ролей
+  partner?: {
+    id: number;
+    name: string;
+  };
+  operator?: {
+    id: number;
+    partner_id: number;
+    access_level: number;
+    service_point_ids?: number[];
+  };
+  client?: {
+    id: number;
+    preferred_notification_method?: string;
+  };
 }
 
 export interface AuthState {

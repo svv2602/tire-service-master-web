@@ -205,15 +205,32 @@ export const login = createAsyncThunk<LoginResponse, { login: string; password: 
       
       const { tokens, user } = response.data;
       
+      // Объединяем данные пользователя с данными роли (partner, operator, client)
+      const enhancedUser = {
+        ...user,
+        role: user.role ? mapRoleToEnum(user.role) : UserRole.ADMIN,
+        // Добавляем данные партнера, если они есть
+        partner: response.data.partner || user.partner,
+        // Добавляем данные оператора, если они есть  
+        operator: response.data.operator || user.operator,
+        // Добавляем данные клиента, если они есть
+        client: response.data.client || user.client
+      };
+      
+      console.log('Login: Расширенные данные пользователя:', {
+        email: enhancedUser.email,
+        role: enhancedUser.role,
+        partner: enhancedUser.partner,
+        operator: enhancedUser.operator,
+        client: enhancedUser.client
+      });
+      
       // ✅ Очищаем кэш RTK Query при входе чтобы убрать данные предыдущего пользователя
       clearAllCacheData(dispatch);
       
       return {
         tokens,
-        user: {
-          ...user,
-          role: user.role ? mapRoleToEnum(user.role) : UserRole.ADMIN
-        }
+        user: enhancedUser
       };
     } catch (error: any) {
       console.error('Login error:', error.response?.data || error);
@@ -286,21 +303,35 @@ export const getCurrentUser = createAsyncThunk(
       const response = await apiClient.get('/auth/me');
       const userData = response.data.user || response.data;
       
-      // Возвращаем данные пользователя с правильной ролью
-      const user = {
+      // Объединяем данные пользователя с данными роли (partner, operator, client)
+      const enhancedUser = {
         ...userData,
-        role: userData.role ? mapRoleToEnum(userData.role) : UserRole.ADMIN
+        role: userData.role ? mapRoleToEnum(userData.role) : UserRole.ADMIN,
+        // Добавляем данные партнера, если они есть
+        partner: response.data.partner || userData.partner,
+        // Добавляем данные оператора, если они есть
+        operator: response.data.operator || userData.operator,
+        // Добавляем данные клиента, если они есть
+        client: response.data.client || userData.client
       };
+      
+      console.log('getCurrentUser: Расширенные данные пользователя:', {
+        email: enhancedUser.email,
+        role: enhancedUser.role,
+        partner: enhancedUser.partner,
+        operator: enhancedUser.operator,
+        client: enhancedUser.client
+      });
       
       // Если в ответе есть токены (например, после refresh), возвращаем их тоже
       if (response.data.tokens) {
         return {
-          user,
+          user: enhancedUser,
           tokens: response.data.tokens
         };
       }
       
-      return user;
+      return enhancedUser;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Не удалось получить данные пользователя');
     }

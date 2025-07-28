@@ -12,6 +12,8 @@ export const useRoleAccess = () => {
   return useMemo(() => {
     const userRole = user?.role;
     
+
+    
     return {
       // Основные роли
       isAdmin: userRole === UserRole.ADMIN,
@@ -54,12 +56,13 @@ export const useRoleAccess = () => {
       // Данные пользователя
       user,
       userRole,
-      partnerId: user?.partner?.id,
+      partnerId: user?.partner?.id || (user as any)?.partner_id,
       
       // Утилиты для UI
       getCreateServicePointPath: () => {
-        if (userRole === UserRole.PARTNER && user?.partner?.id) {
-          return `/admin/partners/${user.partner.id}/service-points/new`;
+        const partnerId = user?.partner?.id || (user as any)?.partner_id;
+        if (userRole === UserRole.PARTNER && partnerId) {
+          return `/admin/partners/${partnerId}/service-points/new`;
         }
         return '/admin/service-points/new';
       },
@@ -76,8 +79,9 @@ export const useRoleAccess = () => {
         if ([UserRole.ADMIN, UserRole.MANAGER].includes(userRole as UserRole)) {
           return true;
         }
-        if (userRole === UserRole.PARTNER && user?.partner?.id) {
-          return servicePoint.partner_id === user.partner.id;
+        const partnerId = user?.partner?.id || (user as any)?.partner_id;
+        if (userRole === UserRole.PARTNER && partnerId) {
+          return servicePoint.partner_id === partnerId;
         }
         return false;
       },

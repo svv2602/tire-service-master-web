@@ -48,6 +48,7 @@ import {
 } from '../../api/servicePoints.api';
 import { useDeleteServicePointPhotoMutation } from '../../api/service-point-photos.api';
 import { useInvalidateCache } from '../../api/baseApi';
+import { useRoleAccess } from '../../hooks/useRoleAccess';
 
 // Типы
 import type { ServicePointFormDataNew, ServicePoint } from '../../types/models';
@@ -111,7 +112,16 @@ const createValidationSchema = (t: any) => yup.object({
 const ServicePointFormPage: React.FC = () => {
   const { t } = useTranslation();
   const FORM_STEPS = getFormSteps(t);
-  const { partnerId, id } = useParams<{ partnerId: string; id: string }>();
+  const { partnerId: urlPartnerId, id } = useParams<{ partnerId: string; id: string }>();
+  const { isPartner, partnerId: userPartnerId } = useRoleAccess();
+  
+
+  
+  // Определяем партнера: из URL или из текущего пользователя (для партнеров)
+  const partnerId = urlPartnerId || (isPartner ? userPartnerId?.toString() : undefined);
+  
+
+  
   const isEditMode = Boolean(id);
   const navigate = useNavigate();
   const location = useLocation();
@@ -119,6 +129,10 @@ const ServicePointFormPage: React.FC = () => {
   // Get token and user info from Redux state
   const authToken = useSelector((state: any) => state.auth?.accessToken);
   const currentUser = useSelector((state: any) => state.auth?.user);
+  
+  // Если partnerId все еще undefined, попробуем получить его напрямую из Redux
+  const finalPartnerId = partnerId || (isPartner && currentUser ? 
+    (currentUser.partner?.id?.toString() || (currentUser as any).partner_id?.toString()) : undefined);
   
   // Определяем откуда пришел пользователь для правильного возврата
   const getReturnPath = () => {
@@ -288,11 +302,11 @@ const ServicePointFormPage: React.FC = () => {
       console.log('=== Проверка прав доступа ===');
       console.log('Роль пользователя:', userRole);
       console.log('partnerId из URL:', partnerId);
-      console.log('ID партнера пользователя:', currentUser.partner_id);
-      console.log('ID оператора пользователя:', currentUser.operator_id);
+      console.log('ID партнера пользователя:', currentUser.partner?.id);
+      console.log('ID оператора пользователя:', currentUser.operator?.id);
       
       // Если пользователь - партнер, может работать только со своими сервисными точками
-      if (userRole === 'partner' && currentUser.partner_id !== Number(partnerId)) {
+      if (userRole === 'partner' && currentUser.partner?.id !== Number(partnerId)) {
         console.warn('Access denied: Partner can only work with their own service points');
         alert(t('errors.noPermissionForPartner'));
         navigate('/service-points');
@@ -300,7 +314,7 @@ const ServicePointFormPage: React.FC = () => {
       }
 
       // Для операторов проверяем права через operator_id
-      if (userRole === 'operator' && !currentUser.operator_id) {
+      if (userRole === 'operator' && !currentUser.operator?.id) {
         console.warn('Access denied: Operator has no access');
         alert(t('errors.noPermissionForPartner'));
         navigate('/service-points');
@@ -340,16 +354,10 @@ const ServicePointFormPage: React.FC = () => {
 
   // Начальные значения формы (мемоизированные)
   const initialValues: ServicePointFormDataNew = useMemo(() => {
-    const partnerIdNumber = partnerId ? Number(partnerId) : 0;
-    
-    console.log('=== Инициализация формы ===');
-    console.log('partnerId:', partnerId);
-    console.log('partnerIdNumber:', partnerIdNumber);
-    console.log('servicePoint?.partner_id:', servicePoint?.partner_id);
+    const partnerIdNumber = finalPartnerId ? Number(finalPartnerId) : 0;
     
     if (partnerIdNumber === 0 && !isEditMode) {
-      console.error('КРИТИЧЕСКАЯ ОШИБКА: partnerIdNumber равен 0 при создании новой сервисной точки');
-      // В этом случае система должна была уже перенаправить пользователя
+      console.warn('Создание сервисной точки без указания партнера');
     }
     
     return {

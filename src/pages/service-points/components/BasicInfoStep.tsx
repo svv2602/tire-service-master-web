@@ -23,6 +23,7 @@ import { useGetCitiesQuery } from '../../../api/cities.api';
 import { SIZES, getFormStyles, getTextFieldStyles } from '../../../styles';
 import type { ServicePointFormDataNew, Partner, Region, City, ServicePoint } from '../../../types/models';
 import { useLocalizedName } from '../../../utils/localizationHelpers';
+import { useRoleAccess } from '../../../hooks/useRoleAccess';
 
 interface BasicInfoStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
@@ -65,6 +66,7 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
   const formStyles = getFormStyles(theme);
   const textFieldStyles = getTextFieldStyles(theme);
   const localizedName = useLocalizedName();
+  const { isPartner, canViewAllServicePoints } = useRoleAccess();
 
   // API запросы
   const { data: partners, isLoading: partnersLoading } = useGetPartnersQuery({});
@@ -139,51 +141,72 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
       </Typography>
       
       <Grid container spacing={SIZES.spacing.lg}>
-        {/* Селект партнера */}
-        <Grid item xs={12} md={6}>
-          <FormControl 
-            fullWidth 
-            error={formik.touched.partner_id && Boolean(formik.errors.partner_id)}
-            required
-            sx={{
-              ...formStyles.field,
-              '& .MuiOutlinedInput-root': {
-                borderRadius: SIZES.borderRadius.sm,
-              },
-            }}
-          >
-            <InputLabel id="partner-id-label">{t('forms.servicePoint.fields.partner')}</InputLabel>
-            <Select
-              labelId="partner-id-label"
-              id="partner_id"
-              name="partner_id"
-              value={formik.values.partner_id > 0 ? formik.values.partner_id.toString() : '0'}
-              onChange={(e) => {
-                formik.setFieldValue('partner_id', Number(e.target.value));
+        {/* Селект партнера - только для админов и менеджеров */}
+        {canViewAllServicePoints && (
+          <Grid item xs={12} md={6}>
+            <FormControl 
+              fullWidth 
+              error={formik.touched.partner_id && Boolean(formik.errors.partner_id)}
+              required
+              sx={{
+                ...formStyles.field,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: SIZES.borderRadius.sm,
+                },
               }}
-              onBlur={formik.handleBlur}
-              label={t('forms.servicePoint.fields.partner')}
-              disabled={partnersLoading || isEditMode}
             >
-              <MenuItem value="0" disabled>
-                {partnersLoading ? t('forms.servicePoint.messages.loading') : t('forms.servicePoint.selectPartner')}
-              </MenuItem>
-              {partnersData.map((partner: Partner) => (
-                <MenuItem key={partner.id} value={partner.id.toString()}>
-                  {partner.company_name}
+              <InputLabel id="partner-id-label">{t('forms.servicePoint.fields.partner')}</InputLabel>
+              <Select
+                labelId="partner-id-label"
+                id="partner_id"
+                name="partner_id"
+                value={formik.values.partner_id > 0 ? formik.values.partner_id.toString() : '0'}
+                onChange={(e) => {
+                  formik.setFieldValue('partner_id', Number(e.target.value));
+                }}
+                onBlur={formik.handleBlur}
+                label={t('forms.servicePoint.fields.partner')}
+                disabled={partnersLoading || isEditMode}
+              >
+                <MenuItem value="0" disabled>
+                  {partnersLoading ? t('forms.servicePoint.messages.loading') : t('forms.servicePoint.selectPartner')}
                 </MenuItem>
-              ))}
-            </Select>
-            {formik.touched.partner_id && formik.errors.partner_id && (
-              <FormHelperText>{formik.errors.partner_id}</FormHelperText>
-            )}
-            {isEditMode && (
-              <FormHelperText sx={{ color: 'text.secondary' }}>
-                {t('forms.servicePoint.messages.partnerCannotBeChanged')}
-              </FormHelperText>
-            )}
-          </FormControl>
-        </Grid>
+                {partnersData.map((partner: Partner) => (
+                  <MenuItem key={partner.id} value={partner.id.toString()}>
+                    {partner.company_name}
+                  </MenuItem>
+                ))}
+              </Select>
+              {formik.touched.partner_id && formik.errors.partner_id && (
+                <FormHelperText>{formik.errors.partner_id}</FormHelperText>
+              )}
+              {isEditMode && (
+                <FormHelperText sx={{ color: 'text.secondary' }}>
+                  {t('forms.servicePoint.messages.partnerCannotBeChanged')}
+                </FormHelperText>
+              )}
+            </FormControl>
+          </Grid>
+        )}
+        
+        {/* Информация о партнере для партнеров */}
+        {isPartner && (
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label={t('forms.servicePoint.fields.partner')}
+              value="Ваша компания" // Можно заменить на реальное название
+              disabled
+              sx={{
+                ...textFieldStyles,
+                '& .MuiInputBase-input.Mui-disabled': {
+                  WebkitTextFillColor: theme.palette.text.secondary,
+                },
+              }}
+              helperText="Партнеры могут создавать только свои сервисные точки"
+            />
+          </Grid>
+        )}
 
         {/* Локализованные поля */}
         <Grid item xs={12}>

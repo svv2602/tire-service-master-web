@@ -71,10 +71,30 @@ const AuthInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
               
               if (userResponse.data && userResponse.data.user) {
                 console.log('AuthInitializer: Данные пользователя получены:', userResponse.data.user.email);
+                
+                // Объединяем данные пользователя с данными роли (partner, operator, client)
+                const enhancedUser = {
+                  ...userResponse.data.user,
+                  // Добавляем данные партнера, если они есть
+                  partner: userResponse.data.partner || userResponse.data.user.partner,
+                  // Добавляем данные оператора, если они есть
+                  operator: userResponse.data.operator || userResponse.data.user.operator,
+                  // Добавляем данные клиента, если они есть
+                  client: userResponse.data.client || userResponse.data.user.client
+                };
+                
+                console.log('AuthInitializer: Расширенные данные пользователя:', {
+                  email: enhancedUser.email,
+                  role: enhancedUser.role,
+                  partner: enhancedUser.partner,
+                  operator: enhancedUser.operator,
+                  client: enhancedUser.client
+                });
+                
                 // Устанавливаем данные пользователя и токен в Redux
                 dispatch(setCredentials({
                   accessToken: token, // может быть null, это нормально при cookie-auth
-                  user: userResponse.data.user
+                  user: enhancedUser
                 }));
               } else {
                 console.log('AuthInitializer: Данные пользователя не получены');
