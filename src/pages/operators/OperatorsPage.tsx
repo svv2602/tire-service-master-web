@@ -48,6 +48,7 @@ import {
   useUpdateOperatorMutation,
   useDeleteOperatorMutation,
 } from '../../api/operators.api';
+import { useRoleAccess } from '../../hooks/useRoleAccess';
 import { useGetPartnersQuery } from '../../api/partners.api';
 
 // Компоненты
@@ -63,6 +64,9 @@ const OperatorsPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const theme = useTheme();
+  
+  // Хук для управления правами доступа по ролям
+  const { isPartner, partnerId } = useRoleAccess();
 
   // Состояние для фильтров и поиска
   const [page, setPage] = useState(1);
@@ -105,7 +109,7 @@ const OperatorsPage: React.FC = () => {
     page,
     per_page: rowsPerPage,
     search: search || undefined,
-    partner_id: partnerFilter || undefined,
+    partner_id: isPartner ? partnerId : (partnerFilter || undefined), // Автоматическая фильтрация для партнеров
     is_active: statusFilter === 'all' ? undefined : statusFilter === 'active',
   });
 
@@ -138,11 +142,12 @@ const OperatorsPage: React.FC = () => {
         }).unwrap();
       } else {
         // Создание - нужен partner_id
-        if (!partnerFilter) {
-          throw new Error('Выберите партнера для создания оператора');
+        const targetPartnerId = isPartner ? partnerId : partnerFilter;
+        if (!targetPartnerId) {
+          throw new Error(isPartner ? 'Ошибка: не найден ID партнера' : 'Выберите партнера для создания оператора');
         }
         await createOperator({
-          partnerId: partnerFilter as number,
+          partnerId: targetPartnerId as number,
           data,
         }).unwrap();
       }
@@ -193,7 +198,7 @@ const OperatorsPage: React.FC = () => {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleCreateOperator}
-            disabled={!partnerFilter}
+            disabled={!isPartner && !partnerFilter} // Партнеры всегда могут создавать, остальные только после выбора партнера
           >
             Добавить оператора
           </Button>
@@ -213,23 +218,26 @@ const OperatorsPage: React.FC = () => {
             />
           </Grid>
 
-          <Grid item xs={12} md={3}>
-            <FormControl fullWidth>
-              <InputLabel>Партнер</InputLabel>
-              <Select
-                value={partnerFilter}
-                onChange={(e) => setPartnerFilter(e.target.value as number | '')}
-                label="Партнер"
-              >
-                <MenuItem value="">Все партнеры</MenuItem>
-                                  {partners.map((partner) => (
+          {/* Фильтр партнеров - только для админов и менеджеров */}
+          {!isPartner && (
+            <Grid item xs={12} md={3}>
+              <FormControl fullWidth>
+                <InputLabel>Партнер</InputLabel>
+                <Select
+                  value={partnerFilter}
+                  onChange={(e) => setPartnerFilter(e.target.value as number | '')}
+                  label="Партнер"
+                >
+                  <MenuItem value="">Все партнеры</MenuItem>
+                  {partners.map((partner) => (
                     <MenuItem key={partner.id} value={partner.id}>
                       {partner.company_name}
                     </MenuItem>
                   ))}
-              </Select>
-            </FormControl>
-          </Grid>
+                </Select>
+              </FormControl>
+            </Grid>
+          )}
 
           <Grid item xs={12} md={3}>
             <FormControl fullWidth>
