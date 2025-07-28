@@ -58,6 +58,7 @@ import { useGetSeoAnalyticsQuery } from '../../api/seoMetatags.api';
 import { useGetChannelStatisticsQuery } from '../../api/notificationChannelSettings.api';
 import { format, subDays, subWeeks } from 'date-fns';
 import StatCard from '../../components/StatCard';
+import { useRoleAccess } from '../../hooks/useRoleAccess';
 
 const DashboardPage: React.FC = () => {
   const theme = useTheme();
@@ -65,6 +66,9 @@ const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const dashboardStyles = getDashboardStyles(theme);
   const [refreshKey, setRefreshKey] = useState(0);
+  
+  // Хук для управления правами доступа по ролям
+  const { isPartner, partnerId, isAdmin, isManager } = useRoleAccess();
 
   // Основные API запросы
   const { data: partnersData, isLoading: partnersLoading, error: partnersError, refetch: refetchPartners } = useGetPartnersQuery({
@@ -74,7 +78,8 @@ const DashboardPage: React.FC = () => {
 
   const { data: servicePointsData, isLoading: servicePointsLoading, error: servicePointsError, refetch: refetchServicePoints } = useGetServicePointsQuery({
     page: 1,
-    per_page: 100 // Загружаем больше для аналитики
+    per_page: 100, // Загружаем больше для аналитики
+    partner_id: isPartner ? partnerId : undefined, // Фильтрация для партнеров
   });
 
   const { data: clientsData, isLoading: clientsLoading, error: clientsError, refetch: refetchClients } = useGetClientsQuery({
@@ -86,12 +91,14 @@ const DashboardPage: React.FC = () => {
     page: 1,
     per_page: 100,
     from_date: format(subWeeks(new Date(), 2), 'yyyy-MM-dd'),
+    partner_id: isPartner ? partnerId : undefined, // Фильтрация для партнеров
   });
 
   // Дополнительные API запросы для расширенной статистики
   const { data: reviewsData, isLoading: reviewsLoading, refetch: refetchReviews } = useGetReviewsQuery({
     page: 1,
-    per_page: 50
+    per_page: 50,
+    partner_id: isPartner ? partnerId : undefined, // Фильтрация для партнеров
   });
 
   const { data: articlesData, isLoading: articlesLoading, refetch: refetchArticles } = useGetArticlesQuery({
@@ -169,34 +176,36 @@ const DashboardPage: React.FC = () => {
     .sort((a, b) => b.bookingsCount - a.bookingsCount)
     .slice(0, 5);
 
-  // Основная статистика с навигацией
+  // Основная статистика с навигацией (адаптирована под роли)
   const mainStats = [
-    {
+    // Статистика партнеров - только для админов и менеджеров
+    ...(isAdmin || isManager ? [{
       title: t('forms.dashboard.stats.partners.title'),
       value: partnersData?.pagination?.total_count || 0,
       icon: <BusinessIcon />,
       color: '#1976d2',
       description: t('forms.dashboard.stats.partners.description'),
       navigateTo: '/admin/partners'
-    },
+    }] : []),
     {
-      title: t('forms.dashboard.stats.servicePoints.title'),
+      title: isPartner ? 'Мои сервисные точки' : t('forms.dashboard.stats.servicePoints.title'),
       value: servicePointsData?.pagination?.total_count || 0,
       icon: <LocationIcon />,
       color: '#388e3c',
-      description: t('forms.dashboard.stats.servicePoints.description'),
+      description: isPartner ? 'Количество ваших сервисных точек' : t('forms.dashboard.stats.servicePoints.description'),
       navigateTo: '/admin/service-points'
     },
-    {
+    // Статистика клиентов - только для админов и менеджеров
+    ...(isAdmin || isManager ? [{
       title: t('forms.dashboard.stats.clients.title'),
       value: clientsData?.pagination?.total_count || 0,
       icon: <PeopleIcon />,
       color: '#f57c00',
       description: t('forms.dashboard.stats.clients.description'),
       navigateTo: '/admin/clients'
-    },
+    }] : []),
     {
-      title: t('forms.dashboard.stats.bookings.title'),
+      title: isPartner ? 'Мои бронирования' : t('forms.dashboard.stats.bookings.title'),
       value: bookingsAnalytics.total,
       icon: <BookingIcon />,
       color: '#7b1fa2',
@@ -205,40 +214,43 @@ const DashboardPage: React.FC = () => {
     },
   ];
 
-  // Дополнительная статистика с навигацией
+  // Дополнительная статистика с навигацией (адаптирована под роли)
   const additionalStats = [
     {
-      title: t('forms.dashboard.stats.reviews.title'),
+      title: isPartner ? 'Отзывы моих точек' : t('forms.dashboard.stats.reviews.title'),
       value: reviewsAnalytics.total,
       icon: <ReviewIcon />,
       color: '#f57c00',
       description: `${reviewsAnalytics.pending} ${t('forms.dashboard.stats.reviews.pending')}`,
       navigateTo: '/admin/reviews'
     },
-    {
+    // Статистика статей - только для админов и менеджеров
+    ...(isAdmin || isManager ? [{
       title: t('forms.dashboard.stats.articles.title'),
       value: articlesAnalytics.total,
       icon: <ArticleIcon />,
       color: '#5d4037',
       description: `${articlesAnalytics.published} ${t('forms.dashboard.stats.articles.published')}`,
       navigateTo: '/admin/page-content'
-    },
-    {
+    }] : []),
+    // Конфликты бронирований - только для админов и менеджеров
+    ...(isAdmin || isManager ? [{
       title: t('forms.dashboard.stats.conflicts.title'),
       value: conflictStats?.statistics?.total_pending || 0,
       icon: <WarningIcon />,
       color: '#d32f2f',
       description: `${conflictStats?.statistics?.total_pending || 0} ${t('forms.dashboard.stats.conflicts.description')}`,
       navigateTo: '/admin/booking-conflicts'
-    },
-    {
+    }] : []),
+    // SEO статистика - только для админов и менеджеров
+    ...(isAdmin || isManager ? [{
       title: t('forms.dashboard.stats.seo.title'),
       value: seoAnalytics?.data?.total_pages || 0,
       icon: <SeoIcon />,
       color: '#00796b',
       description: `${seoAnalytics?.data?.good_pages || 0} ${t('forms.dashboard.stats.seo.optimized')}`,
       navigateTo: '/admin/seo'
-    },
+    }] : []),
   ];
 
   // Компонент статистической карточки с навигацией
@@ -414,8 +426,9 @@ const DashboardPage: React.FC = () => {
           </Card>
         </Grid>
 
-        {/* Статистика уведомлений */}
-        <Grid item xs={12} md={4}>
+        {/* Статистика уведомлений - только для админов и менеджеров */}
+        {(isAdmin || isManager) && (
+          <Grid item xs={12} md={4}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -485,6 +498,7 @@ const DashboardPage: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
+        )}
 
         {/* Топ сервисных точек */}
         <Grid item xs={12} md={4}>

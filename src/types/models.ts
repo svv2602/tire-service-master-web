@@ -367,6 +367,7 @@ export interface ReviewFilter extends PaginationFilter {
   rating?: number;
   status?: ReviewStatus | string;
   service_point_id?: number;
+  partner_id?: number; // Добавлено для фильтрации по партнеру
   review_id?: string;
 }
 
@@ -377,6 +378,7 @@ export interface BookingFilter extends PaginationFilter {
   service_point_id?: number;
   client_id?: number;
   service_category_id?: number;
+  partner_id?: number; // Добавлено для фильтрации по партнеру
   date?: string;
   from_date?: string;
   to_date?: string;
