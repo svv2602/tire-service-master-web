@@ -62,10 +62,9 @@ const MyOrdersPage: React.FC = () => {
       return user.partner.id;
     }
     
-    // Для операторов пока не поддерживаем, нужен отдельный API
-    // if (user.role === UserRole.OPERATOR && user.operator?.partner_id) {
-    //   return user.operator.partner_id;
-    // }
+    if (user.role === UserRole.OPERATOR && user.operator?.partner_id) {
+      return user.operator.partner_id;
+    }
     
     return null;
   }, [user]);

@@ -345,7 +345,7 @@ const MainLayout: React.FC = () => {
             text: t('navigation.partnerOrders'),
             icon: <ShoppingCartIcon />,
             path: '/admin/partner-orders',
-            roles: [UserRole.PARTNER],
+            roles: [UserRole.PARTNER, UserRole.OPERATOR],
             description: t('navigation.descriptions.partnerOrders'),
           },
         ],

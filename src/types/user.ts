@@ -31,6 +31,7 @@ export interface User {
   };
   operator?: {
     id: number;
+    partner_id: number;
     access_level: number;
     service_point_ids?: number[];
   };
