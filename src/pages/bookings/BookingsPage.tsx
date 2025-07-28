@@ -45,6 +45,7 @@ import type {
 import { ActionsMenu, ActionItem } from '../../components/ui/ActionsMenu/ActionsMenu';
 import { useTranslation } from 'react-i18next';
 import { getStatusDisplayName, getStatusChipColor } from '../../utils/bookingStatus';
+import { useRoleAccess } from '../../hooks/useRoleAccess';
 
 // Импорт компонентов для операторов
 import { OperatorServicePointSwitcher } from '../../components/ui/OperatorServicePointSwitcher/OperatorServicePointSwitcher';
@@ -58,6 +59,9 @@ const BookingsPage: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
+  
+  // Хук для управления правами доступа по ролям
+  const { isPartner, partnerId } = useRoleAccess();
   
   // Хуки для операторов
   const { isOperator } = useUserRole();
@@ -126,8 +130,13 @@ const BookingsPage: React.FC = () => {
       params.service_point_id = selectedPointId;
     }
     
+    // Автоматическая фильтрация для партнеров по их сервисным точкам
+    if (isPartner && partnerId) {
+      params.partner_id = partnerId;
+    }
+    
     return params;
-  }, [search, page, sortBy, sortOrder, statusFilter, cityFilter, servicePointFilter, serviceCategoryFilter, dateFromFilter, dateToFilter, isOperator, selectedPointId]);
+  }, [search, page, sortBy, sortOrder, statusFilter, cityFilter, servicePointFilter, serviceCategoryFilter, dateFromFilter, dateToFilter, isOperator, selectedPointId, isPartner, partnerId]);
   
   // RTK Query хуки
   const { 
