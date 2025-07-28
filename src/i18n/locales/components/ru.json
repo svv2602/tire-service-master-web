@@ -575,6 +575,17 @@
       "friday": "Пятница",
       "saturday": "Суббота",
       "sunday": "Воскресенье"
+    },
+    "onlineBooking": {
+      "available": "Онлайн запись доступна",
+      "notAvailable": "Онлайн запись недоступна",
+      "phoneOnly": "Запись только по телефону",
+      "contactPhone": "Контактный телефон",
+      "callToBook": "Для записи звоните по телефону",
+      "phoneBookingTitle": "Запись по телефону",
+      "phoneBookingMessage": "В данной сервисной точке онлайн запись недоступна. Для записи на обслуживание звоните по указанному телефону.",
+      "closeDialog": "Закрыть",
+      "noPhoneAvailable": "Телефон не указан"
     }
   },
   "favoritePoints": {

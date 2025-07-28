@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocalizedName } from '../../../utils/localizationHelpers';
 import {
@@ -37,10 +37,13 @@ import {
   CheckCircle as CheckCircleIcon,
   BookOnline as BookIcon,
   ArrowBackIos as ArrowBackIosIcon,
-  ArrowForwardIos as ArrowForwardIosIcon
+  ArrowForwardIos as ArrowForwardIosIcon,
+  Computer as OnlineIcon,
+  Call as PhoneOnlyIcon
 } from '@mui/icons-material';
 import { FavoriteButton } from '../FavoriteButton';
 import { CategorySelectionModal } from '../CategorySelectionModal';
+import PhoneBookingDialog from '../PhoneBookingDialog';
 import { useTheme } from '@mui/material/styles';
 import { getThemeColors, getCardStyles } from '../../../styles';
 import { useCategorySelection } from '../../../hooks/useCategorySelection';
@@ -88,6 +91,12 @@ export interface ServicePointData {
   work_status?: string;
   is_active?: boolean;
   photos?: ServicePointPhoto[];
+  service_posts?: Array<{
+    id: number;
+    is_active: boolean;
+    service_category_id?: number;
+    category_name?: string;
+  }>;
 }
 
 interface WorkingSchedule {
@@ -589,6 +598,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [servicesExpanded, setServicesExpanded] = useState(false);
   const [scheduleExpanded, setScheduleExpanded] = useState(false);
+  const [phoneBookingDialogOpen, setPhoneBookingDialogOpen] = useState(false);
 
   // Хук для выбора категории услуг
   const {
@@ -614,16 +624,30 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
     }
   };
 
-  const handleBook = () => {
-    // Используем новый хук для выбора категории
-    openCategorySelection({
-      id: servicePoint.id,
-      name: servicePoint.name,
-      city: servicePoint.city
-    });
+  // Определяем доступность онлайн записи по наличию активных постов
+  const hasOnlineBooking = useMemo(() => {
+    // Сначала проверяем, есть ли активные посты в service_posts
+    if (servicePoint.service_posts && servicePoint.service_posts.length > 0) {
+      return servicePoint.service_posts.some(post => post.is_active);
+    }
     
-    // Не вызываем старый обработчик, чтобы избежать конфликтов
-    // Новая логика модального окна полностью заменяет старую
+    // Если service_posts нет, используем старую логику с categories как fallback
+    // (для совместимости с существующим кодом)
+    return categories.length > 0;
+  }, [servicePoint.service_posts, categories]);
+
+  const handleBook = () => {
+    if (hasOnlineBooking) {
+      // Если есть активные посты - открываем модальное окно выбора категории
+      openCategorySelection({
+        id: servicePoint.id,
+        name: servicePoint.name,
+        city: servicePoint.city
+      });
+    } else {
+      // Если нет активных постов - показываем диалог записи по телефону
+      setPhoneBookingDialogOpen(true);
+    }
   };
 
   const handleViewDetails = () => {
@@ -689,9 +713,30 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
       <CardContent onClick={showSelectButton ? handleSelect : undefined} sx={{ cursor: showSelectButton ? 'pointer' : 'default' }}>
         {/* Основная информация */}
         <Box sx={{ mb: 2 }}>
-          <Typography variant={variant === 'compact' ? 'h6' : 'h5'} sx={{ fontWeight: 700, mb: 1, color: colors.textPrimary }}>
-            {servicePoint.localized_name || servicePoint.name}
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <Typography variant={variant === 'compact' ? 'h6' : 'h5'} sx={{ fontWeight: 700, color: colors.textPrimary, flex: 1 }}>
+              {servicePoint.localized_name || servicePoint.name}
+            </Typography>
+            
+            {/* Пиктограмма онлайн записи */}
+            <Chip
+              icon={hasOnlineBooking ? <OnlineIcon /> : <PhoneOnlyIcon />}
+              label={hasOnlineBooking 
+                ? t('components:servicePointCard.onlineBooking.available')
+                : t('components:servicePointCard.onlineBooking.phoneOnly')
+              }
+              size="small"
+              color={hasOnlineBooking ? 'success' : 'default'}
+              variant={hasOnlineBooking ? 'filled' : 'outlined'}
+              sx={{
+                fontSize: '0.75rem',
+                height: 24,
+                '& .MuiChip-icon': {
+                  fontSize: '0.9rem'
+                }
+              }}
+            />
+          </Box>
           
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <LocationIcon sx={{ color: colors.textSecondary, fontSize: '1.2rem' }} />
@@ -876,18 +921,23 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
           <Button
             size="small"
             variant="contained"
-            startIcon={<BookIcon />}
+            startIcon={hasOnlineBooking ? <BookIcon /> : <PhoneIcon />}
             onClick={(e) => {
               e.stopPropagation();
               handleBook();
             }}
             sx={{ 
-              bgcolor: theme.palette.success.main,
-              '&:hover': { bgcolor: theme.palette.success.dark },
+              bgcolor: hasOnlineBooking ? theme.palette.success.main : theme.palette.warning.main,
+              '&:hover': { 
+                bgcolor: hasOnlineBooking ? theme.palette.success.dark : theme.palette.warning.dark 
+              },
               ml: 2 // Добавляем отступ слева
             }}
           >
-            {t('components:servicePointCard.book')}
+            {hasOnlineBooking 
+              ? t('components:servicePointCard.book')
+              : t('components:servicePointCard.onlineBooking.callToBook')
+            }
           </Button>
         )}
         
@@ -932,6 +982,14 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
         categories={availableCategories}
         isLoading={isLoadingCategoriesFromHook}
         onCategorySelect={handleCategorySelect}
+      />
+
+      {/* Диалог записи по телефону */}
+      <PhoneBookingDialog
+        open={phoneBookingDialogOpen}
+        onClose={() => setPhoneBookingDialogOpen(false)}
+        servicePointName={servicePoint.localized_name || servicePoint.name}
+        contactPhone={servicePoint.contact_phone}
       />
     </Card>
   );

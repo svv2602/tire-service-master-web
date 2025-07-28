@@ -144,6 +144,12 @@ const convertServicePointToServicePointData = (servicePoint: ServicePointWithSea
       is_main: photo.is_main || false,
       sort_order: photo.sort_order || 0
     })) || [],
+    service_posts: servicePoint.service_posts?.map(post => ({
+      id: post.id || 0,
+      is_active: post.is_active || false,
+      service_category_id: post.service_category_id,
+      category_name: post.category_name
+    })) || [],
   };
 };
 
@@ -162,21 +168,23 @@ const ServicePointCardWrapper: React.FC<{
   // Преобразуем данные в нужный формат
   const servicePointData = convertServicePointToServicePointData(fullServicePointData || servicePoint);
   
-  // Извлекаем уникальные категории из service_posts
+  // Извлекаем уникальные категории из активных service_posts
   const categories = useMemo(() => {
     if (!fullServicePointData?.service_posts) return [];
     
     const uniqueCategories = new Map();
     fullServicePointData.service_posts.forEach(post => {
-      // Используем service_category_id и category_name из API ответа
-      if (post.service_category_id && post.category_name && !uniqueCategories.has(post.service_category_id)) {
+      // Проверяем, что пост активен и имеет необходимые данные
+      if (post.is_active && post.service_category_id && post.category_name && !uniqueCategories.has(post.service_category_id)) {
         uniqueCategories.set(post.service_category_id, {
           id: post.service_category_id,
           name: post.category_name,
           localized_name: post.category_name, // Используем category_name как локализованное название
           description: post.description || 'Доступные услуги',
           localized_description: post.description || 'Доступные услуги',
-          services_count: 1 // Пока не знаем точное количество услуг
+          services_count: (fullServicePointData.service_posts || []).filter(p => 
+            p.is_active && p.service_category_id === post.service_category_id
+          ).length // Подсчитываем количество активных постов для этой категории
         });
       }
     });

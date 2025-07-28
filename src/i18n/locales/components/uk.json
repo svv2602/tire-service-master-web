@@ -573,6 +573,17 @@
       "friday": "П'ятниця",
       "saturday": "Субота",
       "sunday": "Неділя"
+    },
+    "onlineBooking": {
+      "available": "Онлайн запис доступний",
+      "notAvailable": "Онлайн запис недоступний",
+      "phoneOnly": "Запис тільки по телефону",
+      "contactPhone": "Контактний телефон",
+      "callToBook": "Для запису дзвоніть за телефоном",
+      "phoneBookingTitle": "Запис по телефону",
+      "phoneBookingMessage": "В даній сервісній точці онлайн запис недоступний. Для запису на обслуговування дзвоніть за вказаним телефоном.",
+      "closeDialog": "Закрити",
+      "noPhoneAvailable": "Телефон не вказаний"
     }
   },
   "favoritePoints": {

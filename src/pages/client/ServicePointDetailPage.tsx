@@ -39,7 +39,9 @@ import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
   CalendarToday as CalendarIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  Computer as OnlineIcon,
+  Call as PhoneOnlyIcon
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
@@ -53,6 +55,7 @@ import { useGetServiceCategoriesQuery } from '../../api/serviceCategories.api';
 import { ServicePost } from '../../types/models';
 import { getThemeColors } from '../../styles';
 import ClientLayout from '../../components/client/ClientLayout';
+import PhoneBookingDialog from '../../components/ui/PhoneBookingDialog';
 import { useLocalizedName } from '../../utils/localizationHelpers';
 
 // Интерфейсы
@@ -196,6 +199,7 @@ const ServicePointDetailPage: React.FC = () => {
   const [scheduleExpanded, setScheduleExpanded] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | null>(null);
+  const [phoneBookingDialogOpen, setPhoneBookingDialogOpen] = useState(false);
 
   const { data: servicePointData, isLoading, error } = useGetServicePointByIdQuery(id || '', {
     skip: !id
@@ -290,6 +294,12 @@ const ServicePointDetailPage: React.FC = () => {
     return result;
   }, [servicePostsData, categoriesResponse?.data, servicesData]);
 
+  // Определяем доступность онлайн записи по наличию активных постов
+  const hasOnlineBooking = useMemo(() => {
+    if (!servicePostsData || servicePostsData.length === 0) return false;
+    return servicePostsData.some((post: ServicePost) => post.is_active);
+  }, [servicePostsData]);
+
   // Преобразуем расписание из API в удобный формат
   const schedule: WorkingSchedule[] = useMemo(() => {
     if (!servicePointData?.working_hours) return [];
@@ -319,12 +329,19 @@ const ServicePointDetailPage: React.FC = () => {
   };
 
   const handleBooking = () => {
-    console.log('🎯 handleBooking вызван, serviceCategories:', serviceCategories);
+    console.log('🎯 handleBooking вызван, hasOnlineBooking:', hasOnlineBooking, 'serviceCategories:', serviceCategories);
+    
+    if (!hasOnlineBooking) {
+      // Если нет активных постов - показываем диалог записи по телефону
+      console.log('📞 Нет активных постов, показываем диалог записи по телефону');
+      setPhoneBookingDialogOpen(true);
+      return;
+    }
     
     // Проверяем, есть ли доступные категории услуг
     if (serviceCategories.length === 0) {
       console.warn('⚠️ Нет доступных категорий услуг');
-      alert('В данной сервисной точке нет доступных категорий услуг');
+      setPhoneBookingDialogOpen(true);
       return;
     }
     
@@ -417,9 +434,30 @@ const ServicePointDetailPage: React.FC = () => {
         {/* Заголовок и кнопки */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3, flexWrap: 'wrap', gap: 2 }}>
           <Box>
-            <Typography variant="h4" component="h1" sx={{ fontWeight: 600, mb: 1 }}>
-              {servicePointData.name}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1, flexWrap: 'wrap' }}>
+              <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+                {servicePointData.name}
+              </Typography>
+              
+              {/* Пиктограмма онлайн записи */}
+              <Chip
+                icon={hasOnlineBooking ? <OnlineIcon /> : <PhoneOnlyIcon />}
+                label={hasOnlineBooking 
+                  ? t('components:servicePointCard.onlineBooking.available')
+                  : t('components:servicePointCard.onlineBooking.phoneOnly')
+                }
+                size="medium"
+                color={hasOnlineBooking ? 'success' : 'default'}
+                variant={hasOnlineBooking ? 'filled' : 'outlined'}
+                sx={{
+                  fontSize: '0.875rem',
+                  height: 32,
+                  '& .MuiChip-icon': {
+                    fontSize: '1.1rem'
+                  }
+                }}
+              />
+            </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <LocationIcon sx={{ color: 'text.secondary', fontSize: '1.2rem' }} />
@@ -445,7 +483,7 @@ const ServicePointDetailPage: React.FC = () => {
             </Button>
             <Button
               variant="contained"
-              startIcon={<BookIcon />}
+              startIcon={hasOnlineBooking ? <BookIcon /> : <PhoneIcon />}
               onClick={handleBooking}
               sx={{
                 borderRadius: 3,
@@ -455,12 +493,17 @@ const ServicePointDetailPage: React.FC = () => {
                 fontSize: '1rem',
                 fontWeight: 600,
                 boxShadow: theme.shadows[4],
+                bgcolor: hasOnlineBooking ? theme.palette.success.main : theme.palette.warning.main,
                 '&:hover': {
                   boxShadow: theme.shadows[8],
+                  bgcolor: hasOnlineBooking ? theme.palette.success.dark : theme.palette.warning.dark,
                 },
               }}
             >
-              {t('forms.clientPages.servicePointDetail.bookNow')}
+              {hasOnlineBooking 
+                ? t('forms.clientPages.servicePointDetail.bookNow')
+                : t('components:servicePointCard.onlineBooking.callToBook')
+              }
             </Button>
           </Box>
         </Box>
@@ -696,7 +739,7 @@ const ServicePointDetailPage: React.FC = () => {
             <Button
               variant="contained"
               size="large"
-              startIcon={<BookIcon />}
+              startIcon={hasOnlineBooking ? <BookIcon /> : <PhoneIcon />}
               onClick={handleBooking}
               sx={{
                 borderRadius: 3,
@@ -706,12 +749,17 @@ const ServicePointDetailPage: React.FC = () => {
                 fontWeight: 600,
                 textTransform: 'none',
                 boxShadow: theme.shadows[4],
+                bgcolor: hasOnlineBooking ? theme.palette.success.main : theme.palette.warning.main,
                 '&:hover': {
                   boxShadow: theme.shadows[8],
+                  bgcolor: hasOnlineBooking ? theme.palette.success.dark : theme.palette.warning.dark,
                 },
               }}
             >
-              {t('forms.clientPages.servicePointDetail.bookNow')} на обслуживание
+              {hasOnlineBooking 
+                ? `${t('forms.clientPages.servicePointDetail.bookNow')} на обслуживание`
+                : t('components:servicePointCard.onlineBooking.callToBook')
+              }
             </Button>
           </Grid>
         </Grid>
@@ -795,6 +843,14 @@ const ServicePointDetailPage: React.FC = () => {
             </Grid>
           </DialogContent>
         </Dialog>
+
+        {/* Диалог записи по телефону */}
+        <PhoneBookingDialog
+          open={phoneBookingDialogOpen}
+          onClose={() => setPhoneBookingDialogOpen(false)}
+          servicePointName={servicePointData.name}
+          contactPhone={servicePointData.contact_phone}
+        />
       </Container>
     </ClientLayout>
   );
