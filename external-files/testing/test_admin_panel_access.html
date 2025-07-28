@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест доступа к админ-панели для разных ролей</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .role-test {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f9f9f9;
+        }
+        
+        .role-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .access-granted {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        
+        .access-denied {
+            color: #f44336;
+            font-weight: bold;
+        }
+        
+        .menu-item {
+            padding: 5px 10px;
+            margin: 5px 0;
+            background: #e3f2fd;
+            border-radius: 4px;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .admin-menu-item {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+        }
+        
+        .code-block {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔐 Тест доступа к админ-панели для разных ролей</h1>
+        
+        <div class="code-block">
+            <strong>Изменения в profileActions.ts:</strong><br>
+            // Старая логика:<br>
+            const isAdmin = user?.role === UserRole.ADMIN || user?.role === UserRole.MANAGER;<br><br>
+            // Новая логика:<br>
+            const hasAdminAccess = user?.role === UserRole.ADMIN || <br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;user?.role === UserRole.MANAGER || <br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;user?.role === UserRole.PARTNER || <br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;user?.role === UserRole.OPERATOR;
+        </div>
+        
+        <h2>Тестирование доступа по ролям:</h2>
+        
+        <div class="role-test">
+            <div class="role-title">👑 ADMIN (Администратор)</div>
+            <div class="access-granted">✅ Доступ к админ-панели: ПРЕДОСТАВЛЕН</div>
+            <div class="menu-item">👤 Профиль</div>
+            <div class="menu-item">📅 Мои бронирования</div>
+            <div class="menu-item">⭐ Мои отзывы</div>
+            <div class="menu-item admin-menu-item">🛠️ Админ-панель</div>
+            <div class="menu-item">🚪 Выйти</div>
+        </div>
+        
+        <div class="role-test">
+            <div class="role-title">👨‍💼 MANAGER (Менеджер)</div>
+            <div class="access-granted">✅ Доступ к админ-панели: ПРЕДОСТАВЛЕН</div>
+            <div class="menu-item">👤 Профиль</div>
+            <div class="menu-item">📅 Мои бронирования</div>
+            <div class="menu-item">⭐ Мои отзывы</div>
+            <div class="menu-item admin-menu-item">🛠️ Админ-панель</div>
+            <div class="menu-item">🚪 Выйти</div>
+        </div>
+        
+        <div class="role-test">
+            <div class="role-title">🤝 PARTNER (Партнер)</div>
+            <div class="access-granted">✅ Доступ к админ-панели: ПРЕДОСТАВЛЕН (НОВОЕ!)</div>
+            <div class="menu-item">👤 Профиль</div>
+            <div class="menu-item">📅 Мои бронирования</div>
+            <div class="menu-item">⭐ Мои отзывы</div>
+            <div class="menu-item admin-menu-item">🛠️ Админ-панель</div>
+            <div class="menu-item">🚪 Выйти</div>
+        </div>
+        
+        <div class="role-test">
+            <div class="role-title">👨‍💻 OPERATOR (Оператор)</div>
+            <div class="access-granted">✅ Доступ к админ-панели: ПРЕДОСТАВЛЕН (НОВОЕ!)</div>
+            <div class="menu-item">👤 Профиль</div>
+            <div class="menu-item">📅 Мои бронирования</div>
+            <div class="menu-item">⭐ Мои отзывы</div>
+            <div class="menu-item admin-menu-item">🛠️ Админ-панель</div>
+            <div class="menu-item">🚪 Выйти</div>
+        </div>
+        
+        <div class="role-test">
+            <div class="role-title">👤 CLIENT (Клиент)</div>
+            <div class="access-denied">❌ Доступ к админ-панели: НЕ ПРЕДОСТАВЛЕН</div>
+            <div class="menu-item">👤 Профиль</div>
+            <div class="menu-item">📅 Мои бронирования</div>
+            <div class="menu-item">⭐ Мои отзывы</div>
+            <div class="menu-item">🚪 Выйти</div>
+        </div>
+        
+        <h2>🧪 Инструкции для тестирования:</h2>
+        <ol>
+            <li>Запустите фронтенд: <code>cd tire-service-master-web && yarn start</code></li>
+            <li>Откройте браузер и перейдите на <a href="http://localhost:3008">http://localhost:3008</a></li>
+            <li>Войдите под разными учетными записями:
+                <ul>
+                    <li><strong>Администратор:</strong> admin@test.com / admin123</li>
+                    <li><strong>Партнер:</strong> partner@test.com / partner123</li>
+                    <li><strong>Клиент:</strong> client@test.com / client123</li>
+                </ul>
+            </li>
+            <li>Кликните на аватар пользователя в правом верхнем углу</li>
+            <li>Проверьте наличие пункта "Админ-панель" в выпадающем меню</li>
+            <li>Убедитесь, что клик по "Админ-панель" перенаправляет на <code>/admin</code></li>
+        </ol>
+        
+        <h2>📋 Ожидаемые результаты:</h2>
+        <ul>
+            <li>✅ Администраторы видят пункт "Админ-панель"</li>
+            <li>✅ Менеджеры видят пункт "Админ-панель"</li>
+            <li>✅ Партнеры видят пункт "Админ-панель" (новая функциональность)</li>
+            <li>✅ Операторы видят пункт "Админ-панель" (новая функциональность)</li>
+            <li>❌ Клиенты НЕ видят пункт "Админ-панель"</li>
+            <li>✅ При нахождении в админ-панели показывается пункт "На сайт"</li>
+        </ul>
+        
+        <div style="background: #e8f5e8; padding: 15px; border-radius: 4px; margin-top: 20px;">
+            <strong>✅ Изменения успешно внесены!</strong><br>
+            Теперь партнеры, операторы и менеджеры имеют доступ к админ-панели через выпадающее меню пользователя.
+        </div>
+    </div>
+</body>
+</html> 

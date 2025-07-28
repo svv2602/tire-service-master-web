@@ -28,7 +28,11 @@ export function getProfileActions({
   onLogout: () => void;
   t: TFunction;
 }): AppBarAction[] {
-  const isAdmin = user?.role === UserRole.ADMIN || user?.role === UserRole.MANAGER;
+  // Расширяем права доступа к админ-панели для партнеров, операторов и менеджеров
+  const hasAdminAccess = user?.role === UserRole.ADMIN || 
+                        user?.role === UserRole.MANAGER || 
+                        user?.role === UserRole.PARTNER || 
+                        user?.role === UserRole.OPERATOR;
 
   if (!isAuthenticated) {
     return [
@@ -63,7 +67,7 @@ export function getProfileActions({
     },
   ];
 
-  if (isAdmin) {
+  if (hasAdminAccess) {
     if (isAdminPanel) {
       actions.push({
         label: t('userMenu.toWebsite'),
