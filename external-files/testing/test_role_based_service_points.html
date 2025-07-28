@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест ролевой фильтрации сервисных точек</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .test-section {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f9f9f9;
+        }
+        
+        .success {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        
+        .error {
+            color: #f44336;
+            font-weight: bold;
+        }
+        
+        .info {
+            color: #2196f3;
+            font-weight: bold;
+        }
+        
+        .code-block {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        
+        .api-test {
+            background: #e8f5e8;
+            padding: 10px;
+            border-left: 4px solid #4caf50;
+            margin: 10px 0;
+        }
+        
+        .step {
+            background: #fff3e0;
+            padding: 10px;
+            border-left: 4px solid #ff9800;
+            margin: 10px 0;
+        }
+        
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #1976d2;
+        }
+        
+        .result {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Тест ролевой фильтрации сервисных точек</h1>
+        
+        <div class="step">
+            <h2>📋 Цель тестирования</h2>
+            <p>Проверить, что партнеры видят только свои сервисные точки, а админы видят все точки.</p>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔐 Шаг 1: Вход под разными ролями</h2>
+            
+            <div class="api-test">
+                <h3>Тест API авторизации</h3>
+                <button onclick="testAdminLogin()">Войти как Админ</button>
+                <button onclick="testPartnerLogin()">Войти как Партнер</button>
+                <button onclick="checkCurrentUser()">Проверить текущего пользователя</button>
+                <div id="authResult" class="result"></div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📊 Шаг 2: Проверка фильтрации сервисных точек</h2>
+            
+            <div class="api-test">
+                <h3>Тест загрузки сервисных точек</h3>
+                <button onclick="testServicePointsAsAdmin()">Загрузить как Админ</button>
+                <button onclick="testServicePointsAsPartner()">Загрузить как Партнер</button>
+                <button onclick="testServicePointsWithPartnerFilter()">Загрузить с фильтром партнера</button>
+                <div id="servicePointsResult" class="result"></div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🎯 Ожидаемые результаты</h2>
+            
+            <div class="info">
+                <h3>Для Админа (admin@test.com):</h3>
+                <ul>
+                    <li>✅ Видит ВСЕ сервисные точки всех партнеров</li>
+                    <li>✅ Может фильтровать по партнерам</li>
+                    <li>✅ Кнопка "Добавить" ведет на выбор партнера</li>
+                </ul>
+            </div>
+            
+            <div class="success">
+                <h3>Для Партнера (partner@test.com):</h3>
+                <ul>
+                    <li>✅ Видит ТОЛЬКО свои сервисные точки</li>
+                    <li>✅ Фильтр партнеров скрыт</li>
+                    <li>✅ Кнопка "Добавить" ведет на создание с предустановленным партнером</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔧 Инструкции для ручного тестирования</h2>
+            
+            <div class="step">
+                <h3>1. Тест в браузере:</h3>
+                <ol>
+                    <li>Откройте <a href="http://localhost:3008/admin/service-points" target="_blank">http://localhost:3008/admin/service-points</a></li>
+                    <li>Войдите под админом: admin@test.com / admin123</li>
+                    <li>Проверьте что видны все сервисные точки</li>
+                    <li>Выйдите и войдите под партнером: partner@test.com / partner123</li>
+                    <li>Проверьте что видны только точки партнера</li>
+                </ol>
+            </div>
+            
+            <div class="step">
+                <h3>2. Проверка UI адаптации:</h3>
+                <ul>
+                    <li>Фильтр "Партнер" скрыт для партнеров</li>
+                    <li>Кнопка "Добавить точку" работает правильно для каждой роли</li>
+                    <li>Колонки таблицы адаптированы под роль</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📈 Статус реализации</h2>
+            
+            <div class="success">
+                <h3>✅ Завершено:</h3>
+                <ul>
+                    <li>Создан хук useRoleAccess() для управления правами</li>
+                    <li>Добавлена условная фильтрация в queryParams</li>
+                    <li>Backend политики уже настроены правильно</li>
+                </ul>
+            </div>
+            
+            <div class="info">
+                <h3>🔄 В процессе:</h3>
+                <ul>
+                    <li>Адаптация кнопки "Добавить точку"</li>
+                    <li>Скрытие фильтра партнеров для партнеров</li>
+                    <li>Тестирование всех сценариев</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        let currentToken = null;
+        
+        // Функция для выполнения API запросов
+        async function apiRequest(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            if (currentToken) {
+                headers['Authorization'] = `Bearer ${currentToken}`;
+            }
+            
+            try {
+                const response = await fetch(url, {
+                    credentials: 'include',
+                    headers,
+                    ...options
+                });
+                
+                const data = await response.json();
+                return { success: response.ok, data, status: response.status };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+        
+        // Тест входа под админом
+        async function testAdminLogin() {
+            const result = await apiRequest('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: 'admin@test.com',
+                    password: 'admin123'
+                })
+            });
+            
+            if (result.success && result.data.access_token) {
+                currentToken = result.data.access_token;
+                document.getElementById('authResult').textContent = 
+                    `✅ Админ вошел успешно\nРоль: ${result.data.user?.role}\nТокен: ${currentToken.substring(0, 20)}...`;
+            } else {
+                document.getElementById('authResult').textContent = 
+                    `❌ Ошибка входа админа: ${JSON.stringify(result, null, 2)}`;
+            }
+        }
+        
+        // Тест входа под партнером
+        async function testPartnerLogin() {
+            const result = await apiRequest('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: 'partner@test.com',
+                    password: 'partner123'
+                })
+            });
+            
+            if (result.success && result.data.access_token) {
+                currentToken = result.data.access_token;
+                document.getElementById('authResult').textContent = 
+                    `✅ Партнер вошел успешно\nРоль: ${result.data.user?.role}\nПартнер ID: ${result.data.user?.partner?.id}\nТокен: ${currentToken.substring(0, 20)}...`;
+            } else {
+                document.getElementById('authResult').textContent = 
+                    `❌ Ошибка входа партнера: ${JSON.stringify(result, null, 2)}`;
+            }
+        }
+        
+        // Проверка текущего пользователя
+        async function checkCurrentUser() {
+            const result = await apiRequest('/auth/me');
+            
+            document.getElementById('authResult').textContent = 
+                `Текущий пользователь:\n${JSON.stringify(result.data, null, 2)}`;
+        }
+        
+        // Тест загрузки сервисных точек как админ
+        async function testServicePointsAsAdmin() {
+            const result = await apiRequest('/service_points');
+            
+            if (result.success) {
+                const points = result.data.data || result.data;
+                document.getElementById('servicePointsResult').textContent = 
+                    `✅ Админ загрузил ${points.length} сервисных точек:\n${JSON.stringify(points.map(p => ({id: p.id, name: p.name, partner_id: p.partner_id})), null, 2)}`;
+            } else {
+                document.getElementById('servicePointsResult').textContent = 
+                    `❌ Ошибка загрузки: ${JSON.stringify(result, null, 2)}`;
+            }
+        }
+        
+        // Тест загрузки сервисных точек как партнер
+        async function testServicePointsAsPartner() {
+            const result = await apiRequest('/service_points');
+            
+            if (result.success) {
+                const points = result.data.data || result.data;
+                document.getElementById('servicePointsResult').textContent = 
+                    `✅ Партнер загрузил ${points.length} сервисных точек:\n${JSON.stringify(points.map(p => ({id: p.id, name: p.name, partner_id: p.partner_id})), null, 2)}`;
+            } else {
+                document.getElementById('servicePointsResult').textContent = 
+                    `❌ Ошибка загрузки: ${JSON.stringify(result, null, 2)}`;
+            }
+        }
+        
+        // Тест с фильтром партнера
+        async function testServicePointsWithPartnerFilter() {
+            const result = await apiRequest('/service_points?partner_id=1');
+            
+            if (result.success) {
+                const points = result.data.data || result.data;
+                document.getElementById('servicePointsResult').textContent = 
+                    `✅ Загружено ${points.length} точек партнера ID=1:\n${JSON.stringify(points.map(p => ({id: p.id, name: p.name, partner_id: p.partner_id})), null, 2)}`;
+            } else {
+                document.getElementById('servicePointsResult').textContent = 
+                    `❌ Ошибка загрузки с фильтром: ${JSON.stringify(result, null, 2)}`;
+            }
+        }
+    </script>
+</body>
+</html> 

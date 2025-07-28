@@ -24,6 +24,7 @@ import Notification from '../../components/Notification';
 import { ActionsMenu, ActionItem } from '../../components/ui/ActionsMenu/ActionsMenu';
 import { getTablePageStyles } from '../../styles';
 import { useLocalizedName } from '../../utils/localizationHelpers';
+import { useRoleAccess } from '../../hooks/useRoleAccess';
 
 // Импорты API
 import {
@@ -50,6 +51,14 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
   const tablePageStyles = getTablePageStyles(theme);
   const localizedName = useLocalizedName();
   
+  // Хук для управления правами доступа по ролям
+  const { 
+    isPartner, 
+    partnerId: userPartnerId, 
+    canViewAllServicePoints, 
+    getCreateServicePointPath 
+  } = useRoleAccess();
+  
   // Состояние для фильтров и поиска
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRegion, setSelectedRegion] = useState<string>('all');
@@ -75,11 +84,12 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
     query: searchQuery || undefined,
     city_id: selectedCity !== 'all' ? Number(selectedCity) : undefined,
     region_id: selectedRegion !== 'all' ? Number(selectedRegion) : undefined,
-    partner_id: selectedPartner !== 'all' ? Number(selectedPartner) : undefined,
+    // Для партнеров автоматически фильтруем по их partner_id
+    partner_id: isPartner ? userPartnerId : (selectedPartner !== 'all' ? Number(selectedPartner) : undefined),
     is_active: selectedStatus !== 'all' ? (selectedStatus === 'active' ? 'true' : 'false') : undefined,
     page: page,
     per_page: PER_PAGE,
-  }), [searchQuery, selectedCity, selectedRegion, selectedPartner, selectedStatus, page]);
+  }), [searchQuery, selectedCity, selectedRegion, selectedPartner, selectedStatus, page, isPartner, userPartnerId]);
 
   // API запросы
   const { data: regionsData } = useGetRegionsQuery({});
