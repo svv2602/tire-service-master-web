@@ -95,6 +95,9 @@ export interface OrderFilters {
   customer?: string;
   phone?: string;
   service_point_id?: number;
+  search?: string;
+  page?: number;
+  per_page?: number;
 }
 
 export interface OrderUpdateData {

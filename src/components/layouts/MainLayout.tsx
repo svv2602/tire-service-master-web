@@ -71,6 +71,7 @@ import {
   Google as GoogleIcon,
   Security as SecurityIcon,
   Block as BlockIcon,
+  ShoppingCart as ShoppingCartIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -332,6 +333,20 @@ const MainLayout: React.FC = () => {
             path: '/admin/my-service-points',
             roles: [UserRole.PARTNER, UserRole.MANAGER],
             description: t('navigation.descriptions.myServicePoints'),
+          },
+          {
+            text: t('navigation.allOrders'),
+            icon: <ShoppingCartIcon />,
+            path: '/admin/orders',
+            roles: [UserRole.ADMIN, UserRole.MANAGER],
+            description: t('navigation.descriptions.allOrders'),
+          },
+          {
+            text: t('navigation.partnerOrders'),
+            icon: <ShoppingCartIcon />,
+            path: '/admin/partner-orders',
+            roles: [UserRole.PARTNER],
+            description: t('navigation.descriptions.partnerOrders'),
           },
         ],
       },

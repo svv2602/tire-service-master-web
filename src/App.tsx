@@ -73,6 +73,11 @@ const NewBookingWithAvailabilityPage = lazy(() => import('./pages/bookings/NewBo
 // Страница конфликтов бронирований
 const BookingConflictsPage = lazy(() => import('./pages/booking-conflicts/BookingConflictsPage'));
 
+// Ленивая загрузка страниц заказов товаров
+const OrdersPage = lazy(() => import('./pages/orders/OrdersPage'));
+const PartnerOrdersPage = lazy(() => import('./pages/partners/PartnerOrdersPage'));
+const MyOrdersPage = lazy(() => import('./pages/partners/MyOrdersPage'));
+
 // Ленивая загрузка страниц настроек
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage'));
 const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'));
@@ -324,6 +329,10 @@ const App: React.FC = () => {
                         <Route path="reviews" element={<ReviewsPage />} />
                         <Route path="reviews/new" element={<ReviewFormPage />} />
                         <Route path="reviews/:id/edit" element={<ReviewFormPage />} />
+                        
+                        {/* Управление заказами товаров */}
+                        <Route path="orders" element={<OrdersPage />} />
+                        <Route path="partner-orders" element={<MyOrdersPage />} />
                         
                         {/* Справочники */}
                         <Route path="regions" element={<RegionsPage />} />
