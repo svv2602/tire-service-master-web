@@ -114,8 +114,11 @@ export const bookingConflictsApi = baseApi.injectEndpoints({
     }),
 
     // Получение статистики конфликтов
-    getBookingConflictStatistics: builder.query<{ statistics: BookingConflictStatistics }, void>({
-      query: () => 'booking_conflicts/statistics',
+    getBookingConflictStatistics: builder.query<{ statistics: BookingConflictStatistics }, { partner_id?: number }>({
+      query: (params = {}) => ({
+        url: 'booking_conflicts/statistics',
+        params,
+      }),
       providesTags: ['BookingConflictStatistics'],
     }),
 

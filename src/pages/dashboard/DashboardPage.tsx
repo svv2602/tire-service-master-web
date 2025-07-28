@@ -68,7 +68,7 @@ const DashboardPage: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   
   // Хук для управления правами доступа по ролям
-  const { isPartner, partnerId, isAdmin, isManager } = useRoleAccess();
+  const { isPartner, partnerId, isAdmin, isManager, isOperator } = useRoleAccess();
 
   // Основные API запросы
   const { data: partnersData, isLoading: partnersLoading, error: partnersError, refetch: refetchPartners } = useGetPartnersQuery({
@@ -108,7 +108,9 @@ const DashboardPage: React.FC = () => {
 
   const { data: notificationStats, isLoading: notificationStatsLoading, refetch: refetchNotificationStats } = useGetNotificationStatsQuery();
 
-  const { data: conflictStats, isLoading: conflictStatsLoading, refetch: refetchConflictStats } = useGetBookingConflictStatisticsQuery();
+  const { data: conflictStats, isLoading: conflictStatsLoading, refetch: refetchConflictStats } = useGetBookingConflictStatisticsQuery({
+    partner_id: isPartner ? partnerId : undefined, // Фильтрация для партнеров
+  });
 
   const { data: seoAnalytics, isLoading: seoLoading, refetch: refetchSeo } = useGetSeoAnalyticsQuery();
 
@@ -224,7 +226,16 @@ const DashboardPage: React.FC = () => {
       description: `${reviewsAnalytics.pending} ${t('forms.dashboard.stats.reviews.pending')}`,
       navigateTo: '/admin/reviews'
     },
-    // Статистика статей - только для админов и менеджеров
+    // Конфликты бронирований - доступны всем (партнеры и операторы видят по своим точкам)
+    {
+      title: isPartner || isOperator ? 'Конфликты моих точек' : t('forms.dashboard.stats.conflicts.title'),
+      value: conflictStats?.statistics?.total_pending || 0,
+      icon: <WarningIcon />,
+      color: '#d32f2f',
+      description: `${conflictStats?.statistics?.total_pending || 0} ${t('forms.dashboard.stats.conflicts.description')}`,
+      navigateTo: '/admin/booking-conflicts'
+    },
+    // Статистика статей - только для админов и менеджеров (НЕ для партнеров и операторов)
     ...(isAdmin || isManager ? [{
       title: t('forms.dashboard.stats.articles.title'),
       value: articlesAnalytics.total,
@@ -233,16 +244,7 @@ const DashboardPage: React.FC = () => {
       description: `${articlesAnalytics.published} ${t('forms.dashboard.stats.articles.published')}`,
       navigateTo: '/admin/page-content'
     }] : []),
-    // Конфликты бронирований - только для админов и менеджеров
-    ...(isAdmin || isManager ? [{
-      title: t('forms.dashboard.stats.conflicts.title'),
-      value: conflictStats?.statistics?.total_pending || 0,
-      icon: <WarningIcon />,
-      color: '#d32f2f',
-      description: `${conflictStats?.statistics?.total_pending || 0} ${t('forms.dashboard.stats.conflicts.description')}`,
-      navigateTo: '/admin/booking-conflicts'
-    }] : []),
-    // SEO статистика - только для админов и менеджеров
+    // SEO статистика - только для админов и менеджеров (НЕ для партнеров и операторов)
     ...(isAdmin || isManager ? [{
       title: t('forms.dashboard.stats.seo.title'),
       value: seoAnalytics?.data?.total_pages || 0,
@@ -381,14 +383,17 @@ const DashboardPage: React.FC = () => {
                 >
                   {t('forms.dashboard.quickActions.createBooking')}
                 </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<AddIcon />}
-                  onClick={() => navigate('/admin/articles/new')}
-                  fullWidth
-                >
-                  {t('forms.dashboard.quickActions.writeArticle')}
-                </Button>
+                {/* Написать статью - только для админов и менеджеров */}
+                {(isAdmin || isManager) && (
+                  <Button
+                    variant="outlined"
+                    startIcon={<AddIcon />}
+                    onClick={() => navigate('/admin/articles/new')}
+                    fullWidth
+                  >
+                    {t('forms.dashboard.quickActions.writeArticle')}
+                  </Button>
+                )}
                 <Button
                   variant="outlined"
                   startIcon={<ReviewManageIcon />}
@@ -534,8 +539,9 @@ const DashboardPage: React.FC = () => {
           </Card>
         </Grid>
 
-        {/* Аналитика контента */}
-        <Grid item xs={12} md={6}>
+        {/* Аналитика контента - только для админов и менеджеров */}
+        {(isAdmin || isManager) && (
+          <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -600,6 +606,7 @@ const DashboardPage: React.FC = () => {
             </CardContent>
           </Card>
         </Grid>
+        )}
 
         {/* Критические уведомления */}
         <Grid item xs={12} md={6}>

@@ -117,7 +117,7 @@ const BookingConflictsPage: React.FC = () => {
 
   // API хуки
   const { data: conflictsData, isLoading: conflictsLoading, refetch: refetchConflicts } = useGetBookingConflictsQuery(filters);
-  const { data: statisticsData, isLoading: statisticsLoading } = useGetBookingConflictStatisticsQuery();
+  const { data: statisticsData, isLoading: statisticsLoading } = useGetBookingConflictStatisticsQuery({});
   const { data: servicePointsData } = useGetServicePointsQuery({ per_page: 100 });
   
   const [analyzeConflicts, { isLoading: analyzeLoading }] = useAnalyzeBookingConflictsMutation();

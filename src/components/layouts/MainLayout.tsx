@@ -324,14 +324,14 @@ const MainLayout: React.FC = () => {
             text: t('navigation.servicePoints'),
             icon: <LocationOnIcon />,
             path: '/admin/service-points',
-            roles: [UserRole.ADMIN, UserRole.PARTNER, UserRole.MANAGER],
+            roles: [UserRole.ADMIN, UserRole.MANAGER],
             description: t('navigation.descriptions.servicePoints'),
           },
           {
             text: t('navigation.myServicePoints'),
             icon: <LocationOnIcon />,
-            path: '/admin/my-service-points',
-            roles: [UserRole.PARTNER, UserRole.MANAGER],
+            path: '/admin/service-points',
+            roles: [UserRole.PARTNER],
             description: t('navigation.descriptions.myServicePoints'),
           },
           {
