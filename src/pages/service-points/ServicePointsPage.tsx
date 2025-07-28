@@ -258,11 +258,17 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
         label: t('admin.servicePoints.createServicePoint'),
         icon: <AddIcon />, 
         onClick: () => {
-          if (partnerId) {
+          const createPath = getCreateServicePointPath();
+          if (isPartner) {
+            // Для партнеров - прямой переход на создание с предустановленным партнером
+            navigate(createPath);
+          } else if (partnerId) {
+            // Для админов с указанным partnerId в URL
             navigate(`/admin/partners/${partnerId}/service-points/new`, {
               state: { from: `/admin/partners/${partnerId}/service-points` }
             });
           } else {
+            // Для админов без partnerId - выбор партнера
             showNotification(t('admin.servicePoints.selectPartnerFirst'), 'warning');
             navigate('/admin/partners');
           }
@@ -271,7 +277,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
         color: 'primary' as const
       }
     ]
-  }), [navigate, partnerId, showNotification, selectedPartnerInfo, t]);
+  }), [navigate, partnerId, showNotification, selectedPartnerInfo, t, getCreateServicePointPath, isPartner]);
 
   // Конфигурация поиска
   const searchConfig = useMemo(() => ({
@@ -281,41 +287,48 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
   }), [searchQuery, handleSearchChange, t]);
 
   // Конфигурация фильтров
-  const filtersConfig = useMemo(() => [
-    {
-      id: 'region',
-      label: t('admin.servicePoints.filters.region'),
-      type: 'select' as const,
-      value: selectedRegion,
-      onChange: handleRegionFilterChange,
-      options: [
-        { value: 'all', label: t('admin.servicePoints.filters.allRegions') },
-        ...(regionsData?.data || []).map(region => ({ value: region.id.toString(), label: localizedName(region) }))
-      ]
-    },
-    {
-      id: 'city',
-      label: t('admin.servicePoints.filters.city'),
-      type: 'select' as const,
-      value: selectedCity,
-      onChange: handleCityFilterChange,
-      options: [
-        { value: 'all', label: t('admin.servicePoints.filters.allCities') },
-        ...(citiesData?.data || []).map(city => ({ value: city.id.toString(), label: localizedName(city) }))
-      ]
-    },
-    {
-      id: 'partner',
-      label: t('admin.servicePoints.filters.partner'),
-      type: 'select' as const,
-      value: selectedPartner,
-      onChange: handlePartnerFilterChange,
-      options: [
-        { value: 'all', label: t('admin.servicePoints.filters.allPartners') },
-        ...(partnersData?.data || []).map(partner => ({ value: partner.id.toString(), label: partner.company_name }))
-      ]
-    },
-    {
+  const filtersConfig = useMemo(() => {
+    const filters = [
+      {
+        id: 'region',
+        label: t('admin.servicePoints.filters.region'),
+        type: 'select' as const,
+        value: selectedRegion,
+        onChange: handleRegionFilterChange,
+        options: [
+          { value: 'all', label: t('admin.servicePoints.filters.allRegions') },
+          ...(regionsData?.data || []).map(region => ({ value: region.id.toString(), label: localizedName(region) }))
+        ]
+      },
+      {
+        id: 'city',
+        label: t('admin.servicePoints.filters.city'),
+        type: 'select' as const,
+        value: selectedCity,
+        onChange: handleCityFilterChange,
+        options: [
+          { value: 'all', label: t('admin.servicePoints.filters.allCities') },
+          ...(citiesData?.data || []).map(city => ({ value: city.id.toString(), label: localizedName(city) }))
+        ]
+      }
+    ];
+
+    // Показываем фильтр партнеров только админам и менеджерам
+    if (canViewAllServicePoints) {
+      filters.push({
+        id: 'partner',
+        label: t('admin.servicePoints.filters.partner'),
+        type: 'select' as const,
+        value: selectedPartner,
+        onChange: handlePartnerFilterChange,
+        options: [
+          { value: 'all', label: t('admin.servicePoints.filters.allPartners') },
+          ...(partnersData?.data || []).map(partner => ({ value: partner.id.toString(), label: partner.company_name }))
+        ]
+      });
+    }
+
+    filters.push({
       id: 'status',
       label: t('admin.servicePoints.filters.status'),
       type: 'select' as const,
@@ -326,8 +339,10 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
         { value: 'active', label: t('statuses.active') },
         { value: 'inactive', label: t('statuses.inactive') }
       ]
-    }
-  ], [selectedRegion, selectedCity, selectedPartner, selectedStatus, handleRegionFilterChange, handleCityFilterChange, handlePartnerFilterChange, handleStatusFilterChange, regionsData, citiesData, partnersData, t]);
+    });
+
+    return filters;
+  }, [selectedRegion, selectedCity, selectedPartner, selectedStatus, handleRegionFilterChange, handleCityFilterChange, handlePartnerFilterChange, handleStatusFilterChange, regionsData, citiesData, partnersData, t, canViewAllServicePoints, localizedName]);
 
 
 
