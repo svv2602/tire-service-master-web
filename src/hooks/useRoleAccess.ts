@@ -58,6 +58,15 @@ export const useRoleAccess = () => {
       userRole,
       partnerId: user?.partner?.id || (user as any)?.partner_id,
       
+      // Отладочная информация
+      debugInfo: {
+        userExists: !!user,
+        partnerExists: !!user?.partner,
+        partnerIdFromPartner: user?.partner?.id,
+        partnerIdFromUser: (user as any)?.partner_id,
+        finalPartnerId: user?.partner?.id || (user as any)?.partner_id
+      },
+      
       // Утилиты для UI
       getCreateServicePointPath: () => {
         const partnerId = user?.partner?.id || (user as any)?.partner_id;

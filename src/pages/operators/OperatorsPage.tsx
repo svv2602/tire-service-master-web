@@ -44,6 +44,7 @@ import {
 // API хуки
 import {
   useGetAllOperatorsQuery,
+  useGetOperatorsByPartnerQuery,
   useCreateOperatorMutation,
   useUpdateOperatorMutation,
   useDeleteOperatorMutation,
@@ -66,7 +67,10 @@ const OperatorsPage: React.FC = () => {
   const theme = useTheme();
   
   // Хук для управления правами доступа по ролям
-  const { isPartner, partnerId } = useRoleAccess();
+  const { isPartner, partnerId, debugInfo } = useRoleAccess();
+  
+  // Отладочная информация
+  console.log('OperatorsPage DEBUG:', { isPartner, partnerId, typeof: typeof partnerId, debugInfo });
 
   // Состояние для фильтров и поиска
   const [page, setPage] = useState(1);
@@ -100,18 +104,46 @@ const OperatorsPage: React.FC = () => {
     operator: null,
   });
 
-  // API запросы
+  // API запросы - разная логика для партнеров и админов
   const {
-    data: operatorsData,
-    isLoading: operatorsLoading,
-    refetch: refetchOperators,
+    data: partnerOperatorsData,
+    isLoading: partnerOperatorsLoading,
+    refetch: refetchPartnerOperators,
+  } = useGetOperatorsByPartnerQuery(partnerId || 0, {
+    skip: !isPartner || !partnerId,
+  });
+
+  const {
+    data: allOperatorsData,
+    isLoading: allOperatorsLoading,
+    refetch: refetchAllOperators,
   } = useGetAllOperatorsQuery({
     page,
     per_page: rowsPerPage,
     search: search || undefined,
-    partner_id: isPartner ? partnerId : (partnerFilter || undefined), // Автоматическая фильтрация для партнеров
+    partner_id: partnerFilter || undefined,
     is_active: statusFilter === 'all' ? undefined : statusFilter === 'active',
+  }, {
+    skip: isPartner && !!partnerId,
   });
+
+  // Выбираем правильные данные в зависимости от роли
+  const operatorsData = isPartner && partnerId ? 
+    (partnerOperatorsData ? {
+      data: partnerOperatorsData,
+      pagination: {
+        current_page: 1,
+        total_pages: 1,
+        total_count: partnerOperatorsData.length,
+        per_page: partnerOperatorsData.length
+      }
+    } : undefined) : 
+    allOperatorsData;
+
+  const operatorsLoading = isPartner && partnerId ? partnerOperatorsLoading : allOperatorsLoading;
+  const refetchOperators = isPartner && partnerId ? refetchPartnerOperators : refetchAllOperators;
+  
+  console.log('OperatorsPage API Query Result:', { isPartner, partnerId, operatorsData });
 
   const { data: partnersData } = useGetPartnersQuery({
     page: 1,
