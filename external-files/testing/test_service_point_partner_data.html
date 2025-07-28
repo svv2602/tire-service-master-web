@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест данных партнера в сервисных точках</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .result {
+            background: #f5f5f5;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест данных партнера в сервисных точках</h1>
+    
+    <div class="section">
+        <h2>1. Авторизация как партнер</h2>
+        <button onclick="loginAsPartner()">Войти как партнер (partner@test.com)</button>
+        <div id="loginResult" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>2. Получение списка сервисных точек</h2>
+        <button onclick="getServicePoints()">Получить сервисные точки</button>
+        <div id="servicePointsResult" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>3. Анализ данных партнера</h2>
+        <button onclick="analyzePartnerData()">Анализировать данные партнера</button>
+        <div id="analysisResult" class="result"></div>
+    </div>
+
+    <div class="section">
+        <h2>4. Получение конкретной сервисной точки</h2>
+        <input type="number" id="servicePointId" placeholder="ID сервисной точки" value="9">
+        <button onclick="getServicePointById()">Получить сервисную точку по ID</button>
+        <div id="servicePointByIdResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        let servicePointsData = null;
+
+        async function loginAsPartner() {
+            const resultDiv = document.getElementById('loginResult');
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        auth: {
+                            login: 'partner@test.com',
+                            password: 'partner123'
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ Авторизация успешна</div>
+                        <p>Пользователь: ${data.user.email}</p>
+                        <p>Роль: ${data.user.role}</p>
+                        <p>Partner ID: ${data.partner?.id || 'не найден'}</p>
+                        <p>Partner Name: ${data.partner?.name || 'не найден'}</p>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Ошибка авторизации: ${data.message || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Ошибка сети: ${error.message}</div>`;
+            }
+        }
+
+        async function getServicePoints() {
+            const resultDiv = document.getElementById('servicePointsResult');
+            try {
+                const response = await fetch(`${API_BASE}/service_points`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                servicePointsData = data;
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ Данные получены</div>
+                        <p>Количество сервисных точек: ${data.data?.length || 0}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Ошибка получения данных: ${data.message || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Ошибка сети: ${error.message}</div>`;
+            }
+        }
+
+        async function analyzePartnerData() {
+            const resultDiv = document.getElementById('analysisResult');
+            
+            if (!servicePointsData || !servicePointsData.data) {
+                resultDiv.innerHTML = `<div class="error">❌ Сначала получите данные сервисных точек</div>`;
+                return;
+            }
+
+            let html = '<div class="success">📊 Анализ данных партнера в сервисных точках:</div>';
+            html += '<table><tr><th>ID</th><th>Название</th><th>Partner ID</th><th>Partner Object</th><th>Partner Name</th><th>Partner Company Name</th></tr>';
+
+            servicePointsData.data.forEach(sp => {
+                html += `<tr>
+                    <td>${sp.id}</td>
+                    <td>${sp.name || sp.localized_name || 'N/A'}</td>
+                    <td>${sp.partner_id || 'N/A'}</td>
+                    <td>${sp.partner ? 'Есть' : 'Нет'}</td>
+                    <td>${sp.partner?.name || 'N/A'}</td>
+                    <td>${sp.partner?.company_name || 'N/A'}</td>
+                </tr>`;
+            });
+
+            html += '</table>';
+
+            // Анализ первой сервисной точки
+            if (servicePointsData.data.length > 0) {
+                const firstSp = servicePointsData.data[0];
+                html += '<h3>🔍 Детальный анализ первой сервисной точки:</h3>';
+                html += `<pre>${JSON.stringify(firstSp, null, 2)}</pre>`;
+            }
+
+            resultDiv.innerHTML = html;
+        }
+
+        async function getServicePointById() {
+            const resultDiv = document.getElementById('servicePointByIdResult');
+            const id = document.getElementById('servicePointId').value;
+            
+            if (!id) {
+                resultDiv.innerHTML = `<div class="error">❌ Введите ID сервисной точки</div>`;
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/service_points/${id}`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ Данные получены для сервисной точки ID ${id}</div>
+                        <h3>Информация о партнере:</h3>
+                        <p>Partner ID: ${data.partner_id || 'N/A'}</p>
+                        <p>Partner Object: ${data.partner ? 'Есть' : 'Нет'}</p>
+                        <p>Partner Name: ${data.partner?.name || 'N/A'}</p>
+                        <p>Partner Company Name: ${data.partner?.company_name || 'N/A'}</p>
+                        <h3>Полные данные:</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Ошибка получения данных: ${data.message || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Ошибка сети: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html> 

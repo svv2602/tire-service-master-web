@@ -395,7 +395,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
       hideOnMobile: true,
       render: (servicePoint: ServicePoint) => (
         <Typography variant="body2">
-          {servicePoint.partner?.company_name || t('admin.servicePoints.notSpecified')}
+          {servicePoint.partner?.company_name || servicePoint.partner?.name || t('admin.servicePoints.notSpecified')}
         </Typography>
       )
     },

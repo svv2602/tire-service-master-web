@@ -420,6 +420,10 @@ const ServicePointFormPage: React.FC = () => {
       try {
         // Подготавливаем данные для отправки
         const servicePointData = {
+          // Базовые поля (для совместимости с валидацией бэкенда)
+          name: values.name_ru || values.name_uk || '',
+          address: values.address_ru || values.address_uk || '',
+          
           // Локализованные поля
           name_ru: values.name_ru,
           name_uk: values.name_uk,

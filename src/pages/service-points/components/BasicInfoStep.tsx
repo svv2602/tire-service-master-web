@@ -24,6 +24,7 @@ import { SIZES, getFormStyles, getTextFieldStyles } from '../../../styles';
 import type { ServicePointFormDataNew, Partner, Region, City, ServicePoint } from '../../../types/models';
 import { useLocalizedName } from '../../../utils/localizationHelpers';
 import { useRoleAccess } from '../../../hooks/useRoleAccess';
+import { useSelector } from 'react-redux';
 
 interface BasicInfoStepProps {
   formik: FormikProps<ServicePointFormDataNew>;
@@ -67,6 +68,9 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
   const textFieldStyles = getTextFieldStyles(theme);
   const localizedName = useLocalizedName();
   const { isPartner, canViewAllServicePoints } = useRoleAccess();
+  
+  // Получаем данные пользователя для отображения названия партнера
+  const currentUser = useSelector((state: any) => state.auth?.user);
 
   // API запросы
   const { data: partners, isLoading: partnersLoading } = useGetPartnersQuery({});
@@ -195,7 +199,7 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
             <TextField
               fullWidth
               label={t('forms.servicePoint.fields.partner')}
-              value="Ваша компания" // Можно заменить на реальное название
+              value={currentUser?.partner?.name || currentUser?.partner?.company_name || 'Ваша компания'}
               disabled
               sx={{
                 ...textFieldStyles,
