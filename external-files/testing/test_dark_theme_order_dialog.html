@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест темной темы в диалоге заказа</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .theme-demo {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .light-theme {
+            background: #ffffff;
+            color: #000000;
+        }
+        .dark-theme {
+            background: #121212;
+            color: #ffffff;
+        }
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+        .light-theme .order-item {
+            background-color: #f5f5f5;
+        }
+        .dark-theme .order-item {
+            background-color: #424242;
+        }
+        .total-section {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid;
+        }
+        .light-theme .total-section {
+            border-color: rgba(0, 0, 0, 0.12);
+        }
+        .dark-theme .total-section {
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+        .status-chip {
+            padding: 4px 12px;
+            border-radius: 16px;
+            color: white;
+            background-color: #FF9800;
+        }
+        .fix-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎨 Тест темной темы в диалоге заказа</h1>
+        
+        <div class="fix-info">
+            <h3>✅ Исправление применено</h3>
+            <p><strong>Проблема:</strong> В темной теме товары заказа имели белый фон (grey.50), из-за чего текст был не виден.</p>
+            <p><strong>Решение:</strong> Заменено на адаптивный цвет:</p>
+            <code>backgroundColor: theme.palette.mode === 'dark' ? 'grey.800' : 'grey.50'</code>
+        </div>
+
+        <h2>Светлая тема</h2>
+        <div class="theme-demo light-theme">
+            <h3>Заказ TTN202507280020</h3>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <div>
+                    <strong>Клиент:</strong><br>
+                    Иванов Иван Иванович<br>
+                    +38 (671) 234-56-7
+                </div>
+                <div>
+                    <strong>Статус:</strong><br>
+                    <span class="status-chip">В обработке</span>
+                </div>
+            </div>
+
+            <h4>Товары:</h4>
+            
+            <div class="order-item">
+                <div>
+                    <div style="font-weight: bold;">Артикул: 00000047875</div>
+                    <div>Шина всесезонная Bridgestone Turanza</div>
+                </div>
+                <div style="text-align: right;">
+                    <div>4 шт.</div>
+                    <div style="font-weight: bold;">7488.0 ₴</div>
+                </div>
+            </div>
+
+            <div class="order-item">
+                <div>
+                    <div style="font-weight: bold;">Артикул: BRAKE-PAD-FRONT</div>
+                    <div>Колодки тормозные передние Brembo</div>
+                </div>
+                <div style="text-align: right;">
+                    <div>1 шт.</div>
+                    <div style="font-weight: bold;">1890.0 ₴</div>
+                </div>
+            </div>
+
+            <div class="order-item">
+                <div>
+                    <div style="font-weight: bold;">Артикул: AIR-FILTER-BOSCH</div>
+                    <div>Фильтр воздушный Bosch</div>
+                </div>
+                <div style="text-align: right;">
+                    <div>1 шт.</div>
+                    <div style="font-weight: bold;">450.0 ₴</div>
+                </div>
+            </div>
+
+            <div class="total-section">
+                <span>Итого:</span>
+                <span>9828.0 ₴</span>
+            </div>
+        </div>
+
+        <h2>Темная тема (исправлено)</h2>
+        <div class="theme-demo dark-theme">
+            <h3>Заказ TTN202507280020</h3>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <div>
+                    <strong>Клиент:</strong><br>
+                    Иванов Иван Иванович<br>
+                    +38 (671) 234-56-7
+                </div>
+                <div>
+                    <strong>Статус:</strong><br>
+                    <span class="status-chip">В обработке</span>
+                </div>
+            </div>
+
+            <h4>Товары:</h4>
+            
+            <div class="order-item">
+                <div>
+                    <div style="font-weight: bold;">Артикул: 00000047875</div>
+                    <div>Шина всесезонная Bridgestone Turanza</div>
+                </div>
+                <div style="text-align: right;">
+                    <div>4 шт.</div>
+                    <div style="font-weight: bold;">7488.0 ₴</div>
+                </div>
+            </div>
+
+            <div class="order-item">
+                <div>
+                    <div style="font-weight: bold;">Артикул: BRAKE-PAD-FRONT</div>
+                    <div>Колодки тормозные передние Brembo</div>
+                </div>
+                <div style="text-align: right;">
+                    <div>1 шт.</div>
+                    <div style="font-weight: bold;">1890.0 ₴</div>
+                </div>
+            </div>
+
+            <div class="order-item">
+                <div>
+                    <div style="font-weight: bold;">Артикул: AIR-FILTER-BOSCH</div>
+                    <div>Фильтр воздушный Bosch</div>
+                </div>
+                <div style="text-align: right;">
+                    <div>1 шт.</div>
+                    <div style="font-weight: bold;">450.0 ₴</div>
+                </div>
+            </div>
+
+            <div class="total-section">
+                <span>Итого:</span>
+                <span>9828.0 ₴</span>
+            </div>
+        </div>
+
+        <div class="fix-info">
+            <h3>🔧 Техническое решение</h3>
+            <p><strong>Файл:</strong> <code>tire-service-master-web/src/pages/orders/OrdersPage.tsx</code></p>
+            <p><strong>Изменение:</strong></p>
+            <pre>// До
+backgroundColor: 'grey.50'
+
+// После  
+backgroundColor: theme.palette.mode === 'dark' ? 'grey.800' : 'grey.50'</pre>
+            <p><strong>Результат:</strong> Товары теперь имеют темный фон в темной теме и остаются светлыми в светлой теме.</p>
+        </div>
+
+        <h2>✅ Проверка готова</h2>
+        <p>Теперь в темной теме:</p>
+        <ul>
+            <li>✅ Товары имеют темно-серый фон (grey.800)</li>
+            <li>✅ Текст хорошо виден на темном фоне</li>
+            <li>✅ Сохранена читаемость в светлой теме</li>
+            <li>✅ Итоговая сумма корректно отображается</li>
+        </ul>
+    </div>
+</body>
+</html> 
