@@ -126,7 +126,6 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
         ids.add(post.service_category_id);
       }
     });
-    console.log('🔍 ServicesStep - categoryIds из постов:', Array.from(ids));
     return Array.from(ids);
   }, [formik.values.service_posts]);
 
@@ -140,7 +139,6 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
   // Мемоизируем availableServices для оптимизации
   const availableServices = useMemo(() => {
     const services = servicesResponse?.data || [];
-    console.log('🔍 ServicesStep - availableServices всего:', services.length, 'для категорий:', categoryIds);
     return services;
   }, [servicesResponse?.data, categoryIds]);
 
@@ -171,7 +169,6 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
       (a.localized_name || a.name).localeCompare(b.localized_name || b.name)
     );
     
-    console.log('🔍 ServicesStep - categoriesFromPosts:', categories.length, categories.map(c => `${c.id}:${c.name}`));
     return categories;
   }, [formik.values.service_posts, availableServices]);
 
@@ -188,10 +185,8 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
         )
       );
       grouped[category.id] = categoryServices;
-      console.log(`🔍 ServicesStep - категория ${category.id} (${category.name}):`, categoryServices.length, 'услуг');
     });
     
-    console.log('🔍 ServicesStep - servicesByCategory:', grouped);
     return grouped;
   }, [categoriesFromPosts, availableServices, searchQuery]);
 
@@ -323,8 +318,6 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ formik, isEditMode, service
         newSetting
       ]);
     }
-    
-    console.log(`🔧 Автоподтверждение для категории ${categoryId}: ${enabled ? 'включено' : 'отключено'}`);
   };
 
   // Если нет категорий из постов, показываем предупреждение

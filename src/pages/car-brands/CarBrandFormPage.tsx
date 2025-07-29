@@ -115,21 +115,10 @@ export const CarBrandFormPage: React.FC = () => {
           // Если logo это строка (URL), значит логотип не изменился и не нужно его отправлять
           if (values.logo instanceof File) {
             updateData.logo = values.logo;
-            console.log('Logo is a File, will use FormData');
           } else if (values.logo === null) {
             // Если logo === null, значит пользователь удалил логотип
             updateData.logo = null;
-            console.log('Logo is null, will remove logo');
-          } else {
-            // Если logo это строка (URL), не отправляем его - логотип не изменился
-            console.log('Logo is URL string, not sending logo field');
           }
-          
-          console.log('Update data:', {
-            ...updateData,
-            logo: updateData.logo ? 'File object' : updateData.logo
-          });
-          console.log('Logo type:', typeof values.logo, values.logo?.constructor?.name);
           
           await updateBrand({ id, data: updateData }).unwrap();
           setSuccessMessage(t('forms.carBrand.messages.updateSuccess'));
@@ -141,7 +130,6 @@ export const CarBrandFormPage: React.FC = () => {
             logo: values.logo instanceof File ? values.logo : null,
           };
           
-          console.log('Sending create data:', createData);
           await createBrand(createData).unwrap();
           setSuccessMessage(t('forms.carBrand.messages.createSuccess'));
         }

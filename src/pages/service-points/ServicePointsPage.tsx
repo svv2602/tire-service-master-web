@@ -345,15 +345,7 @@ const ServicePointsPage: React.FC<ServicePointsPageNewProps> = () => {
 
 
 
-  // Отладочная информация для диагностики переводов
-  console.log('🔧 ServicePointsPage переводы:', {
-    t: typeof t,
-    nameTranslation: t('tables.columns.name'),
-    partnerTranslation: t('tables.columns.partner'),
-    cityTranslation: t('tables.columns.city'),
-    statusTranslation: t('tables.columns.status'),
-    actionsTranslation: t('tables.columns.actions')
-  });
+
 
   // Колонки таблицы  
   const columns = useMemo(() => [

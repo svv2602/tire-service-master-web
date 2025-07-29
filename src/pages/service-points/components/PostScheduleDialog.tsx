@@ -119,10 +119,6 @@ const PostScheduleDialog: React.FC<PostScheduleDialogProps> = ({
       custom_hours: finalSchedule.has_custom_schedule ? finalSchedule.custom_hours : undefined,
     };
     
-    console.log('PostScheduleDialog: сохраняем данные:', dataToSave);
-    console.log('PostScheduleDialog: локальное состояние:', localSchedule);
-    console.log('PostScheduleDialog: финальное состояние:', finalSchedule);
-    
     onSave(dataToSave);
     onClose();
   };

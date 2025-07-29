@@ -91,15 +91,7 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
   const regionsData = regions?.data || [];
   const citiesData = cities?.data || [];
 
-  // Отладочная информация (только в режиме разработки)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('BasicInfoStep: partnersData:', partnersData);
-    console.log('BasicInfoStep: regionsData:', regionsData);
-    console.log('BasicInfoStep: citiesData:', citiesData);
-    console.log('BasicInfoStep: selectedRegionId:', selectedRegionId);
-    console.log('BasicInfoStep: formik.values.partner_id:', formik.values.partner_id);
-    console.log('BasicInfoStep: formik.values.city_id:', formik.values.city_id);
-  }
+
 
   // Устанавливаем регион при загрузке точки обслуживания
   useEffect(() => {
@@ -120,9 +112,7 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ formik, isEditMode, servi
     setSelectedRegionId(regionId);
     formik.setFieldValue('city_id', 0); // Сбрасываем город при смене региона
     
-    if (regionId > 0) {
-      console.log('Регион изменен на:', regionId, 'Города будут загружены автоматически');
-    }
+
   };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {

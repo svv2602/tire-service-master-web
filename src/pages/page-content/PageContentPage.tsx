@@ -94,21 +94,7 @@ const PageContentPage: React.FC = () => {
     return matchesSearch && matchesActive;
   }) || [];
 
-  // Отладочная информация (только в режиме разработки)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔍 PageContentPage Debug Info:');
-    console.log('📊 All Pages:', pageContentData?.data);
-    console.log('🔢 Total Pages Count:', pageContentData?.data?.length);
-    console.log('🔍 Search Query:', searchQuery);
-    console.log('👁️ Show Inactive:', showInactive);
-    console.log('📋 Filtered Pages:', filteredPages);
-    console.log('🔢 Filtered Count:', filteredPages.length);
-    console.log('❌ Inactive Pages:', pageContentData?.data?.filter(p => !p.active));
-    console.log('✅ Active Pages:', pageContentData?.data?.filter(p => p.active));
-    console.log('🔑 Auth State:', isAuthenticated ? 'аутентифицирован' : 'не аутентифицирован');
-    console.log('📡 API Response:', pageContentData);
-    console.log('⚠️ API Error:', error);
-  }
+
   
   // Обработка переключения активности
   const handleToggleActive = async (pageId: number, currentActive: boolean) => {

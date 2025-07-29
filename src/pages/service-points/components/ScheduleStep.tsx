@@ -57,24 +57,14 @@ const defaultWorkingHours: WorkingHoursSchedule = DAYS_OF_WEEK.reduce<WorkingHou
 
 const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, servicePoint }) => {
   const { t } = useTranslation();
-  // Отладочная информация
-  console.log('=== ScheduleStep Debug ===');
-  console.log('isEditMode:', isEditMode);
-  console.log('servicePoint?.working_hours:', servicePoint?.working_hours);
-  console.log('formik.values.working_hours:', formik.values.working_hours);
   
   // Инициализируем расписание пустым шаблоном для новых точек
   React.useEffect(() => {
-    console.log('=== ScheduleStep useEffect ===');
-    console.log('formik.values.working_hours:', formik.values.working_hours);
-    console.log('Object.keys(formik.values.working_hours || {}).length:', Object.keys(formik.values.working_hours || {}).length);
-    
     if (!formik.values.working_hours || Object.keys(formik.values.working_hours).length === 0) {
       // Для новых точек - пустое расписание, для редактирования - данные из servicePoint
       const initialSchedule = isEditMode && servicePoint?.working_hours 
         ? servicePoint.working_hours 
         : emptyWorkingHours;
-      console.log('Устанавливаем начальное расписание:', initialSchedule);
       formik.setFieldValue('working_hours', initialSchedule);
     }
   }, [formik, isEditMode, servicePoint]);
@@ -142,7 +132,6 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
                         <Switch
                           checked={dayHours.is_working_day}
                           onChange={(e) => {
-                            console.log(`Изменение рабочего дня ${day.name}: ${dayHours.is_working_day} -> ${e.target.checked}`);
                             const newWorkingHours = {
                               ...normalizedWorkingHours,
                               [day.key]: {
@@ -150,7 +139,6 @@ const ScheduleStep: React.FC<ScheduleStepProps> = ({ formik, isEditMode, service
                                 is_working_day: e.target.checked
                               }
                             };
-                            console.log('Новое расписание:', newWorkingHours);
                             formik.setFieldValue('working_hours', newWorkingHours);
                           }}
                           name={`working_hours.${day.key}.is_working_day`}

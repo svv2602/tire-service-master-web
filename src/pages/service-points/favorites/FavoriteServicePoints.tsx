@@ -64,7 +64,6 @@ const FavoriteServicePoints: React.FC = () => {
       }
       
       const responseJson = await response.json();
-      console.log('API Response in FavoriteServicePoints:', responseJson);
       
       let points = [];
       

@@ -136,11 +136,9 @@ const ClientCarFormPage: React.FC = () => {
       try {
         setSuccessMessage('');
         if (isEditMode && carId && clientId) {
-          console.log('Отправляем данные для обновления:', values);
           await updateCar({ clientId, carId, data: { car: values } }).unwrap();
           setSuccessMessage(t('admin.clients.carsManagement.form.messages.carUpdated'));
         } else if (clientId) {
-          console.log('Отправляем данные для создания:', values);
           await createCar({ clientId, data: { car: values } }).unwrap();
           setSuccessMessage(t('admin.clients.carsManagement.form.messages.carCreated'));
         }

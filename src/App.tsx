@@ -171,18 +171,9 @@ const ProtectedRoute: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
   const { isAuthenticated, accessToken, user, isInitialized, loading } = useSelector((state: RootState) => state.auth);
-  
-  console.log('ProtectedRoute check:', { 
-    isAuthenticated, 
-    hasToken: !!accessToken,
-    hasUser: !!user,
-    isInitialized,
-    loading
-  });
 
   // Показываем загрузку если состояние еще не инициализировано или идет загрузка
   if (!isInitialized || loading) {
-    console.log('ProtectedRoute: showing loading screen');
     return <LoadingScreen />;
   }
 
@@ -191,11 +182,9 @@ const ProtectedRoute: React.FC<{
   if (!isAuthenticated || !user) {
     // Не делаем редирект, если не инициализировано
     if (!isInitialized) return <LoadingScreen />;
-    console.log('ProtectedRoute: redirecting to login - not authenticated');
     return <Navigate to="/login" />;
   }
 
-  console.log('ProtectedRoute: access granted');
   return <>{children}</>;
 };
 

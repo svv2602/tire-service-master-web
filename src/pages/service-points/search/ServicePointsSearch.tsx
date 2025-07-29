@@ -149,7 +149,6 @@ const ServicePointsSearch: React.FC = () => {
       }
       
       const responseJson = await response.json();
-      console.log('API Response in ServicePointsSearch:', responseJson);
       
       let points = [];
       

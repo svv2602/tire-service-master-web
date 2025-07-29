@@ -150,12 +150,6 @@ const ServicePointFormPage: React.FC = () => {
     const referrer = location.state?.from || document.referrer;
     const userRole = currentUser?.role;
     
-    console.log('=== Return path determination ===');
-    console.log('location.state?.from:', location.state?.from);
-    console.log('document.referrer:', document.referrer);
-    console.log('partnerId:', partnerId);
-    console.log('userRole:', userRole);
-    
     // If came from partner edit page
     if (referrer && referrer.includes(`/admin/partners/${partnerId}/edit`)) {
       return `/admin/partners/${partnerId}/edit`;
@@ -192,11 +186,7 @@ const ServicePointFormPage: React.FC = () => {
   };
   
   // Debug info for URL parameters
-  console.log('=== URL parameters ===');
-  console.log('partnerId:', partnerId, 'type:', typeof partnerId);
-  console.log('id:', id, 'type:', typeof id);
-  console.log('isEditMode:', isEditMode);
-  console.log('partnerId as number:', partnerId ? Number(partnerId) : null);
+
   
   // Хуки для темы и адаптивности
   const theme = useTheme();
@@ -245,19 +235,6 @@ const ServicePointFormPage: React.FC = () => {
     }
     
     const url = `http://localhost:8000/api/v1/service_points/${servicePointId}/photos`;
-    console.log('=== Direct photo upload ===');
-    console.log('URL:', url);
-    console.log('servicePointId:', servicePointId);
-    console.log('file:', file);
-    console.log('file.name:', file.name);
-    console.log('file.size:', file.size);
-    console.log('file.type:', file.type);
-    console.log('isMain:', isMain);
-    console.log('FormData содержимое:');
-    // Fix iteration for TypeScript compatibility
-    Array.from(formData.entries()).forEach(([key, value]) => {
-      console.log('  ', key, ':', value);
-    });
     
     const response = await fetch(url, {
       method: 'POST',
@@ -275,10 +252,8 @@ const ServicePointFormPage: React.FC = () => {
     }
     
     const result = await response.json();
-    console.log(t('forms.servicePoint.photoUploadSuccess'), result);
     
     // RTK Query cache invalidation after successful upload
-    console.log(t('forms.servicePoint.cacheInvalidation'));
     invalidateTag('ServicePointPhoto');
     invalidateTag('ServicePoint');
     invalidateList(['ServicePointPhoto']);
@@ -309,11 +284,6 @@ const ServicePointFormPage: React.FC = () => {
     // Проверяем права доступа для партнеров и операторов
     if (currentUser && partnerId) {
       const userRole = currentUser.role;
-      console.log('=== Проверка прав доступа ===');
-      console.log('Роль пользователя:', userRole);
-      console.log('partnerId из URL:', partnerId);
-      console.log('ID партнера пользователя:', currentUser.partner?.id);
-      console.log('ID оператора пользователя:', currentUser.operator?.id);
       
       // Если пользователь - партнер, может работать только со своими сервисными точками
       if (userRole === 'partner' && currentUser.partner?.id !== Number(partnerId)) {
