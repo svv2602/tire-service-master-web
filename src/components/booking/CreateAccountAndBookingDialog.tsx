@@ -271,11 +271,7 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
         services: [], // Услуги больше не выбираются - передаем пустой массив
       };
       
-      console.log('🚀 Создание бронирования:', bookingRequestData);
-      console.log('🔍 Проверка car_type_id:', bookingData.car_type_id);
-      console.log('🔍 Полные данные booking:', JSON.stringify(bookingRequestData, null, 2));
       const bookingResult = await createClientBooking(bookingRequestData).unwrap();
-      console.log('✅ Бронирование создано:', bookingResult);
       
       setStep('success');
       setTimeout(() => {
@@ -296,13 +292,11 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
             data: err.data,
             name: err.name
           };
-          console.log('❌ Детали ошибки:', JSON.stringify(errorInfo, null, 2));
-          
           if (err.data) {
-            console.log('❌ Данные ошибки:', err.data);
+            // Обработка ошибок API
           }
         } else {
-          console.log('❌ Простая ошибка:', err);
+          // Обработка простых ошибок
         }
       } catch (logError) {
         console.error('❌ Ошибка при логировании:', logError);

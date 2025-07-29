@@ -147,7 +147,6 @@ const ClientCarFormPage: React.FC = () => {
         setTimeout(() => navigate(`/admin/clients/${clientId}/cars`), 1000);
       } catch (error) {
         console.error('Ошибка при сохранении автомобиля:', error);
-        console.log('Детали ошибки:', JSON.stringify(error, null, 2));
         
         // Показываем сообщение об ошибке пользователю
         let errorMessage = 'Произошла ошибка при сохранении автомобиля';

@@ -507,7 +507,7 @@ const ServicePointFormPage: React.FC = () => {
           // Для обновления всегда используем JSON, не отправляем фотографии в основном запросе
           const { photos_attributes, ...updateData } = servicePointData;
           
-          console.log('Отправляемые данные для обновления:', JSON.stringify({ servicePoint: updateData }, null, 2));
+
           
           await updateServicePoint({
             id,
@@ -625,10 +625,7 @@ const ServicePointFormPage: React.FC = () => {
             createData.partner_id = Number(partnerId);
           }
           
-          console.log('=== Создание сервисной точки ===');
-          console.log('partnerId:', partnerId);
-          console.log('createData.partner_id:', createData.partner_id);
-          console.log('Отправляемые данные для создания:', JSON.stringify({ servicePoint: createData }, null, 2));
+
           
           const result = await createServicePoint({
             partnerId: partnerId,

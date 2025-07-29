@@ -168,8 +168,6 @@ const ClientFormPage: React.FC = () => {
             }
           };
           
-          console.log('🚀 Sending client data:', JSON.stringify(createData, null, 2));
-          
           await createClient(createData).unwrap();
           
           setSnackbarMessage(t('admin.clients.form.messages.clientCreated'));

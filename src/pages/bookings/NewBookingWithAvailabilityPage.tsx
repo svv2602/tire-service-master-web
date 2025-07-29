@@ -87,15 +87,8 @@ const initialFormData: BookingFormData = {
 
 const NewBookingWithAvailabilityPage: React.FC = () => {
   const { t } = useTranslation();
-  console.log('🚀 NewBookingWithAvailabilityPage загружен');
-  
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Отладочная информация в самом начале
-  console.log('📍 location.pathname:', location.pathname);
-  console.log('📍 location.state:', JSON.stringify(location.state, null, 2));
-  console.log('📍 location.search:', location.search);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const colors = getThemeColors(theme);
@@ -110,15 +103,8 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const dispatch = useDispatch();
   
-  // 🚀 НОВАЯ ЛОГИКА: Определяем тип пользователя для фильтрации слотов
+  // Определяем тип пользователя для фильтрации слотов
   const isServiceUser = currentUser && ['admin', 'partner', 'manager', 'operator'].includes(currentUser.role);
-  
-  console.log('🔍 Тип пользователя:', JSON.stringify({
-    isAuthenticated,
-    userRole: currentUser?.role,
-    isServiceUser,
-    shouldShowAllSlots: isServiceUser
-  }, null, 2));
   
   // Состояние формы
   const [activeStep, setActiveStep] = useState(0);
@@ -419,8 +405,7 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
         services: [], // Убираем выбор конкретных услуг - передаем пустой массив
       };
 
-      // Отладочная информация
-      console.log('🚀 Отправляем данные бронирования авторизованного пользователя:', JSON.stringify(bookingData, null, 2));
+
 
       const response = await createClientBooking(bookingData).unwrap();
 

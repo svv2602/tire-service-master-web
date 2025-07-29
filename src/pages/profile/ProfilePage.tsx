@@ -69,14 +69,7 @@ const ProfilePage: React.FC = () => {
   // Хук для смены пароля
   const [changePasswordApi, { isLoading: isChangingPassword }] = useChangePasswordMutation();
   
-  // Вывод данных пользователя в консоль для отладки
-  useEffect(() => {
-    if (user) {
-      console.log('=== Данные пользователя в ProfilePage ===');
-      console.log('user:', user);
-      console.log('JSON.stringify(user):', JSON.stringify(user, null, 2));
-    }
-  }, [user]);
+
 
   // Инициализация данных формы
   const [formData, setFormData] = useState<UserFormData>({
