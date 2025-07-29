@@ -22,6 +22,8 @@ import { TextField } from '../../components/ui/TextField/TextField';
 import { Select } from '../../components/ui/Select/Select';
 import { PhoneField } from '../../components/ui/PhoneField/PhoneField';
 import { getThemeColors } from '../../styles/theme';
+import ClientLayout from '../../components/client/ClientLayout';
+import { usePageTitleFocus } from '../../hooks/useNavigationFocus';
 
 // Импорты API и типов
 import { useCreatePartnerApplicationMutation } from '../../api/partnerApplications.api';
@@ -84,6 +86,9 @@ const BusinessApplicationPage: React.FC = () => {
   
   const [activeStep, setActiveStep] = useState(0);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  // Хук для автофокуса на заголовке при переходах
+  const titleRef = usePageTitleFocus();
 
   // Формик для управления формой
   const formik = useFormik<PartnerApplicationFormData>({
@@ -161,7 +166,7 @@ const BusinessApplicationPage: React.FC = () => {
     return stepFields.every(field => {
       const value = formik.values[field as keyof PartnerApplicationFormData];
       if (field === 'region_id' || field === 'city_record_id') {
-        return value && value > 0;
+        return value && Number(value) > 0;
       }
       if (field === 'website' || field === 'additional_info' || field === 'address') {
         return true; // Опциональные поля
@@ -261,13 +266,13 @@ const BusinessApplicationPage: React.FC = () => {
                 name="region_id"
                 label="Регион"
                 value={formik.values.region_id}
-                onChange={(e) => {
-                  formik.setFieldValue('region_id', e.target.value);
+                onChange={(value) => {
+                  formik.setFieldValue('region_id', Number(value));
                   formik.setFieldValue('city_record_id', 0); // Сброс города при смене региона
                 }}
                 onBlur={formik.handleBlur}
                 error={formik.touched.region_id && Boolean(formik.errors.region_id)}
-                helperText={formik.touched.region_id && formik.errors.region_id}
+                helperText={formik.touched.region_id && formik.errors.region_id ? formik.errors.region_id : undefined}
               >
                 <option value={0}>Выберите регион</option>
                 {regionsData?.data?.map((region) => (
@@ -283,8 +288,8 @@ const BusinessApplicationPage: React.FC = () => {
                 name="city_record_id"
                 label="Город из списка"
                 value={formik.values.city_record_id}
-                onChange={(e) => {
-                  const cityId = Number(e.target.value);
+                onChange={(value) => {
+                  const cityId = Number(value);
                   formik.setFieldValue('city_record_id', cityId);
                   
                   // Автозаполнение поля city
@@ -297,7 +302,7 @@ const BusinessApplicationPage: React.FC = () => {
                 }}
                 onBlur={formik.handleBlur}
                 error={formik.touched.city_record_id && Boolean(formik.errors.city_record_id)}
-                helperText={formik.touched.city_record_id && formik.errors.city_record_id}
+                helperText={formik.touched.city_record_id && formik.errors.city_record_id ? formik.errors.city_record_id : undefined}
                 disabled={!formik.values.region_id}
               >
                 <option value={0}>Выберите город</option>
@@ -409,75 +414,92 @@ const BusinessApplicationPage: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Paper sx={{ p: 4 }}>
-        {/* Заголовок */}
-        <Box sx={{ mb: 4, textAlign: 'center' }}>
-          <Typography variant="h4" sx={{ fontWeight: 600, mb: 2 }}>
-            Заявка на партнерство
-          </Typography>
-          <Typography variant="body1" sx={{ color: colors.textSecondary }}>
-            Присоединяйтесь к нашей сети сервисных центров
-          </Typography>
-        </Box>
-
-        {/* Stepper */}
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-          {steps.map((label, index) => (
-            <Step key={label} completed={isStepCompleted(index)}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
-
-        {/* Форма */}
-        <form onSubmit={formik.handleSubmit}>
-          {/* Содержимое шага */}
-          <Box sx={{ mb: 4 }}>
-            {renderStepContent(activeStep)}
-          </Box>
-
-          {/* Кнопки навигации */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Button
-              onClick={handleBack}
-              disabled={activeStep === 0}
-              variant="outlined"
+    <ClientLayout>
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Paper sx={{ p: 4 }}>
+          {/* Заголовок с автофокусом */}
+          <Box sx={{ mb: 4, textAlign: 'center' }}>
+            <Typography 
+              variant="h4" 
+              ref={titleRef}
+              tabIndex={-1}
+              component="h1"
+              sx={{
+                fontWeight: 600, 
+                mb: 2,
+                outline: 'none',
+                '&:focus': {
+                  outline: `2px solid ${colors.primary}`,
+                  outlineOffset: '4px',
+                  borderRadius: '4px'
+                }
+              }}
             >
-              Назад
-            </Button>
-
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              {activeStep === steps.length - 1 ? (
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={isSubmitting || !formik.isValid}
-                  startIcon={isSubmitting && <CircularProgress size={20} />}
-                >
-                  {isSubmitting ? 'Отправка...' : 'Отправить заявку'}
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleNext}
-                  variant="contained"
-                  disabled={!isStepCompleted(activeStep)}
-                >
-                  Далее
-                </Button>
-              )}
-            </Box>
+              Заявка на партнерство
+            </Typography>
+            <Typography variant="body1" sx={{ color: colors.textSecondary }}>
+              Присоединяйтесь к нашей сети сервисных центров
+            </Typography>
           </Box>
-        </form>
 
-        {/* Информация о обработке данных */}
-        <Alert severity="info" sx={{ mt: 3 }}>
-          <Typography variant="body2">
-            Отправляя заявку, вы соглашаетесь на обработку персональных данных в соответствии с нашей политикой конфиденциальности.
-          </Typography>
-        </Alert>
-      </Paper>
-    </Container>
+          {/* Stepper */}
+          <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+            {steps.map((label, index) => (
+              <Step key={label} completed={isStepCompleted(index)}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+
+          {/* Форма */}
+          <form onSubmit={formik.handleSubmit}>
+            {/* Содержимое шага */}
+            <Box sx={{ mb: 4 }}>
+              {renderStepContent(activeStep)}
+            </Box>
+
+            {/* Кнопки навигации */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Button
+                onClick={handleBack}
+                disabled={activeStep === 0}
+                variant="outlined"
+              >
+                Назад
+              </Button>
+
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                {activeStep === steps.length - 1 ? (
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={isSubmitting || !formik.isValid}
+                    startIcon={isSubmitting && <CircularProgress size={20} />}
+                  >
+                    {isSubmitting ? 'Отправка...' : 'Отправить заявку'}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleNext}
+                    variant="contained"
+                    disabled={!isStepCompleted(activeStep)}
+                  >
+                    Далее
+                  </Button>
+                )}
+              </Box>
+            </Box>
+          </form>
+
+          {/* Информация о обработке данных */}
+          <Alert severity="info" sx={{ mt: 3 }}>
+            <Typography variant="body2">
+              Отправляя заявку, вы соглашаетесь на обработку персональных данных в соответствии с нашей политикой конфиденциальности.
+            </Typography>
+          </Alert>
+        </Paper>
+      </Container>
+    </ClientLayout>
   );
 };
 

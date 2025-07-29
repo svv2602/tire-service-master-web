@@ -7,20 +7,14 @@ import {
   Typography,
   Grid,
   IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
   useTheme
 } from '@mui/material';
 import {
   Phone as PhoneIcon,
   Email as EmailIcon,
-  Telegram as TelegramIcon,
-  QrCode as QrCodeIcon
+  Telegram as TelegramIcon
 } from '@mui/icons-material';
-import QRCode from 'qrcode';
+// import QRCode from 'qrcode'; // Временно отключено
 import { getThemeColors } from '../../styles';
 import { useGetPageContentsQuery } from '../../api/pageContent.api';
 import { useGetServiceCategoriesQuery } from '../../api/serviceCategories.api';
@@ -35,9 +29,7 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
   const { t } = useTranslation();
   const theme = useTheme();
   const colors = getThemeColors(theme);
-  const [telegramQrOpen, setTelegramQrOpen] = useState(false);
-  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
-  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
+  // QR код заменен на простую ссылку
 
   // API запрос для контента футера
   const { data: pageContentData } = useGetPageContentsQuery({
@@ -62,29 +54,15 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
   console.log('Service categories:', JSON.stringify(serviceCategories, null, 2));
 
   // Генерация QR кода
+  // Функция не используется - QR код заменен на прямую ссылку
   const generateQRCode = async () => {
-    const botUrl = `https://t.me/${botUsername}`;
-    setQrCodeUrl(botUrl);
-    
-    if (qrCanvasRef.current) {
-      try {
-        await QRCode.toCanvas(qrCanvasRef.current, botUrl, {
-          width: 200,
-          margin: 2,
-          color: {
-            dark: '#000000',
-            light: '#FFFFFF'
-          }
-        });
-      } catch (error) {
-        console.error('Ошибка генерации QR кода:', error);
-      }
-    }
+    // Функциональность отключена
   };
 
   const handleTelegramClick = () => {
-    setTelegramQrOpen(true);
-    setTimeout(generateQRCode, 100);
+    // Простое перенаправление на Telegram бота вместо QR кода
+    const botUrl = `https://t.me/${botUsername}`;
+    window.open(botUrl, '_blank');
   };
 
   return (
@@ -200,44 +178,7 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
         </Container>
       </Box>
 
-      {/* Telegram QR Dialog */}
-      <Dialog open={telegramQrOpen} onClose={() => setTelegramQrOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ textAlign: 'center' }}>
-          <TelegramIcon sx={{ color: '#0088cc', mr: 1 }} />
-          Підписка на Telegram бота
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ textAlign: 'center', p: 2 }}>
-            <canvas 
-              ref={qrCanvasRef}
-              style={{ 
-                border: '1px solid #ddd',
-                borderRadius: '8px'
-              }}
-            />
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Відскануйте QR код і отримуйте сповіщення про ваші записи
-            </Typography>
-            <Typography variant="caption" sx={{ mt: 1, fontFamily: 'monospace', display: 'block' }}>
-              {qrCodeUrl || `https://t.me/${botUsername}`}
-            </Typography>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setTelegramQrOpen(false)}>
-            Закрити
-          </Button>
-          <Button 
-            variant="contained" 
-            href={`https://t.me/${botUsername}`}
-            target="_blank"
-            startIcon={<TelegramIcon />}
-            sx={{ bgcolor: '#0088cc' }}
-          >
-            Відкрити в Telegram
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* QR Dialog удален - используется прямая ссылка */}
     </>
   );
 };

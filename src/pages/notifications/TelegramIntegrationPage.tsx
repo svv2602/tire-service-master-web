@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import QRCode from 'qrcode';
+// import QRCode from 'qrcode'; // Библиотека удалена
 import {
   Box,
   Typography,
@@ -142,41 +142,21 @@ export const TelegramIntegrationPage: React.FC = () => {
           
           console.log('Canvas dimensions:', canvas.width, canvas.height);
           
-          QRCode.toCanvas(canvas, botUrl, {
-            width: 256,
-            margin: 2,
-            color: {
-              dark: '#000000',
-              light: '#FFFFFF'
-            }
-          }).then(() => {
-            console.log('QR code generated successfully');
-          }).catch((error) => {
-            console.error('QR code generation error:', error);
+          // QRCode библиотека удалена - рисуем простое сообщение
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#f5f5f5';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Fallback - попробуем сгенерировать как DataURL и нарисовать на canvas
-            QRCode.toDataURL(botUrl, {
-              width: 256,
-              margin: 2,
-              color: {
-                dark: '#000000',
-                light: '#FFFFFF'
-              }
-            }).then((dataUrl) => {
-              const img = new Image();
-              img.onload = () => {
-                const ctx = canvas.getContext('2d');
-                if (ctx) {
-                  ctx.clearRect(0, 0, canvas.width, canvas.height);
-                  ctx.drawImage(img, 0, 0, 256, 256);
-                  console.log('QR code drawn via DataURL fallback');
-                }
-              };
-              img.src = dataUrl;
-            }).catch((fallbackError) => {
-              console.error('Fallback QR generation also failed:', fallbackError);
-            });
-          });
+            ctx.fillStyle = '#333';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('QR Code недоступен', canvas.width / 2, canvas.height / 2 - 20);
+            ctx.fillText('Используйте ссылку ниже', canvas.width / 2, canvas.height / 2 + 10);
+            
+            console.log('QR code заменен на текстовое сообщение');
+          }
         }
       }, 300); // Увеличиваем задержку
     }
@@ -439,40 +419,20 @@ export const TelegramIntegrationPage: React.FC = () => {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
       
-      QRCode.toCanvas(canvas, botUrl, {
-        width: 256,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
-      }).then(() => {
-        console.log('QR code generated successfully');
-      }).catch((error) => {
-        console.error('QR code generation error:', error);
+      // QRCode библиотека удалена - рисуем простое сообщение
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#f5f5f5';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Fallback - попробуем сгенерировать как DataURL и нарисовать на canvas
-        QRCode.toDataURL(botUrl, {
-          width: 256,
-          margin: 2,
-          color: {
-            dark: '#000000',
-            light: '#FFFFFF'
-          }
-        }).then((dataUrl) => {
-          const img = new Image();
-          img.onload = () => {
-            if (ctx) {
-              ctx.clearRect(0, 0, canvas.width, canvas.height);
-              ctx.drawImage(img, 0, 0, 256, 256);
-              console.log('QR code drawn via DataURL fallback');
-            }
-          };
-          img.src = dataUrl;
-        }).catch((fallbackError) => {
-          console.error('Fallback QR generation also failed:', fallbackError);
-        });
-      });
+        ctx.fillStyle = '#333';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('QR Code недоступен', canvas.width / 2, canvas.height / 2 - 20);
+        ctx.fillText('Используйте ссылку ниже', canvas.width / 2, canvas.height / 2 + 10);
+        
+        console.log('QR code заменен на текстовое сообщение');
+      }
     } else {
       console.warn('Canvas ref not available');
     }

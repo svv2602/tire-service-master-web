@@ -49,6 +49,7 @@ import { useLocalizedName } from '../../utils/localizationHelpers';
 import { useSearchServicePointsQuery, useGetServicePointServicesQuery } from '../../api/servicePoints.api';
 import { useGetServiceCategoriesByCityQuery } from '../../api/services.api';
 import ClientLayout from '../../components/client/ClientLayout';
+import { usePageTitleFocus } from '../../hooks/useNavigationFocus';
 
 // Импорт SEO компонентов
 import { SEOHead } from '../../components/common/SEOHead';
@@ -995,6 +996,9 @@ const ClientSearchPage: React.FC = () => {
   const location = useLocation();
   const { useSEOFromAPI } = useSEO();
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  
+  // Хук для автофокуса на заголовке при переходах  
+  const titleRef = usePageTitleFocus();
 
   // Получаем параметры поиска из URL
   const searchParams = useMemo(() => {
@@ -1123,16 +1127,32 @@ const ClientSearchPage: React.FC = () => {
         </Container>
       </Box>
     );
-  }
+      }
 
-  return (
+    return (
     <ClientLayout>
       <SEOHead {...finalSeoConfig} />
       <Container maxWidth="lg" sx={{ py: 4 }}>
 
-        {/* Заголовок результатов */}
+        {/* Заголовок результатов с автофокусом */}
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: colors.textPrimary }}>
+          <Typography 
+            variant="h4" 
+            sx={{ 
+              fontWeight: 700, 
+              mb: 1, 
+              color: colors.textPrimary,
+              outline: 'none',
+              '&:focus': {
+                outline: `2px solid ${colors.primary}`,
+                outlineOffset: '4px',
+                borderRadius: '4px'
+              }
+            }}
+            ref={titleRef}
+            tabIndex={-1}
+            component="h1"
+          >
             🔍 {t('clientSearchPage.searchResults')}
           </Typography>
           

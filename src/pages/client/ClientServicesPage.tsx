@@ -67,6 +67,7 @@ import {
   ANIMATIONS
 } from '../../styles';
 import ClientLayout from '../../components/client/ClientLayout';
+import { usePageTitleFocus } from '../../hooks/useNavigationFocus';
 
 // SEO импорты
 import { SEOHead } from '../../components/common/SEOHead';
@@ -523,15 +524,34 @@ const ClientServicesPage: React.FC = () => {
     return parseFloat(rating.toString());
   };
 
+  // Хук для автофокуса на заголовке при переходах
+  const titleRef = usePageTitleFocus();
+
   return (
     <ClientLayout>
       <SEOHead {...seoConfig} />
       <Box sx={{ minHeight: '100vh', bgcolor: colors.backgroundPrimary }}>
         <Container maxWidth="lg" sx={{ py: 4 }}>
-          {/* Заголовок */}
+          {/* Заголовок с автофокусом */}
           <Fade in timeout={300}>
             <Box sx={{ textAlign: 'center', mb: 6 }}>
-              <Typography variant="h3" sx={{ fontWeight: 700, mb: 2, color: colors.textPrimary }}>
+              <Typography 
+                variant="h3" 
+                sx={{ 
+                  fontWeight: 700, 
+                  mb: 2, 
+                  color: colors.textPrimary,
+                  outline: 'none',
+                  '&:focus': {
+                    outline: `2px solid ${colors.primary}`,
+                    outlineOffset: '4px',
+                    borderRadius: '4px'
+                  }
+                }}
+                ref={titleRef}
+                tabIndex={-1}
+                component="h1"
+              >
                 {t('forms.clientPages.clientServicesPage.title')}
               </Typography>
               <Typography variant="h6" sx={{ color: colors.textSecondary, maxWidth: 600, mx: 'auto' }}>
