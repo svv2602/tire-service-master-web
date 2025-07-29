@@ -182,13 +182,13 @@ export const Select: React.FC<SelectProps> = ({
       size={size}
     >
       {label && (
-        <InputLabel id={labelId}>{t(label)}</InputLabel>
+        <InputLabel id={labelId}>{label}</InputLabel>
       )}
       <MuiSelect
         labelId={labelId}
         value={value}
         onChange={handleChange as any}
-        label={label ? t(label) : undefined}
+        label={label}
         MenuProps={{
           PaperProps: {
             sx: {
@@ -203,9 +203,9 @@ export const Select: React.FC<SelectProps> = ({
         {...props}
       >
         {/* Опция по умолчанию */}
-        {(!props.multiple && (value === undefined || value === '' || value === null) && !children) && (
+        {(!props.multiple && (value === undefined || value === '' || value === null || value === 0) && !children) && (
           <MenuItem value="" disabled>
-            {t('select.placeholder')}
+            Выберите опцию
           </MenuItem>
         )}
         {children || options?.map((option) => (
@@ -214,13 +214,13 @@ export const Select: React.FC<SelectProps> = ({
             value={option.value}
             disabled={option.disabled}
           >
-            {t(option.label)}
+            {option.label}
           </MenuItem>
         ))}
       </MuiSelect>
       {(helperText || errorText) && (
         <FormHelperText id={helperId}>
-          {error ? t(errorText || '') : t(helperText || '')}
+          {error ? (errorText || '') : (helperText || '')}
         </FormHelperText>
       )}
     </StyledFormControl>

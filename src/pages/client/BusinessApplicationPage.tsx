@@ -12,6 +12,7 @@ import {
   Step,
   StepLabel,
   CircularProgress,
+  MenuItem,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -58,7 +59,29 @@ const validationSchema = Yup.object({
     .email('Некорректный формат email'),
   phone: Yup.string()
     .required('Телефон обязателен')
-    .matches(/^\+?[1-9]\d{1,14}$/, 'Некорректный формат телефона'),
+    .test('phone-format', 'Некорректный формат телефона', function(value) {
+      if (!value) return false;
+      
+      // Убираем все символы кроме цифр
+      const digitsOnly = value.replace(/\D/g, '');
+      
+      // Проверяем украинские номера: должно быть 12 цифр, начинающихся с 380
+      if (digitsOnly.startsWith('380') && digitsOnly.length === 12) {
+        return true;
+      }
+      
+      // Проверяем номера без кода страны: должно быть 10 цифр, начинающихся с 0
+      if (digitsOnly.startsWith('0') && digitsOnly.length === 10) {
+        return true;
+      }
+      
+      // Проверяем номера с кодом +38: должно быть 10 цифр после 38
+      if (digitsOnly.startsWith('38') && digitsOnly.length === 12) {
+        return true;
+      }
+      
+      return false;
+    }),
   city: Yup.string()
     .required('Город обязателен')
     .min(2, 'Минимум 2 символа')
@@ -130,9 +153,27 @@ const BusinessApplicationPage: React.FC = () => {
     region_id: formik.values.region_id || undefined
   });
 
+  // Обработчик отправки формы
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    // Отправлять форму только на последнем шаге
+    if (activeStep === steps.length - 1) {
+      formik.handleSubmit(e);
+    }
+  };
+
   // Обработчики шагов
-  const handleNext = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+  const handleNext = (e?: React.MouseEvent<HTMLButtonElement>) => {
+    e?.preventDefault(); // Предотвращаем отправку формы
+    
+    console.log('handleNext called, current step:', activeStep, 'total steps:', steps.length);
+    
+    if (activeStep < steps.length - 1) {
+      setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    } else {
+      console.log('Already on last step, should not call handleNext');
+    }
   };
 
   const handleBack = () => {
@@ -264,7 +305,7 @@ const BusinessApplicationPage: React.FC = () => {
               <Select
                 fullWidth
                 name="region_id"
-                label="Регион"
+                label="Регион *"
                 value={formik.values.region_id}
                 onChange={(value) => {
                   formik.setFieldValue('region_id', Number(value));
@@ -274,11 +315,11 @@ const BusinessApplicationPage: React.FC = () => {
                 error={formik.touched.region_id && Boolean(formik.errors.region_id)}
                 helperText={formik.touched.region_id && formik.errors.region_id ? formik.errors.region_id : undefined}
               >
-                <option value={0}>Выберите регион</option>
+                <MenuItem value={0}>Выберите регион</MenuItem>
                 {regionsData?.data?.map((region) => (
-                  <option key={region.id} value={region.id}>
+                  <MenuItem key={region.id} value={region.id}>
                     {region.name}
-                  </option>
+                  </MenuItem>
                 ))}
               </Select>
             </Grid>
@@ -305,11 +346,11 @@ const BusinessApplicationPage: React.FC = () => {
                 helperText={formik.touched.city_record_id && formik.errors.city_record_id ? formik.errors.city_record_id : undefined}
                 disabled={!formik.values.region_id}
               >
-                <option value={0}>Выберите город</option>
+                <MenuItem value={0}>Выберите город</MenuItem>
                 {citiesData?.data?.map((city) => (
-                  <option key={city.id} value={city.id}>
+                  <MenuItem key={city.id} value={city.id}>
                     {city.name}
-                  </option>
+                  </MenuItem>
                 ))}
               </Select>
             </Grid>
@@ -452,7 +493,7 @@ const BusinessApplicationPage: React.FC = () => {
           </Stepper>
 
           {/* Форма */}
-          <form onSubmit={formik.handleSubmit}>
+          <form onSubmit={handleSubmit}>
             {/* Содержимое шага */}
             <Box sx={{ mb: 4 }}>
               {renderStepContent(activeStep)}
@@ -480,6 +521,7 @@ const BusinessApplicationPage: React.FC = () => {
                   </Button>
                 ) : (
                   <Button
+                    type="button"
                     onClick={handleNext}
                     variant="contained"
                     disabled={!isStepCompleted(activeStep)}
