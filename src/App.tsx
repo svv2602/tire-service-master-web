@@ -141,6 +141,7 @@ const BookingDetailsPage = lazy(() => import('./pages/client/BookingDetailsPage'
 const RescheduleBookingPage = lazy(() => import('./pages/client/RescheduleBookingPage'));
 const ClientMyReviewsPage = lazy(() => import('./pages/client/MyReviewsPage'));
 const ClientReviewFormPage = lazy(() => import('./pages/client/ReviewFormPage'));
+const BusinessApplicationPage = lazy(() => import('./pages/client/BusinessApplicationPage'));
 
 // Ленивая загрузка страницы записей для роута /my-bookings
 const MyBookingsPageStandalone = lazy(() => import('./pages/my-bookings/MyBookingsPage'));
@@ -242,6 +243,7 @@ const App: React.FC = () => {
                       {/* Клиентские маршруты */}
           <Route path="/client/services" element={<ClientServicesPage />} />
           <Route path="/client/search" element={<ClientSearchPage />} />
+          <Route path="/business-application" element={<BusinessApplicationPage />} />
           <Route path="/client/service-point/:id" element={<ClientServicePointDetailPage />} />
                       <Route path="/client/tire-calculator" element={<TireCalculatorPage />} />
                       <Route path="/client/booking" element={<NewBookingWithAvailabilityPage />} />

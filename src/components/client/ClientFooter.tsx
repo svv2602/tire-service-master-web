@@ -175,7 +175,7 @@ export const ClientFooter: React.FC<ClientFooterProps> = ({
                   Особистий кабінет
                 </Link>
                 <Link 
-                  to="/login" 
+                  to="/business-application" 
                   style={{ 
                     color: colors.textSecondary, 
                     textDecoration: 'none'
