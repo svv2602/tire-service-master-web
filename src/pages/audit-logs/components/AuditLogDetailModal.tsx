@@ -91,7 +91,7 @@ export const AuditLogDetailModal: React.FC<AuditLogDetailModalProps> = ({
           <Box
             component="pre"
             sx={{
-              backgroundColor: 'grey.50',
+              backgroundColor: 'action.hover', // Адаптивный цвет вместо 'grey.50'
               p: 2,
               borderRadius: 1,
               overflow: 'auto',
@@ -99,7 +99,7 @@ export const AuditLogDetailModal: React.FC<AuditLogDetailModalProps> = ({
               fontSize: '0.875rem',
               fontFamily: 'monospace',
               border: '1px solid',
-              borderColor: 'grey.300',
+              borderColor: 'divider', // Адаптивный цвет вместо 'grey.300'
             }}
           >
             {JSON.stringify(data, null, 2)}

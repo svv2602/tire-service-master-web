@@ -118,17 +118,75 @@ const UserTimelinePage: React.FC = () => {
     }
   };
 
+  const renderUserInfo = (user: any) => {
+    const getName = () => {
+      if (!user) return 'Неизвестный пользователь';
+      if (typeof user.name === 'string') return user.name;
+      if (typeof user.email === 'string') return user.email;
+      if (user.id) return `Пользователь ID: ${user.id}`;
+      return 'Неизвестный пользователь';
+    };
+
+    const getEmail = () => {
+      if (!user || typeof user.email !== 'string') return 'email не указан';
+      return user.email;
+    };
+
+    const getRole = () => {
+      if (!user || typeof user.role !== 'string') return 'роль не указана';
+      return user.role;
+    };
+
+    return {
+      name: getName(),
+      email: getEmail(),
+      role: getRole()
+    };
+  };
+
+  const renderResourceName = (resource: any) => {
+    if (!resource) return 'Неизвестный ресурс';
+    
+    // Если это строка, возвращаем как есть
+    if (typeof resource === 'string') {
+      return resource;
+    }
+    
+    // Если это объект, пытаемся извлечь имя
+    if (typeof resource === 'object') {
+      // Приоритет: name > name_uk > id
+      if (resource.name) return resource.name;
+      if (resource.name_uk) return resource.name_uk;
+      if (resource.id) return `ID: ${resource.id}`;
+      return 'Объект без имени';
+    }
+    
+    return String(resource);
+  };
+
   const renderEventDetails = (event: any) => {
     if (!event.details?.changes) return null;
 
     return (
-      <Box sx={{ mt: 1, p: 1, bgcolor: 'grey.50', borderRadius: 1 }}>
-        <Typography variant="caption" color="text.secondary">
+      <Box sx={{ 
+        mt: 1, 
+        p: 1, 
+        bgcolor: 'action.hover', // Адаптивный цвет вместо 'grey.50'
+        borderRadius: 1 
+      }}>
+        <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
           Изменения:
         </Typography>
-        <pre style={{ fontSize: '12px', margin: '4px 0', wordWrap: 'break-word' }}>
-          {JSON.stringify(event.details.changes, null, 2)}
-        </pre>
+        {Object.entries(event.details.changes).map(([field, change]: [string, any]) => (
+          <Box key={field} sx={{ mb: 0.5 }}>
+            <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+              {field}:
+            </Typography>
+            <Typography variant="caption" sx={{ ml: 1 }}>
+              {Array.isArray(change) ? `${change[0]} → ${change[1]}` : String(change)}
+            </Typography>
+          </Box>
+        ))}
       </Box>
     );
   };
@@ -191,7 +249,7 @@ const UserTimelinePage: React.FC = () => {
                        sx={{ 
                          width: 2, 
                          height: 40, 
-                         bgcolor: 'grey.300', 
+                         bgcolor: 'divider', // Адаптивный цвет вместо 'grey.300'
                          mt: 1 
                        }} 
                      />
@@ -206,7 +264,7 @@ const UserTimelinePage: React.FC = () => {
                      </Typography>
                      
                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                       {event.resource}
+                       {renderResourceName(event.resource)}
                      </Typography>
                      
                      {event.details?.resource_type && (
@@ -262,6 +320,7 @@ const UserTimelinePage: React.FC = () => {
   }
 
   const timelineDates = Object.keys(data.timeline).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+  const userInfo = renderUserInfo(data.user);
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
@@ -307,15 +366,15 @@ const UserTimelinePage: React.FC = () => {
               <PersonIcon />
             </Avatar>
             <Box>
-              <Typography variant="h6">{data.user.name}</Typography>
+              <Typography variant="h6">{userInfo.name}</Typography>
               <Typography variant="body2" color="text.secondary">
-                {data.user.email} • {data.user.role}
+                {userInfo.email} • {userInfo.role}
               </Typography>
             </Box>
           </Box>
-          
+
           <Grid container spacing={2} sx={{ mt: 2 }}>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={6} md={3}>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h4" color="primary">
                   {data.total_events}
@@ -325,23 +384,14 @@ const UserTimelinePage: React.FC = () => {
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs={12} sm={4}>
+            
+            <Grid item xs={12} sm={6} md={3}>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h4" color="secondary">
                   {timelineDates.length}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Активных дней
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" color="info.main">
-                  {period}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Дней анализа
                 </Typography>
               </Box>
             </Grid>

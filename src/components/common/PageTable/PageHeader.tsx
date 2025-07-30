@@ -68,9 +68,9 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ config }) => {
             mt: isMobile ? 2 : 0
           }}
         >
-          {actions.map((action: any) => (
+          {actions.map((action: any, index: number) => (
             <Button
-              key={action.id}
+              key={action.id || `action-${index}`}
               variant={action.variant || 'contained'}
               color={action.color || 'primary'}
               startIcon={action.icon}

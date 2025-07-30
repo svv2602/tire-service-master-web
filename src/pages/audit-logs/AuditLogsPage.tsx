@@ -347,7 +347,11 @@ const AuditLogsPage: React.FC = () => {
       <AuditLogFilters
         filters={filters}
         onFiltersChange={handleFiltersChange}
-        appliedFiltersCount={Object.keys(meta.filters_applied).length}
+        appliedFiltersCount={
+          Object.keys(filters).filter(
+            key => key !== 'page' && key !== 'per_page' && filters[key as keyof AuditLogsQueryParams]
+          ).length
+        }
       />
 
       {/* Кнопка экспорта */}
