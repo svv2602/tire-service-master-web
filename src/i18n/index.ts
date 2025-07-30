@@ -60,6 +60,10 @@ import profileUkTranslations from './locales/forms/profile/profile-uk.json';
 import carBrandsRuTranslations from './locales/forms/car-brands/car-brands-ru.json';
 import carBrandsUkTranslations from './locales/forms/car-brands/car-brands-uk.json';
 
+// Partner Applications
+import partnerApplicationsRuTranslations from './locales/forms/partner-applications/partner-applications-ru.json';
+import partnerApplicationsUkTranslations from './locales/forms/partner-applications/partner-applications-uk.json';
+
 // Components translations
 import componentsRuTranslations from './locales/components/ru.json';
 import componentsUkTranslations from './locales/components/uk.json';
@@ -106,6 +110,7 @@ const ukTranslationModules = [
   clientServicePointsUkTranslations,
   profileUkTranslations,
   carBrandsUkTranslations,
+  partnerApplicationsUkTranslations,
 ];
 
 // Russian translation modules
@@ -133,6 +138,7 @@ const ruTranslationModules = [
   clientServicePointsRuTranslations,
   profileRuTranslations,
   carBrandsRuTranslations,
+  partnerApplicationsRuTranslations,
 ];
 
 const resources = {

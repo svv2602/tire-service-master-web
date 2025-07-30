@@ -137,32 +137,13 @@ export const UsersPage: React.FC = () => {
   const totalPages = usersData?.pagination?.total_pages || 1;
   const totalItems = usersData?.totalItems || 0;
   
+
+  
   // Подсчет активных и неактивных пользователей
   const activeUsersCount = users.filter(user => user.is_active).length;
   const inactiveUsersCount = users.filter(user => !user.is_active).length;
 
   // Мемоизированные вспомогательные функции
-  const getRoleName = useCallback((role: string): string => {    
-    switch(role) {
-      case 'admin': return t('admin.users.roles.admin');
-      case 'manager': return t('admin.users.roles.manager');
-      case 'partner': return t('admin.users.roles.partner');
-      case 'operator': return t('admin.users.roles.operator');
-      case 'client': return t('admin.users.roles.client');
-      default: return t('common.unknown');
-    }
-  }, [t]);
-  
-  const getRoleColor = useCallback((role: string): 'error' | 'warning' | 'primary' | 'success' | 'info' => {
-    switch(role) {
-      case 'admin': return 'error';      // Красный - высший уровень доступа
-      case 'manager': return 'warning';  // Оранжевый - управленческая роль
-      case 'partner': return 'success';  // Зеленый - партнерская роль (важная бизнес-роль)
-      case 'operator': return 'primary'; // Синий - операционная роль
-      case 'client': return 'info';      // Голубой - клиентская роль
-      default: return 'info';
-    }
-  }, []);
 
   // Функция для получения инициалов пользователя
   const getUserInitials = useCallback((user: User): string => {
@@ -375,26 +356,7 @@ export const UsersPage: React.FC = () => {
         </Typography>
       )
     },
-    {
-      id: 'role',
-      label: t('tables.columns.role'),
-      align: 'center',
-      format: (_value: any, row: User) => (
-        <Chip
-          label={getRoleName(row.role)}
-          color={getRoleColor(row.role)}
-          size="medium"
-          sx={{
-            fontWeight: 600,
-            fontSize: '0.875rem',
-            minWidth: 100,
-            '& .MuiChip-label': {
-              padding: '6px 12px',
-            }
-          }}
-        />
-      )
-    },
+
     {
       id: 'status',
       label: t('tables.columns.status'),
@@ -456,7 +418,7 @@ export const UsersPage: React.FC = () => {
         <ActionsMenu actions={userActions} item={row} menuThreshold={1} />
       )
     }
-  ], [getRoleName, getRoleColor, getUserInitials, userActions, t]);
+  ], [getUserInitials, userActions, t]);
 
   // Конфигурация пагинации
   const paginationConfig = useMemo(() => ({

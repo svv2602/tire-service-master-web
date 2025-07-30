@@ -72,6 +72,7 @@ import {
   Security as SecurityIcon,
   Block as BlockIcon,
   ShoppingCart as ShoppingCartIcon,
+  Assignment,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -307,6 +308,13 @@ const MainLayout: React.FC = () => {
             path: '/admin/clients',
             roles: [UserRole.ADMIN, UserRole.MANAGER],
             description: t('navigation.descriptions.clients'),
+          },
+          {
+            text: t('navigation.partnerApplications'),
+            icon: <Assignment />,
+            path: '/admin/partner-applications',
+            roles: [UserRole.ADMIN, UserRole.MANAGER],
+            description: t('navigation.descriptions.partnerApplications'),
           },
           {
             text: t('navigation.operators'),

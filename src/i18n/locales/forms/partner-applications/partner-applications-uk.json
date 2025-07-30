@@ -1,0 +1,106 @@
+{
+  "partnerApplications": {
+    "title": "Заявки партнерів",
+    "subtitle": "Управління заявками на партнерство",
+    "filters": {
+      "status": "Статус",
+      "region": "Регіон",
+      "allStatuses": "Всі статуси",
+      "allRegions": "Всі регіони"
+    },
+    "statuses": {
+      "new": "Нові",
+      "pending": "В очікуванні",
+      "in_progress": "В обробці",
+      "approved": "Схвалені",
+      "rejected": "Відхилені",
+      "connected": "Підключені"
+    },
+    "statusLabels": {
+      "new": "Нова",
+      "pending": "В очікуванні",
+      "in_progress": "В обробці",
+      "approved": "Схвалена",
+      "rejected": "Відхилена",
+      "connected": "Підключена"
+    },
+    "table": {
+      "company": "Компанія",
+      "contacts": "Контакти",
+      "location": "Місцезнаходження",
+      "status": "Статус",
+      "servicePoints": "Точок",
+      "dateSubmitted": "Дата подачі",
+      "actions": "Дії"
+    },
+    "actions": {
+      "view": "Переглянути",
+      "approve": "Схвалити",
+      "reject": "Відхилити",
+      "delete": "Видалити",
+      "changeStatus": "Змінити статус"
+    },
+    "dialogs": {
+      "changeStatus": {
+        "title": "Змінити статус заявки",
+        "application": "Заявка:",
+        "newStatus": "Новий статус:",
+        "approved": "Схвалена",
+        "rejected": "Відхилена",
+        "adminComment": "Коментар адміністратора",
+        "adminCommentPlaceholder": "Вкажіть причину або додаткову інформацію...",
+        "cancel": "Скасувати",
+        "confirm": "Підтвердити",
+        "saving": "Збереження..."
+      },
+      "delete": {
+        "title": "Видалити заявку",
+        "message": "Ви впевнені, що хочете видалити заявку від",
+        "warning": "Цю дію неможливо скасувати.",
+        "cancel": "Скасувати",
+        "delete": "Видалити",
+        "deleting": "Видалення..."
+      },
+      "viewDetails": {
+        "title": "Деталі заявки",
+        "close": "Закрити"
+      }
+    },
+    "messages": {
+      "statusUpdated": "Статус заявки успішно оновлено",
+      "statusUpdateError": "Помилка при оновленні статусу",
+      "applicationDeleted": "Заявку успішно видалено",
+      "deleteError": "Помилка при видаленні заявки",
+      "loadingError": "Помилка при завантаженні заявок",
+      "accessDenied": "У вас немає прав доступу до цієї сторінки"
+    },
+    "empty": {
+      "title": "Заявки не знайдено",
+      "description": "Тут будуть відображатися заявки на партнерство"
+    },
+    "details": {
+      "companyInfo": "Інформація про компанію",
+      "companyName": "Назва компанії",
+      "businessDescription": "Опис бізнесу",
+      "contactInfo": "Контактна інформація",
+      "contactPerson": "Контактна особа",
+      "email": "Email",
+      "phone": "Телефон",
+      "locationInfo": "Інформація про місцезнаходження",
+      "region": "Регіон",
+      "city": "Місто",
+      "address": "Адреса",
+      "additionalInfo": "Додаткова інформація",
+      "website": "Веб-сайт",
+      "expectedServicePoints": "Планована кількість точок",
+      "additionalNotes": "Додаткові замітки",
+      "applicationStatus": "Статус заявки",
+      "submissionDate": "Дата подачі",
+      "processingInfo": "Інформація про обробку",
+      "processedBy": "Обробив",
+      "processedAt": "Дата обробки",
+      "adminNotes": "Замітки адміністратора",
+      "noValue": "Не вказано"
+    }
+  }
+} 

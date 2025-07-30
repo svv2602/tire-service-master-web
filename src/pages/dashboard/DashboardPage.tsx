@@ -42,6 +42,7 @@ import {
   Assessment as AnalyticsIcon,
   Schedule as ScheduleIcon,
   RateReview as ReviewManageIcon,
+  Assignment as ApplicationIcon,
 } from '@mui/icons-material';
 import { getDashboardStyles } from '../../styles';
 import { 
@@ -56,6 +57,7 @@ import { useGetNotificationStatsQuery } from '../../api/notifications.api';
 import { useGetBookingConflictStatisticsQuery } from '../../api/bookingConflicts.api';
 import { useGetSeoAnalyticsQuery } from '../../api/seoMetatags.api';
 import { useGetChannelStatisticsQuery } from '../../api/notificationChannelSettings.api';
+import { useGetPartnerApplicationsStatsQuery } from '../../api/partnerApplications.api';
 import { format, subDays, subWeeks } from 'date-fns';
 import StatCard from '../../components/StatCard';
 import { useRoleAccess } from '../../hooks/useRoleAccess';
@@ -116,6 +118,14 @@ const DashboardPage: React.FC = () => {
 
   const { data: channelStats, isLoading: channelStatsLoading, refetch: refetchChannelStats } = useGetChannelStatisticsQuery();
 
+  // Статистика заявок партнеров - только для админов и менеджеров
+  const { data: applicationStats, isLoading: applicationStatsLoading, refetch: refetchApplicationStats } = useGetPartnerApplicationsStatsQuery(
+    undefined,
+    {
+      skip: !isAdmin && !isManager, // Пропускаем запрос для других ролей
+    }
+  );
+
   // Функция обновления всех данных
   const handleRefreshAll = () => {
     setRefreshKey(prev => prev + 1);
@@ -129,6 +139,9 @@ const DashboardPage: React.FC = () => {
     refetchConflictStats();
     refetchSeo();
     refetchChannelStats();
+    if (isAdmin || isManager) {
+      refetchApplicationStats();
+    }
   };
 
   // Проверка загрузки
@@ -235,6 +248,15 @@ const DashboardPage: React.FC = () => {
       description: `${conflictStats?.statistics?.total_pending || 0} ${t('forms.dashboard.stats.conflicts.description')}`,
       navigateTo: '/admin/booking-conflicts'
     },
+    // Заявки партнеров - только для админов и менеджеров
+    ...(isAdmin || isManager ? [{
+      title: 'Заявки партнеров',
+      value: applicationStats?.data?.total || 0,
+      icon: <ApplicationIcon />,
+      color: '#9c27b0',
+      description: `${applicationStats?.data?.by_status?.new || 0} новых, ${applicationStats?.data?.recent_count || 0} за неделю`,
+      navigateTo: '/admin/partner-applications'
+    }] : []),
     // Статистика статей - только для админов и менеджеров (НЕ для партнеров и операторов)
     ...(isAdmin || isManager ? [{
       title: t('forms.dashboard.stats.articles.title'),

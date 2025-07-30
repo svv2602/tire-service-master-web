@@ -49,6 +49,7 @@ export interface PartnerApplication {
 // Статусы заявки
 export type PartnerApplicationStatus = 
   | 'new' 
+  | 'pending'
   | 'in_progress' 
   | 'approved' 
   | 'rejected' 

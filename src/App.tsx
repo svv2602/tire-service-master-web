@@ -36,6 +36,9 @@ const OperatorDashboardPage = lazy(() => import('./pages/operator-dashboard/Oper
 const PartnersPage = lazy(() => import('./pages/partners/PartnersPage'));
 const PartnerFormPage = lazy(() => import('./pages/partners/PartnerFormPage'));
 
+// Ленивая загрузка страниц заявок партнеров
+const PartnerApplicationsPage = lazy(() => import('./pages/partner-applications/PartnerApplicationsPage'));
+
 // Ленивая загрузка страниц сервисных точек
 const ServicePointsPage = lazy(() => import('./pages/service-points/ServicePointsPage'));
 const ServicePointFormPage = lazy(() => import('./pages/service-points/ServicePointFormPage'));
@@ -289,6 +292,9 @@ const App: React.FC = () => {
                         <Route path="partners" element={<PartnersPage />} />
                         <Route path="partners/new" element={<PartnerFormPage />} />
                         <Route path="partners/:id/edit" element={<PartnerFormPage />} />
+                        
+                        {/* Управление заявками партнеров */}
+                        <Route path="partner-applications" element={<PartnerApplicationsPage />} />
                         
                         {/* Управление сервисными точками */}
                         <Route path="service-points" element={<ServicePointsPage />} />

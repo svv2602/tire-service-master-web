@@ -84,7 +84,7 @@ export const partnerApplicationsApi = baseApi.injectEndpoints({
       UpdateApplicationStatusData
     >({
       query: ({ id, status, admin_notes }) => ({
-        url: `partner_applications/${id}/status`,
+        url: `partner_applications/${id}/update_status`,
         method: 'PATCH',
         body: {
           status,

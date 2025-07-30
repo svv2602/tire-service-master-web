@@ -1,0 +1,106 @@
+{
+  "partnerApplications": {
+    "title": "Заявки партнеров",
+    "subtitle": "Управление заявками на партнерство",
+    "filters": {
+      "status": "Статус",
+      "region": "Регион",
+      "allStatuses": "Все статусы",
+      "allRegions": "Все регионы"
+    },
+    "statuses": {
+      "new": "Новые",
+      "pending": "В ожидании",
+      "in_progress": "В обработке",
+      "approved": "Одобренные",
+      "rejected": "Отклоненные",
+      "connected": "Подключенные"
+    },
+    "statusLabels": {
+      "new": "Новая",
+      "pending": "В ожидании",
+      "in_progress": "В обработке",
+      "approved": "Одобрена",
+      "rejected": "Отклонена",
+      "connected": "Подключена"
+    },
+    "table": {
+      "company": "Компания",
+      "contacts": "Контакты",
+      "location": "Местоположение",
+      "status": "Статус",
+      "servicePoints": "Точек",
+      "dateSubmitted": "Дата подачи",
+      "actions": "Действия"
+    },
+    "actions": {
+      "view": "Просмотреть",
+      "approve": "Одобрить",
+      "reject": "Отклонить",
+      "delete": "Удалить",
+      "changeStatus": "Изменить статус"
+    },
+    "dialogs": {
+      "changeStatus": {
+        "title": "Изменить статус заявки",
+        "application": "Заявка:",
+        "newStatus": "Новый статус:",
+        "approved": "Одобрена",
+        "rejected": "Отклонена",
+        "adminComment": "Комментарий администратора",
+        "adminCommentPlaceholder": "Укажите причину или дополнительную информацию...",
+        "cancel": "Отмена",
+        "confirm": "Подтвердить",
+        "saving": "Сохранение..."
+      },
+      "delete": {
+        "title": "Удалить заявку",
+        "message": "Вы уверены, что хотите удалить заявку от",
+        "warning": "Это действие нельзя отменить.",
+        "cancel": "Отмена",
+        "delete": "Удалить",
+        "deleting": "Удаление..."
+      },
+      "viewDetails": {
+        "title": "Детали заявки",
+        "close": "Закрыть"
+      }
+    },
+    "messages": {
+      "statusUpdated": "Статус заявки успешно обновлен",
+      "statusUpdateError": "Ошибка при обновлении статуса",
+      "applicationDeleted": "Заявка успешно удалена",
+      "deleteError": "Ошибка при удалении заявки",
+      "loadingError": "Ошибка при загрузке заявок",
+      "accessDenied": "У вас нет прав доступа к этой странице"
+    },
+    "empty": {
+      "title": "Заявки не найдены",
+      "description": "Здесь будут отображаться заявки на партнерство"
+    },
+    "details": {
+      "companyInfo": "Информация о компании",
+      "companyName": "Название компании",
+      "businessDescription": "Описание бизнеса",
+      "contactInfo": "Контактная информация",
+      "contactPerson": "Контактное лицо",
+      "email": "Email",
+      "phone": "Телефон",
+      "locationInfo": "Информация о местоположении",
+      "region": "Регион",
+      "city": "Город",
+      "address": "Адрес",
+      "additionalInfo": "Дополнительная информация",
+      "website": "Веб-сайт",
+      "expectedServicePoints": "Планируемое количество точек",
+      "additionalNotes": "Дополнительные заметки",
+      "applicationStatus": "Статус заявки",
+      "submissionDate": "Дата подачи",
+      "processingInfo": "Информация об обработке",
+      "processedBy": "Обработал",
+      "processedAt": "Дата обработки",
+      "adminNotes": "Заметки администратора",
+      "noValue": "Не указано"
+    }
+  }
+} 
