@@ -22,6 +22,7 @@ import {
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import TireSearchBar from '../../components/tire-search/TireSearchBar/TireSearchBar';
 import TireSearchResults from '../../components/tire-search/TireSearchResults/TireSearchResults';
+import { SearchHistory, PopularSearches } from '../../components/tire-search';
 import { useTireSearch, useTireFavorites } from '../../hooks/useTireSearch';
 import { tireSearchCacheUtils } from '../../api/tireSearch.api';
 import { useAppDispatch } from '../../store';
@@ -273,6 +274,25 @@ const TireSearchPage: React.FC = () => {
             </Box>
           )}
         </Paper>
+
+        {/* Популярные поиски и история - показываем когда нет активного поиска */}
+        {!searchState.query && !isLoading && searchState.results.length === 0 && (
+          <Box sx={{ mb: 4 }}>
+            <PopularSearches 
+              onSearchSelect={setQuery}
+              maxItems={12}
+              showTrends={true}
+              compact={false}
+              autoRefresh={true}
+            />
+            <SearchHistory 
+              onSearchSelect={setQuery}
+              maxItems={8}
+              showFavorites={true}
+              compact={false}
+            />
+          </Box>
+        )}
 
         {/* Результаты поиска */}
         <Fade in timeout={500}>
