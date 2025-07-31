@@ -169,6 +169,9 @@ const SEOManagementPage = lazy(() => import('./pages/admin/SEOManagementPage'));
 // Ленивая загрузка калькулятора шин
 const TireCalculatorPage = lazy(() => import('./pages/tire-calculator/TireCalculatorPage'));
 
+// Ленивая загрузка страницы поиска шин
+const TireSearchPage = lazy(() => import('./pages/tire-search/TireSearchPage'));
+
 // Компонент для защищенных маршрутов
 const ProtectedRoute: React.FC<{
   children: React.ReactNode;
@@ -235,6 +238,7 @@ const App: React.FC = () => {
                       {/* Клиентские маршруты */}
           <Route path="/client/services" element={<ClientServicesPage />} />
           <Route path="/client/search" element={<ClientSearchPage />} />
+          <Route path="/client/tire-search" element={<TireSearchPage />} />
           <Route path="/business-application" element={<BusinessApplicationPage />} />
           <Route path="/client/service-point/:id" element={<ClientServicePointDetailPage />} />
                       <Route path="/client/tire-calculator" element={<TireCalculatorPage />} />
