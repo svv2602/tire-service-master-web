@@ -172,6 +172,9 @@ const TireCalculatorPage = lazy(() => import('./pages/tire-calculator/TireCalcul
 // Ленивая загрузка страницы поиска шин
 const TireSearchPage = lazy(() => import('./pages/tire-search/TireSearchPage'));
 
+// Ленивая загрузка админской страницы управления данными поиска шин
+const TireDataManagementPage = lazy(() => import('./pages/admin/tire-search/TireDataManagementPage'));
+
 // Компонент для защищенных маршрутов
 const ProtectedRoute: React.FC<{
   children: React.ReactNode;
@@ -375,6 +378,9 @@ const App: React.FC = () => {
                         
                         {/* SEO управление */}
                         <Route path="seo" element={<SEOManagementPage />} />
+                        
+                        {/* Управление данными поиска шин */}
+                        <Route path="tire-search/data-management" element={<TireDataManagementPage />} />
           </Route>
           
                       {/* Маршрут по умолчанию */}
