@@ -580,6 +580,13 @@ const MainLayout: React.FC = () => {
             roles: [UserRole.ADMIN],
             description: t('navigation.descriptions.systemSettings'),
           },
+          {
+            text: 'Конфигурация системы',
+            icon: <SettingsIcon />,
+            path: '/admin/system-settings',
+            roles: [UserRole.ADMIN],
+            description: 'Управление переменными окружения и системными настройками',
+          },
         ],
       },
     ];

@@ -258,10 +258,7 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
     return favorites.some(fav => fav.id === item.id);
   };
 
-  // Expose addToHistory для использования в родительском компоненте
-  React.useImperativeHandle(React.useRef(), () => ({
-    addToHistory
-  }));
+  // addToHistory функция доступна внутри компонента
 
   if (history.length === 0 && favorites.length === 0) {
     return null;

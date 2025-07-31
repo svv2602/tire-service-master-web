@@ -20,6 +20,7 @@ import {
   KeyboardArrowUp as KeyboardArrowUpIcon
 } from '@mui/icons-material';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import TireSearchBar from '../../components/tire-search/TireSearchBar/TireSearchBar';
 import TireSearchResults from '../../components/tire-search/TireSearchResults/TireSearchResults';
 import { SearchHistory, PopularSearches } from '../../components/tire-search';

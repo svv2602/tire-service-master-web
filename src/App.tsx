@@ -174,6 +174,8 @@ const TireSearchPage = lazy(() => import('./pages/tire-search/TireSearchPage'));
 
 // Ленивая загрузка админской страницы управления данными поиска шин
 const TireDataManagementPage = lazy(() => import('./pages/admin/tire-search/TireDataManagementPage'));
+// Ленивая загрузка страницы системных настроек
+const SystemSettingsPage = lazy(() => import('./pages/admin/system-settings/SystemSettingsPage'));
 
 // Компонент для защищенных маршрутов
 const ProtectedRoute: React.FC<{
@@ -381,6 +383,7 @@ const App: React.FC = () => {
                         
                         {/* Управление данными поиска шин */}
                         <Route path="tire-search/data-management" element={<TireDataManagementPage />} />
+                        <Route path="system-settings" element={<SystemSettingsPage />} />
           </Route>
           
                       {/* Маршрут по умолчанию */}
