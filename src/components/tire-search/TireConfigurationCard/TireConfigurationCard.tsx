@@ -41,7 +41,8 @@ const TireConfigurationCard: React.FC<TireConfigurationCardProps> = ({
   const optionalSizes = configuration.tire_sizes.filter(size => size.type === 'optional');
   
   // Получаем уникальные диаметры
-  const uniqueDiameters = [...new Set(configuration.tire_sizes.map(size => size.diameter))].sort((a, b) => a - b);
+  const diameterSet = new Set(configuration.tire_sizes.map(size => size.diameter));
+  const uniqueDiameters = Array.from(diameterSet).sort((a, b) => a - b);
 
   // Определяем логотип бренда (заглушка)
   const getBrandLogo = (brandName: string) => {

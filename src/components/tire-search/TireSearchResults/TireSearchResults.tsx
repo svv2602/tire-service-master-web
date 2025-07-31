@@ -314,7 +314,7 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
         <Pagination
           count={totalPages}
           page={page}
-          onChange={(_, newPage) => handlePageChange(newPage)}
+          onChange={handlePageChange}
           color="primary"
           size="large"
           showFirstButton

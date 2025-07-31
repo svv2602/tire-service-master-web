@@ -165,12 +165,15 @@ export const useTireSearch = (options: UseTireSearchOptions = {}): UseTireSearch
     setSearchState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
+      // Преобразуем фильтры для API (берем первые значения из массивов)
       const searchQuery: TireSearchQuery = {
         query: query.trim(),
         limit: 20,
         offset: 0,
         use_llm: true,
-        ...filters
+        brand: filters.brand?.[0],
+        diameter: filters.diameter?.[0],
+        year: filters.year_from
       };
 
       const response = await searchTires(searchQuery).unwrap();
@@ -222,12 +225,15 @@ export const useTireSearch = (options: UseTireSearchOptions = {}): UseTireSearch
     setSearchState(prev => ({ ...prev, loading: true }));
 
     try {
+      // Преобразуем фильтры для API (берем первые значения из массивов)
       const searchQuery: TireSearchQuery = {
         query: searchState.query,
         limit: 20,
         offset: searchState.results.length,
         use_llm: true,
-        ...searchState.filters
+        brand: searchState.filters.brand?.[0],
+        diameter: searchState.filters.diameter?.[0],
+        year: searchState.filters.year_from
       };
 
       const response = await searchTires(searchQuery).unwrap();
@@ -256,12 +262,15 @@ export const useTireSearch = (options: UseTireSearchOptions = {}): UseTireSearch
     setSearchState(prev => ({ ...prev, loading: true }));
 
     try {
+      // Преобразуем фильтры для API (берем первые значения из массивов)
       const searchQuery: TireSearchQuery = {
         query: searchState.query,
         limit: 20,
         offset: (page - 1) * 20,
         use_llm: true,
-        ...searchState.filters
+        brand: searchState.filters.brand?.[0],
+        diameter: searchState.filters.diameter?.[0],
+        year: searchState.filters.year_from
       };
 
       const response = await searchTires(searchQuery).unwrap();

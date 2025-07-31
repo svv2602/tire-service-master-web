@@ -191,14 +191,17 @@ export const tireSearchCacheUtils = {
   },
 
   // Получение кешированных результатов поиска
-  getCachedSearchResults: (state: any, query: TireSearchQuery) => {
-    return tireSearchApi.endpoints.searchTires.select(query)(state);
+  getCachedSearchResults: (state: any, queryString: string) => {
+    // Для мутаций кеширование работает по-другому
+    // Возвращаем undefined, так как мутации не кешируют результаты как queries
+    return undefined;
   }
 };
 
 // Селекторы для получения данных из стора
-export const selectTireSearchResults = (state: any, query: TireSearchQuery) => {
-  return tireSearchApi.endpoints.searchTires.select(query)(state);
+export const selectTireSearchResults = (state: any, queryString: string) => {
+  // Для мутаций селекторы работают по-другому
+  return undefined;
 };
 
 export const selectTireSuggestions = (state: any, query: string) => {

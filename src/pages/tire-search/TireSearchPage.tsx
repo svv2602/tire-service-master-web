@@ -24,7 +24,7 @@ import TireSearchBar from '../../components/tire-search/TireSearchBar/TireSearch
 import TireSearchResults from '../../components/tire-search/TireSearchResults/TireSearchResults';
 import { useTireSearch, useTireFavorites } from '../../hooks/useTireSearch';
 import { tireSearchCacheUtils } from '../../api/tireSearch.api';
-import { useAppDispatch } from '../../hooks/redux';
+import { useAppDispatch } from '../../store';
 import type { TireSearchResult, TireSuggestion } from '../../types/tireSearch';
 
 const TireSearchPage: React.FC = () => {
