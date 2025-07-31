@@ -49,6 +49,7 @@ import {
   ExpandMore as ExpandMoreIcon
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
 
 // Типы данных
 interface SystemSetting {
@@ -109,7 +110,23 @@ const SystemSettingsPage: React.FC = () => {
   }>({ open: false, title: '', message: '', onConfirm: () => {} });
 
   // API базовый URL
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+  const API_BASE_URL = `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/v1`;
+  
+  // Получаем токен аутентификации
+  const authToken = useSelector((state: any) => state.auth?.accessToken);
+
+  // Функция для получения заголовков с авторизацией
+  const getAuthHeaders = () => {
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json'
+    };
+    
+    if (authToken) {
+      (headers as any)['Authorization'] = `Bearer ${authToken}`;
+    }
+    
+    return headers;
+  };
 
   // Загрузка настроек
   const loadSettings = async () => {
@@ -118,11 +135,11 @@ const SystemSettingsPage: React.FC = () => {
       const [settingsResponse, categoriesResponse] = await Promise.all([
         fetch(`${API_BASE_URL}/admin/system_settings`, {
           credentials: 'include',
-          headers: { 'Content-Type': 'application/json' }
+          headers: getAuthHeaders()
         }),
         fetch(`${API_BASE_URL}/admin/system_settings/categories`, {
           credentials: 'include',
-          headers: { 'Content-Type': 'application/json' }
+          headers: getAuthHeaders()
         })
       ]);
 
@@ -150,7 +167,7 @@ const SystemSettingsPage: React.FC = () => {
       const response = await fetch(`${API_BASE_URL}/admin/system_settings/${key}`, {
         method: 'PUT',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ value })
       });
 
@@ -194,7 +211,7 @@ const SystemSettingsPage: React.FC = () => {
       const response = await fetch(`${API_BASE_URL}/admin/system_settings/test_connection`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ key, value })
       });
 

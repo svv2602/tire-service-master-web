@@ -91,11 +91,15 @@ const SettingsPage: React.FC = () => {
   // Обновление настроек при загрузке данных
   useEffect(() => {
     if (settingsData) {
+      // Проверяем, что выбранный город существует в списке доступных городов
+      const defaultCityIdStr = String(settingsData.defaultCityId);
+      const cityExists = Array.isArray(cities) && cities.some(city => String(city.id) === defaultCityIdStr);
+      
       const settingsToSet: SystemSettings = {
         systemName: settingsData.systemName,
         contactEmail: settingsData.contactEmail,
         supportPhone: settingsData.supportPhone,
-        defaultCityId: String(settingsData.defaultCityId),
+        defaultCityId: cityExists ? defaultCityIdStr : '',
         dateFormat: settingsData.dateFormat,
         timeFormat: settingsData.timeFormat,
         emailNotifications: settingsData.emailNotifications,
@@ -103,7 +107,7 @@ const SettingsPage: React.FC = () => {
       };
       setSettings(settingsToSet);
     }
-  }, [settingsData]);
+  }, [settingsData, cities]);
 
   // Обработчик изменения вкладки
   const handleTabChange = (newValue: string | number) => {
