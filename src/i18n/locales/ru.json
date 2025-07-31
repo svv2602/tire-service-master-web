@@ -153,7 +153,8 @@
     "knowledgeBase": "База знаний",
     "services": "Услуги",
     "booking": "Запись",
-    "tireCalculator": "Калькулятор шин"
+    "tireCalculator": "Калькулятор шин",
+    "tireSearch": "Поиск шин"
   },
   "auth": {
     "errors": {

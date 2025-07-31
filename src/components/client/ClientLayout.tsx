@@ -21,7 +21,8 @@ import {
   RateReview as ReviewIcon,
   AdminPanelSettings as AdminIcon,
   Logout as LogoutIcon,
-  Calculate as CalculateIcon
+  Calculate as CalculateIcon,
+  Search as SearchIcon
 } from '@mui/icons-material';
 import { Button, ListItemIcon, ListItemText, MenuItem, Divider } from '@mui/material';
 import ClientFooter from './ClientFooter';
@@ -90,6 +91,15 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         startIcon={<CalculateIcon />}
       >
         {t('navigation.tireCalculator')}
+      </Button>
+      <Button
+        color="inherit"
+        component={Link}
+        to="/client/tire-search"
+        sx={{ color: colors.textSecondary }}
+        startIcon={<SearchIcon />}
+      >
+        {t('navigation.tireSearch')}
       </Button>
     </Box>
   );
