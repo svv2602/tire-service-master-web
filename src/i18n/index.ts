@@ -22,6 +22,10 @@ import partnerUkTranslations from './locales/forms/partners/partner-uk.json';
 import tireCalculatorRuTranslations from './locales/forms/tire-calculator/tire-calculator-ru.json';
 import tireCalculatorUkTranslations from './locales/forms/tire-calculator/tire-calculator-uk.json';
 
+// Import tire search translation files
+import tireSearchRuTranslations from './locales/tire-search/ru.json';
+import tireSearchUkTranslations from './locales/tire-search/uk.json';
+
 // Import new form translation files
 import commonRuTranslations from './locales/forms/common/common-ru.json';
 import commonUkTranslations from './locales/forms/common/common-uk.json';
@@ -95,6 +99,7 @@ const ukTranslationModules = [
   modalsUkTranslations,
   partnerUkTranslations,
   tireCalculatorUkTranslations,
+  tireSearchUkTranslations,
   commonUkTranslations,
   userUkTranslations,
   bookingUkTranslations,
@@ -123,6 +128,7 @@ const ruTranslationModules = [
   modalsRuTranslations,
   partnerRuTranslations,
   tireCalculatorRuTranslations,
+  tireSearchRuTranslations,
   commonRuTranslations,
   userRuTranslations,
   bookingRuTranslations,

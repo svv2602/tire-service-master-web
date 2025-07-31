@@ -1,0 +1,172 @@
+{
+  "tireSearch": {
+    "title": "Поиск шин для автомобиля",
+    "subtitle": "Найдите подходящие размеры шин для вашего автомобиля по марке, модели и году выпуска",
+    "searchPlaceholder": "Введите марку и модель автомобиля: BMW 3 Series 2020, Тигуан резина R18...",
+    "searchButton": "Найти шины",
+    "searching": "Поиск...",
+    "noResults": "Результаты не найдены",
+    "resultsFound": "Найдено {{count}} результатов",
+    "loadMore": "Загрузить еще",
+    "showMore": "Показать больше",
+    "showLess": "Свернуть",
+    "clearSearch": "Очистить поиск",
+    
+    "filters": {
+      "title": "Фильтры",
+      "diameter": "Диаметр",
+      "brand": "Бренд",
+      "type": "Тип шин",
+      "year": "Год выпуска",
+      "sortBy": "Сортировка",
+      "sortRelevance": "По релевантности",
+      "sortBrand": "По бренду",
+      "sortModel": "По модели",
+      "sortYear": "По году",
+      "apply": "Применить",
+      "reset": "Сбросить",
+      "close": "Закрыть"
+    },
+    
+    "results": {
+      "configuration": "Конфигурация",
+      "brand": "Бренд",
+      "model": "Модель",
+      "years": "Годы выпуска",
+      "tireSizes": "Размеры шин",
+      "matchScore": "Соответствие",
+      "addToFavorites": "Добавить в избранное",
+      "removeFromFavorites": "Удалить из избранного",
+      "viewDetails": "Подробнее",
+      "noSizes": "Размеры не указаны",
+      "stockTires": "Штатные шины",
+      "optionalTires": "Опциональные шины"
+    },
+    
+    "tireSize": {
+      "width": "Ширина",
+      "height": "Высота",
+      "diameter": "Диаметр",
+      "type": {
+        "stock": "Штатный",
+        "optional": "Опциональный"
+      },
+      "format": "{{width}}/{{height}}R{{diameter}}",
+      "details": "Ширина: {{width}}мм, Высота: {{height}}%, Диаметр: R{{diameter}}"
+    },
+    
+    "history": {
+      "title": "История поиска",
+      "empty": "История поиска пуста",
+      "clear": "Очистить историю",
+      "clearConfirm": "Очистить историю поиска?",
+      "clearWarning": "Это действие нельзя отменить. Вся история поиска будет удалена.",
+      "willDelete": "Будет удалено: {{count}} запросов",
+      "favorites": "Избранные поиски",
+      "addToFavorites": "Добавить в избранное",
+      "removeFromFavorites": "Удалить из избранного",
+      "removeFromHistory": "Удалить из истории",
+      "searchCount": "{{count}} поисков",
+      "resultsCount": "{{count}} результатов",
+      "clickCount": "{{count}}x",
+      "timeAgo": {
+        "justNow": "только что",
+        "minutesAgo": "{{count}} мин назад",
+        "hoursAgo": "{{count}} ч назад",
+        "daysAgo": "{{count}} дн назад"
+      }
+    },
+    
+    "popular": {
+      "title": "Популярные поиски",
+      "refresh": "Обновить",
+      "showMore": "Показать еще {{count}} запросов",
+      "topPopular": "Топ-{{count}} самых популярных запросов выделены цветом",
+      "categories": {
+        "brand": "Премиум бренды",
+        "model": "Популярные модели",
+        "size": "Популярные размеры",
+        "general": "Сезонные",
+        "special": "Специальные",
+        "diameter": "Диаметры",
+        "carType": "По типу авто"
+      },
+      "trends": {
+        "up": "Растет",
+        "down": "Падает",
+        "stable": "Стабильно"
+      }
+    },
+    
+    "suggestions": {
+      "loading": "Поиск предложений...",
+      "categories": {
+        "brands": "Бренды",
+        "models": "Модели",
+        "sizes": "Размеры",
+        "history": "История поиска",
+        "popular": "Популярные запросы",
+        "general": "Общие запросы",
+        "other": "Другое"
+      },
+      "resultsCount": "{{count}} результатов"
+    },
+    
+    "statistics": {
+      "inDatabase": "В базе: {{count}} брендов",
+      "diameters": "Диаметры: R{{diameters}}",
+      "favorites": "Избранное: {{count}}",
+      "totalConfigurations": "Всего конфигураций: {{count}}",
+      "lastUpdate": "Последнее обновление: {{date}}"
+    },
+    
+    "errors": {
+      "searchFailed": "Ошибка поиска",
+      "networkError": "Ошибка сети. Проверьте подключение к интернету.",
+      "serverError": "Ошибка сервера. Попробуйте позже.",
+      "invalidQuery": "Некорректный запрос. Попробуйте изменить поисковый запрос.",
+      "noConnection": "Нет подключения к серверу",
+      "timeout": "Превышено время ожидания",
+      "tryAgain": "Попробовать снова",
+      "contactSupport": "Обратиться в поддержку"
+    },
+    
+    "actions": {
+      "search": "Поиск",
+      "clear": "Очистить",
+      "cancel": "Отмена",
+      "ok": "ОК",
+      "close": "Закрыть",
+      "save": "Сохранить",
+      "delete": "Удалить",
+      "edit": "Редактировать",
+      "copy": "Копировать",
+      "share": "Поделиться",
+      "print": "Печать",
+      "export": "Экспорт"
+    },
+    
+    "navigation": {
+      "home": "Главная",
+      "search": "Поиск шин",
+      "favorites": "Избранное",
+      "history": "История",
+      "help": "Помощь",
+      "settings": "Настройки"
+    },
+    
+    "help": {
+      "title": "Помощь по поиску шин",
+      "examples": "Примеры запросов:",
+      "exampleBrand": "BMW 3 серия",
+      "exampleModel": "Тигуан 2019 года",
+      "exampleSize": "резина R17",
+      "exampleCombined": "Mercedes C-класс зимняя резина",
+      "tips": "Советы:",
+      "tip1": "Используйте название бренда и модели для точного поиска",
+      "tip2": "Указывайте год выпуска для более точных результатов",
+      "tip3": "Можете использовать размер диска (например, R17, R18)",
+      "tip4": "Поиск работает с сокращениями: БМВ, Мерс, Ауди"
+    }
+  }
+}

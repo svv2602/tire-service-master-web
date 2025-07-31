@@ -29,6 +29,7 @@ import { useAppDispatch } from '../../store';
 import type { TireSearchResult, TireSuggestion } from '../../types/tireSearch';
 
 const TireSearchPage: React.FC = () => {
+  const { t } = useTranslation(['tireSearch', 'common']);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
@@ -217,7 +218,7 @@ const TireSearchPage: React.FC = () => {
           </Link>
           <Typography color="text.primary" sx={{ display: 'flex', alignItems: 'center' }}>
             <SearchIcon sx={{ mr: 0.5, fontSize: 20 }} />
-            Поиск шин
+            {t('navigation.search')}
           </Typography>
         </Breadcrumbs>
 
@@ -228,14 +229,14 @@ const TireSearchPage: React.FC = () => {
             component="h1"
             sx={{ fontWeight: 700, mb: 2, color: 'primary.main' }}
           >
-            Поиск шин для автомобиля
+{t('title')}
           </Typography>
           <Typography
             variant="h6"
             color="text.secondary"
             sx={{ mb: 3, maxWidth: 600, mx: 'auto' }}
           >
-            Найдите подходящие размеры шин для вашего автомобиля по марке, модели и году выпуска
+            {t('subtitle')}
           </Typography>
         </Box>
 
@@ -256,7 +257,7 @@ const TireSearchPage: React.FC = () => {
             loading={isLoading}
             suggestions={suggestions}
             onSuggestionSelect={handleSuggestionSelect}
-            placeholder="Введите марку и модель автомобиля: BMW 3 Series 2020, Тигуан резина R18..."
+            placeholder={t('searchPlaceholder')}
           />
 
           {/* Статистика системы */}

@@ -1,0 +1,172 @@
+{
+  "tireSearch": {
+    "title": "Пошук шин для автомобіля",
+    "subtitle": "Знайдіть підходящі розміри шин для вашого автомобіля за маркою, моделлю та роком випуску",
+    "searchPlaceholder": "Введіть марку та модель автомобіля: BMW 3 Series 2020, Тігуан гума R18...",
+    "searchButton": "Знайти шини",
+    "searching": "Пошук...",
+    "noResults": "Результати не знайдено",
+    "resultsFound": "Знайдено {{count}} результатів",
+    "loadMore": "Завантажити ще",
+    "showMore": "Показати більше",
+    "showLess": "Згорнути",
+    "clearSearch": "Очистити пошук",
+    
+    "filters": {
+      "title": "Фільтри",
+      "diameter": "Діаметр",
+      "brand": "Бренд",
+      "type": "Тип шин",
+      "year": "Рік випуску",
+      "sortBy": "Сортування",
+      "sortRelevance": "За релевантністю",
+      "sortBrand": "За брендом",
+      "sortModel": "За моделлю",
+      "sortYear": "За роком",
+      "apply": "Застосувати",
+      "reset": "Скинути",
+      "close": "Закрити"
+    },
+    
+    "results": {
+      "configuration": "Конфігурація",
+      "brand": "Бренд",
+      "model": "Модель",
+      "years": "Роки випуску",
+      "tireSizes": "Розміри шин",
+      "matchScore": "Відповідність",
+      "addToFavorites": "Додати до обраного",
+      "removeFromFavorites": "Видалити з обраного",
+      "viewDetails": "Детальніше",
+      "noSizes": "Розміри не вказано",
+      "stockTires": "Штатні шини",
+      "optionalTires": "Опціональні шини"
+    },
+    
+    "tireSize": {
+      "width": "Ширина",
+      "height": "Висота",
+      "diameter": "Діаметр",
+      "type": {
+        "stock": "Штатний",
+        "optional": "Опціональний"
+      },
+      "format": "{{width}}/{{height}}R{{diameter}}",
+      "details": "Ширина: {{width}}мм, Висота: {{height}}%, Діаметр: R{{diameter}}"
+    },
+    
+    "history": {
+      "title": "Історія пошуку",
+      "empty": "Історія пошуку порожня",
+      "clear": "Очистити історію",
+      "clearConfirm": "Очистити історію пошуку?",
+      "clearWarning": "Цю дію неможливо скасувати. Вся історія пошуку буде видалена.",
+      "willDelete": "Буде видалено: {{count}} запитів",
+      "favorites": "Обрані пошуки",
+      "addToFavorites": "Додати до обраного",
+      "removeFromFavorites": "Видалити з обраного",
+      "removeFromHistory": "Видалити з історії",
+      "searchCount": "{{count}} пошуків",
+      "resultsCount": "{{count}} результатів",
+      "clickCount": "{{count}}x",
+      "timeAgo": {
+        "justNow": "щойно",
+        "minutesAgo": "{{count}} хв тому",
+        "hoursAgo": "{{count}} год тому",
+        "daysAgo": "{{count}} дн тому"
+      }
+    },
+    
+    "popular": {
+      "title": "Популярні пошуки",
+      "refresh": "Оновити",
+      "showMore": "Показати ще {{count}} запитів",
+      "topPopular": "Топ-{{count}} найпопулярніших запитів виділено кольором",
+      "categories": {
+        "brand": "Преміум бренди",
+        "model": "Популярні моделі",
+        "size": "Популярні розміри",
+        "general": "Сезонні",
+        "special": "Спеціальні",
+        "diameter": "Діаметри",
+        "carType": "За типом авто"
+      },
+      "trends": {
+        "up": "Зростає",
+        "down": "Падає",
+        "stable": "Стабільно"
+      }
+    },
+    
+    "suggestions": {
+      "loading": "Пошук пропозицій...",
+      "categories": {
+        "brands": "Бренди",
+        "models": "Моделі",
+        "sizes": "Розміри",
+        "history": "Історія пошуку",
+        "popular": "Популярні запити",
+        "general": "Загальні запити",
+        "other": "Інше"
+      },
+      "resultsCount": "{{count}} результатів"
+    },
+    
+    "statistics": {
+      "inDatabase": "У базі: {{count}} брендів",
+      "diameters": "Діаметри: R{{diameters}}",
+      "favorites": "Обране: {{count}}",
+      "totalConfigurations": "Всього конфігурацій: {{count}}",
+      "lastUpdate": "Останнє оновлення: {{date}}"
+    },
+    
+    "errors": {
+      "searchFailed": "Помилка пошуку",
+      "networkError": "Помилка мережі. Перевірте підключення до інтернету.",
+      "serverError": "Помилка сервера. Спробуйте пізніше.",
+      "invalidQuery": "Некоректний запит. Спробуйте змінити пошуковий запит.",
+      "noConnection": "Немає підключення до сервера",
+      "timeout": "Перевищено час очікування",
+      "tryAgain": "Спробувати знову",
+      "contactSupport": "Звернутися до підтримки"
+    },
+    
+    "actions": {
+      "search": "Пошук",
+      "clear": "Очистити",
+      "cancel": "Скасувати",
+      "ok": "ОК",
+      "close": "Закрити",
+      "save": "Зберегти",
+      "delete": "Видалити",
+      "edit": "Редагувати",
+      "copy": "Копіювати",
+      "share": "Поділитися",
+      "print": "Друк",
+      "export": "Експорт"
+    },
+    
+    "navigation": {
+      "home": "Головна",
+      "search": "Пошук шин",
+      "favorites": "Обране",
+      "history": "Історія",
+      "help": "Допомога",
+      "settings": "Налаштування"
+    },
+    
+    "help": {
+      "title": "Допомога з пошуку шин",
+      "examples": "Приклади запитів:",
+      "exampleBrand": "BMW 3 серія",
+      "exampleModel": "Тігуан 2019 року",
+      "exampleSize": "гума R17",
+      "exampleCombined": "Mercedes C-клас зимова гума",
+      "tips": "Поради:",
+      "tip1": "Використовуйте назву бренду та моделі для точного пошуку",
+      "tip2": "Вказуйте рік випуску для більш точних результатів",
+      "tip3": "Можете використовувати розмір диска (наприклад, R17, R18)",
+      "tip4": "Пошук працює зі скороченнями: БМВ, Мерс, Ауді"
+    }
+  }
+}

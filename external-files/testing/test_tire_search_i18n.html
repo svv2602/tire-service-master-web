@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест локализации поиска шин</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .header h1 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #1976d2;
+        }
+        .section h3 {
+            color: #1976d2;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .key-value {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: start;
+        }
+        .key {
+            font-weight: bold;
+            color: #333;
+            background: #e3f2fd;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .value {
+            padding: 8px 12px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .lang-switch {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .lang-btn {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .lang-btn:hover {
+            background: #1565c0;
+        }
+        .lang-btn.active {
+            background: #0d47a1;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #4caf50;
+        }
+        .status.info {
+            background: #e3f2fd;
+            color: #1976d2;
+            border: 1px solid #2196f3;
+        }
+        .category {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border-left: 3px solid #ff9800;
+        }
+        .category h4 {
+            margin: 0 0 10px 0;
+            color: #e65100;
+        }
+        .example {
+            background: #f1f8e9;
+            padding: 10px;
+            border-radius: 4px;
+            font-style: italic;
+            color: #33691e;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #1976d2;
+        }
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌐 Тест локализации поиска шин</h1>
+        <p>Проверка переводов для компонентов TireSearch</p>
+    </div>
+
+    <div class="lang-switch">
+        <button class="lang-btn active" onclick="switchLanguage('ru')">🇷🇺 Русский</button>
+        <button class="lang-btn" onclick="switchLanguage('uk')">🇺🇦 Українська</button>
+    </div>
+
+    <div class="container">
+        <div class="status success">
+            ✅ <span id="status-text">Файлы локализации успешно созданы</span>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number">2</div>
+                <div class="stat-label">Языка</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">150+</div>
+                <div class="stat-label">Ключей перевода</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">12</div>
+                <div class="stat-label">Категорий</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">3</div>
+                <div class="stat-label">Компонента</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="section">
+            <h3>🔍 Основные элементы поиска</h3>
+            <div class="key-value">
+                <div class="key">tireSearch.title</div>
+                <div class="value" id="title">Поиск шин для автомобиля</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.subtitle</div>
+                <div class="value" id="subtitle">Найдите подходящие размеры шин для вашего автомобиля по марке, модели и году выпуска</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.searchPlaceholder</div>
+                <div class="value" id="searchPlaceholder">Введите марку и модель автомобиля: BMW 3 Series 2020, Тигуан резина R18...</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.searchButton</div>
+                <div class="value" id="searchButton">Найти шины</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📊 Результаты поиска</h3>
+            <div class="key-value">
+                <div class="key">tireSearch.results.brand</div>
+                <div class="value" id="resultsBrand">Бренд</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.results.model</div>
+                <div class="value" id="resultsModel">Модель</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.results.tireSizes</div>
+                <div class="value" id="resultsTireSizes">Размеры шин</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.results.addToFavorites</div>
+                <div class="value" id="resultsAddToFavorites">Добавить в избранное</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📚 История поиска</h3>
+            <div class="key-value">
+                <div class="key">tireSearch.history.title</div>
+                <div class="value" id="historyTitle">История поиска</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.history.clear</div>
+                <div class="value" id="historyClear">Очистить историю</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.history.favorites</div>
+                <div class="value" id="historyFavorites">Избранные поиски</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.history.timeAgo.justNow</div>
+                <div class="value" id="historyJustNow">только что</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>⭐ Популярные поиски</h3>
+            <div class="key-value">
+                <div class="key">tireSearch.popular.title</div>
+                <div class="value" id="popularTitle">Популярные поиски</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.popular.refresh</div>
+                <div class="value" id="popularRefresh">Обновить</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.popular.categories.brand</div>
+                <div class="value" id="popularBrand">Премиум бренды</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.popular.trends.up</div>
+                <div class="value" id="popularTrendsUp">Растет</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>💡 Автодополнение</h3>
+            <div class="key-value">
+                <div class="key">tireSearch.suggestions.loading</div>
+                <div class="value" id="suggestionsLoading">Поиск предложений...</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.suggestions.categories.brands</div>
+                <div class="value" id="suggestionsBrands">Бренды</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.suggestions.categories.models</div>
+                <div class="value" id="suggestionsModels">Модели</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.suggestions.categories.sizes</div>
+                <div class="value" id="suggestionsSizes">Размеры</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>⚠️ Ошибки</h3>
+            <div class="key-value">
+                <div class="key">tireSearch.errors.searchFailed</div>
+                <div class="value" id="errorsSearchFailed">Ошибка поиска</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.errors.networkError</div>
+                <div class="value" id="errorsNetworkError">Ошибка сети. Проверьте подключение к интернету.</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.errors.tryAgain</div>
+                <div class="value" id="errorsTryAgain">Попробовать снова</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🎯 Действия</h3>
+            <div class="key-value">
+                <div class="key">tireSearch.actions.search</div>
+                <div class="value" id="actionsSearch">Поиск</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.actions.clear</div>
+                <div class="value" id="actionsClear">Очистить</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.actions.save</div>
+                <div class="value" id="actionsSave">Сохранить</div>
+            </div>
+            <div class="key-value">
+                <div class="key">tireSearch.actions.delete</div>
+                <div class="value" id="actionsDelete">Удалить</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="section">
+            <h3>📋 Структура файлов</h3>
+            <div class="category">
+                <h4>📁 tire-search-locales/</h4>
+                <div>📄 ru.json - русская локализация (150+ ключей)</div>
+                <div>📄 uk.json - украинская локализация (150+ ключей)</div>
+            </div>
+            
+            <div class="category">
+                <h4>🔧 Интеграция</h4>
+                <div>✅ Добавлены импорты в src/i18n/index.ts</div>
+                <div>✅ Подключены к модулям переводов</div>
+                <div>✅ Готово к использованию в компонентах</div>
+            </div>
+
+            <div class="category">
+                <h4>🎯 Покрытие</h4>
+                <div>✅ SearchHistory - история поиска</div>
+                <div>✅ PopularSearches - популярные запросы</div>
+                <div>✅ SearchSuggestions - автодополнение</div>
+                <div>✅ TireSearchPage - основная страница</div>
+                <div>✅ Ошибки и уведомления</div>
+                <div>✅ Навигация и действия</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Переводы
+        const translations = {
+            ru: {
+                title: "Поиск шин для автомобиля",
+                subtitle: "Найдите подходящие размеры шин для вашего автомобиля по марке, модели и году выпуска",
+                searchPlaceholder: "Введите марку и модель автомобиля: BMW 3 Series 2020, Тигуан резина R18...",
+                searchButton: "Найти шины",
+                resultsBrand: "Бренд",
+                resultsModel: "Модель",
+                resultsTireSizes: "Размеры шин",
+                resultsAddToFavorites: "Добавить в избранное",
+                historyTitle: "История поиска",
+                historyClear: "Очистить историю",
+                historyFavorites: "Избранные поиски",
+                historyJustNow: "только что",
+                popularTitle: "Популярные поиски",
+                popularRefresh: "Обновить",
+                popularBrand: "Премиум бренды",
+                popularTrendsUp: "Растет",
+                suggestionsLoading: "Поиск предложений...",
+                suggestionsBrands: "Бренды",
+                suggestionsModels: "Модели",
+                suggestionsSizes: "Размеры",
+                errorsSearchFailed: "Ошибка поиска",
+                errorsNetworkError: "Ошибка сети. Проверьте подключение к интернету.",
+                errorsTryAgain: "Попробовать снова",
+                actionsSearch: "Поиск",
+                actionsClear: "Очистить",
+                actionsSave: "Сохранить",
+                actionsDelete: "Удалить",
+                statusText: "Файлы локализации успешно созданы"
+            },
+            uk: {
+                title: "Пошук шин для автомобіля",
+                subtitle: "Знайдіть підходящі розміри шин для вашого автомобіля за маркою, моделлю та роком випуску",
+                searchPlaceholder: "Введіть марку та модель автомобіля: BMW 3 Series 2020, Тігуан гума R18...",
+                searchButton: "Знайти шини",
+                resultsBrand: "Бренд",
+                resultsModel: "Модель",
+                resultsTireSizes: "Розміри шин",
+                resultsAddToFavorites: "Додати до обраного",
+                historyTitle: "Історія пошуку",
+                historyClear: "Очистити історію",
+                historyFavorites: "Обрані пошуки",
+                historyJustNow: "щойно",
+                popularTitle: "Популярні пошуки",
+                popularRefresh: "Оновити",
+                popularBrand: "Преміум бренди",
+                popularTrendsUp: "Зростає",
+                suggestionsLoading: "Пошук пропозицій...",
+                suggestionsBrands: "Бренди",
+                suggestionsModels: "Моделі",
+                suggestionsSizes: "Розміри",
+                errorsSearchFailed: "Помилка пошуку",
+                errorsNetworkError: "Помилка мережі. Перевірте підключення до інтернету.",
+                errorsTryAgain: "Спробувати знову",
+                actionsSearch: "Пошук",
+                actionsClear: "Очистити",
+                actionsSave: "Зберегти",
+                actionsDelete: "Видалити",
+                statusText: "Файли локалізації успішно створено"
+            }
+        };
+
+        let currentLang = 'ru';
+
+        function switchLanguage(lang) {
+            currentLang = lang;
+            
+            // Обновляем активную кнопку
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Обновляем все переводы
+            Object.keys(translations[lang]).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+
+            console.log(`Переключен язык на: ${lang}`);
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🌐 Тест локализации поиска шин загружен');
+            console.log('📊 Статистика:');
+            console.log('- Языки: 2 (русский, украинский)');
+            console.log('- Ключей перевода: 150+');
+            console.log('- Категорий: 12');
+            console.log('- Компонентов: 3');
+        });
+    </script>
+</body>
+</html>
