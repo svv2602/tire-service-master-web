@@ -314,12 +314,20 @@ const SystemSettingsPage: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Switch
               checked={currentValue === 'true'}
-              onChange={(e) => handleValueChange(setting.key, e.target.checked ? 'true' : 'false')}
+              onChange={(e) => {
+                const newValue = e.target.checked ? 'true' : 'false';
+                handleValueChange(setting.key, newValue);
+                // Автосохранение для boolean полей
+                saveSetting(setting.key, newValue);
+              }}
               disabled={isSaving}
             />
             <Typography variant="body2" color={currentValue === 'true' ? 'success.main' : 'text.secondary'}>
               {currentValue === 'true' ? 'Включено' : 'Отключено'}
             </Typography>
+            {isSaving && (
+              <CircularProgress size={16} />
+            )}
           </Box>
         );
 
@@ -576,15 +584,18 @@ const SystemSettingsPage: React.FC = () => {
                     
                     <CardActions sx={{ justifyContent: 'space-between' }}>
                       <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button
-                          variant="contained"
-                          size="small"
-                          startIcon={isSaving ? <CircularProgress size={16} /> : <SaveIcon />}
-                          onClick={() => saveSetting(key, getCurrentValue(key, setting.value))}
-                          disabled={!hasChanges(key) || isSaving}
-                        >
-                          {isSaving ? 'Сохранение...' : 'Сохранить'}
-                        </Button>
+                        {/* Скрываем кнопку сохранения для boolean полей (автосохранение) */}
+                        {setting.type !== 'boolean' && (
+                          <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={isSaving ? <CircularProgress size={16} /> : <SaveIcon />}
+                            onClick={() => saveSetting(key, getCurrentValue(key, setting.value))}
+                            disabled={!hasChanges(key) || isSaving}
+                          >
+                            {isSaving ? 'Сохранение...' : 'Сохранить'}
+                          </Button>
+                        )}
                         
                         {canTestConnection(key) && (
                           <Button
@@ -599,7 +610,7 @@ const SystemSettingsPage: React.FC = () => {
                         )}
                       </Box>
                       
-                      {hasChanges(key) && (
+                      {hasChanges(key) && setting.type !== 'boolean' && (
                         <Button
                           size="small"
                           onClick={() => setPendingChanges(prev => {
