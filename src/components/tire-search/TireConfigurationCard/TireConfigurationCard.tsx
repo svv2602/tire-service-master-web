@@ -47,7 +47,7 @@ const TireConfigurationCard: React.FC<TireConfigurationCardProps> = ({
   // Определяем логотип бренда (заглушка)
   const getBrandLogo = (brandName: string) => {
     // В реальном приложении здесь будет логика получения логотипа
-    return brandName.charAt(0).toUpperCase();
+    return brandName && brandName.length > 0 ? brandName.charAt(0).toUpperCase() : '?';
   };
 
   // Компактный вариант карточки

@@ -16,7 +16,8 @@ import {
   Paper,
   LinearProgress,
   Fade,
-  Collapse
+  Collapse,
+  useTheme
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -28,6 +29,7 @@ import {
 } from '@mui/icons-material';
 import TireConfigurationCard from '../TireConfigurationCard/TireConfigurationCard';
 import Pagination from '../../ui/Pagination/Pagination';
+import { getThemeColors } from '../../../styles';
 import type { 
   TireSearchResultsProps,
   TireSearchResult,
@@ -46,9 +48,12 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
   onPageChange,
   onResultClick,
   onFavoriteToggle,
+  onSearchExample,
   favorites = [],
   className
 }) => {
+  const theme = useTheme();
+  const colors = getThemeColors(theme);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
   const [showSearchInfo, setShowSearchInfo] = useState(false);
@@ -139,10 +144,10 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
         textAlign: 'center',
         py: 8,
         px: 4,
-        bgcolor: 'grey.50',
+        bgcolor: colors.backgroundSecondary,
         borderRadius: 3,
         border: '2px dashed',
-        borderColor: 'grey.300'
+        borderColor: colors.borderPrimary
       }}
     >
       <SearchIcon sx={{ fontSize: 64, color: 'grey.400', mb: 2 }} />
@@ -164,8 +169,8 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
             size="small"
             variant="outlined"
             onClick={() => {
-              // Здесь можно добавить логику для выполнения примера поиска
               console.log('Поиск примера:', example);
+              onSearchExample?.(example);
             }}
             sx={{ cursor: 'pointer' }}
           />

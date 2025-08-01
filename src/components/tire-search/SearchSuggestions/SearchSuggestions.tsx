@@ -13,7 +13,8 @@ import {
   CircularProgress,
   Fade,
   Popper,
-  ClickAwayListener
+  ClickAwayListener,
+  useTheme
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -24,6 +25,7 @@ import {
   Star as StarIcon,
   Speed as SpeedIcon
 } from '@mui/icons-material';
+import { getThemeColors } from '../../../styles';
 import { useDebounce } from 'use-debounce';
 
 // Типы данных
@@ -60,6 +62,9 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
   includeHistory = true,
   includePopular = true
 }) => {
+  const theme = useTheme();
+  const colors = getThemeColors(theme);
+  
   // Состояние компонента
   const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -375,7 +380,7 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
                         {showCategories && Object.keys(groupedSuggestions).length > 1 && (
                           <>
                             {categoryIndex > 0 && <Divider />}
-                            <ListItem sx={{ py: 0.5, bgcolor: 'grey.50' }}>
+                            <ListItem sx={{ py: 0.5, bgcolor: colors.backgroundSecondary }}>
                               <Typography variant="caption" color="text.secondary" fontWeight="medium">
                                 {category}
                               </Typography>

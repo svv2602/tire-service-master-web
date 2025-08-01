@@ -153,6 +153,7 @@ export interface TireSearchResultsProps {
   onPageChange?: (page: number) => void;
   onResultClick?: (result: TireSearchResult) => void;
   onFavoriteToggle?: (resultId: number) => void;
+  onSearchExample?: (query: string) => void;
   favorites?: number[];
   className?: string;
 }

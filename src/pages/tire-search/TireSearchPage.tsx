@@ -5,8 +5,6 @@ import {
   Typography,
   Paper,
   Fade,
-  Breadcrumbs,
-  Link,
   Alert,
   Snackbar,
   Fab,
@@ -14,7 +12,6 @@ import {
   useMediaQuery
 } from '@mui/material';
 import {
-  Home as HomeIcon,
   Search as SearchIcon,
   Favorite as FavoriteIcon,
   KeyboardArrowUp as KeyboardArrowUpIcon
@@ -27,6 +24,8 @@ import { SearchHistory, PopularSearches } from '../../components/tire-search';
 import { useTireSearch, useTireFavorites } from '../../hooks/useTireSearch';
 import { tireSearchCacheUtils } from '../../api/tireSearch.api';
 import { useAppDispatch } from '../../store';
+import { getThemeColors } from '../../styles';
+import ClientLayout from '../../components/client/ClientLayout';
 import type { TireSearchResult, TireSuggestion } from '../../types/tireSearch';
 
 const TireSearchPage: React.FC = () => {
@@ -204,24 +203,11 @@ const TireSearchPage: React.FC = () => {
     setNotification(prev => ({ ...prev, open: false }));
   };
 
+  const colors = getThemeColors(theme);
+
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+    <ClientLayout>
       <Container maxWidth="xl" sx={{ py: 3 }}>
-        {/* Хлебные крошки */}
-        <Breadcrumbs sx={{ mb: 3 }}>
-          <Link
-            color="inherit"
-            href="/client"
-            sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
-          >
-            <HomeIcon sx={{ mr: 0.5, fontSize: 20 }} />
-            Главная
-          </Link>
-          <Typography color="text.primary" sx={{ display: 'flex', alignItems: 'center' }}>
-            <SearchIcon sx={{ mr: 0.5, fontSize: 20 }} />
-            {t('navigation.search')}
-          </Typography>
-        </Breadcrumbs>
 
         {/* Заголовок страницы */}
         <Box sx={{ textAlign: 'center', mb: 4 }}>
@@ -248,7 +234,8 @@ const TireSearchPage: React.FC = () => {
             p: { xs: 2, md: 3 },
             mb: 4,
             borderRadius: 3,
-            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
+            bgcolor: colors.backgroundSecondary,
+            border: `1px solid ${colors.borderPrimary}`
           }}
         >
           <TireSearchBar
@@ -308,6 +295,7 @@ const TireSearchPage: React.FC = () => {
               onPageChange={handlePageChange}
               onResultClick={handleResultClick}
               onFavoriteToggle={handleFavoriteToggle}
+              onSearchExample={handleSearch}
               favorites={favorites}
             />
           </Box>
@@ -380,7 +368,7 @@ const TireSearchPage: React.FC = () => {
           {notification.message}
         </Alert>
       </Snackbar>
-    </Box>
+    </ClientLayout>
   );
 };
 

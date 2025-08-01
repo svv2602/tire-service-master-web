@@ -14,7 +14,8 @@ import {
   CircularProgress,
   Divider,
   Fade,
-  ClickAwayListener
+  ClickAwayListener,
+  useTheme
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -24,6 +25,7 @@ import {
   DirectionsCar as CarIcon,
   Settings as SettingsIcon
 } from '@mui/icons-material';
+import { getThemeColors } from '../../../styles';
 import type { 
   TireSearchBarProps, 
   TireSuggestion,
@@ -47,6 +49,8 @@ const TireSearchBar: React.FC<TireSearchBarProps> = ({
   onSuggestionSelect,
   className
 }) => {
+  const theme = useTheme();
+  const colors = getThemeColors(theme);
   const [state, setState] = useState<TireSearchBarState>({
     focused: false,
     showSuggestions: false,
@@ -366,12 +370,12 @@ const TireSearchBar: React.FC<TireSearchBarProps> = ({
             ),
             sx: {
               borderRadius: 3,
-              backgroundColor: 'background.paper',
+              backgroundColor: colors.backgroundField,
               '&:hover': {
-                backgroundColor: 'background.paper',
+                backgroundColor: colors.backgroundHover,
               },
               '&.Mui-focused': {
-                backgroundColor: 'background.paper',
+                backgroundColor: colors.backgroundField,
                 boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
               }
             }

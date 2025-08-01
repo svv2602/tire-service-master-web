@@ -18,7 +18,8 @@ import {
   DialogActions,
   Alert,
   Tooltip,
-  Collapse
+  Collapse,
+  useTheme
 } from '@mui/material';
 import {
   History as HistoryIcon,
@@ -32,6 +33,7 @@ import {
   Bookmark as BookmarkIcon,
   BookmarkBorder as BookmarkBorderIcon
 } from '@mui/icons-material';
+import { getThemeColors } from '../../../styles';
 import { useTranslation } from 'react-i18next';
 
 // Типы данных
@@ -63,6 +65,8 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
   compact = false
 }) => {
   const { t } = useTranslation(['client', 'common']);
+  const theme = useTheme();
+  const colors = getThemeColors(theme);
   
   // Состояние компонента
   const [history, setHistory] = useState<SearchHistoryItem[]>([]);
@@ -85,8 +89,9 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
     try {
       const savedHistory = localStorage.getItem(HISTORY_STORAGE_KEY);
       if (savedHistory) {
-        const parsedHistory = JSON.parse(savedHistory).map((item: any) => ({
+        const parsedHistory = JSON.parse(savedHistory).map((item: any, index: number) => ({
           ...item,
+          id: item.id || `history-${Date.now()}-${index}`,
           timestamp: new Date(item.timestamp)
         }));
         setHistory(parsedHistory);
@@ -100,8 +105,9 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
     try {
       const savedFavorites = localStorage.getItem(FAVORITES_STORAGE_KEY);
       if (savedFavorites) {
-        const parsedFavorites = JSON.parse(savedFavorites).map((item: any) => ({
+        const parsedFavorites = JSON.parse(savedFavorites).map((item: any, index: number) => ({
           ...item,
+          id: item.id || `favorite-${Date.now()}-${index}`,
           timestamp: new Date(item.timestamp)
         }));
         setFavorites(parsedFavorites);
@@ -278,7 +284,7 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
       <Box 
         sx={{ 
           p: 2, 
-          bgcolor: 'grey.50', 
+          bgcolor: colors.backgroundSecondary, 
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'space-between',
@@ -342,8 +348,8 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
                     </ListItemIcon>
                     <ListItemText
                       primary={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="body2" fontWeight="medium">
+                        <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="body2" fontWeight="medium" component="span">
                             {item.query}
                           </Typography>
                           {item.resultsCount > 0 && (
@@ -380,16 +386,16 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
         {history.length > 0 ? (
           <Box>
             <List dense>
-              {getDisplayItems().map((item) => (
-                <ListItem key={item.id} disablePadding>
+              {getDisplayItems().map((item, index) => (
+                <ListItem key={item.id || `history-${index}`} disablePadding>
                   <ListItemButton onClick={() => handleHistoryClick(item)}>
                     <ListItemIcon sx={{ minWidth: 36 }}>
                       <SearchIcon color="primary" fontSize="small" />
                     </ListItemIcon>
                     <ListItemText
                       primary={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="body2">
+                        <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="body2" component="span">
                             {item.query}
                           </Typography>
                           {item.resultsCount > 0 && (
@@ -412,15 +418,15 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
                         </Box>
                       }
                       secondary={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                        <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
                           <AccessTimeIcon sx={{ fontSize: 12 }} />
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography variant="caption" color="text.secondary" component="span">
                             {formatTime(item.timestamp)}
                           </Typography>
                           {getFiltersDescription(item.filters) && (
                             <>
-                              <Typography variant="caption" color="text.secondary">•</Typography>
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography variant="caption" color="text.secondary" component="span">•</Typography>
+                              <Typography variant="caption" color="text.secondary" component="span">
                                 {getFiltersDescription(item.filters)}
                               </Typography>
                             </>

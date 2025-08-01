@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -11,7 +11,8 @@ import {
   Tooltip,
   IconButton,
   Collapse,
-  Divider
+  Divider,
+  useTheme
 } from '@mui/material';
 import {
   TrendingUp as TrendingUpIcon,
@@ -23,6 +24,8 @@ import {
   Star as StarIcon,
   Speed as SpeedIcon
 } from '@mui/icons-material';
+import { getThemeColors } from '../../../styles';
+import { useGetPopularQueriesQuery } from '../../../api/tireSearch.api';
 import { useTranslation } from 'react-i18next';
 
 // Типы данных
@@ -52,16 +55,15 @@ const PopularSearches: React.FC<PopularSearchesProps> = ({
   autoRefresh = false
 }) => {
   const { t } = useTranslation(['client', 'common']);
+  const theme = useTheme();
+  const colors = getThemeColors(theme);
   
   // Состояние компонента
-  const [popularSearches, setPopularSearches] = useState<PopularSearchItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(!compact);
   const [showAll, setShowAll] = useState(false);
 
-  // API базовый URL
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+  // RTK Query для получения популярных запросов
+  const { data: apiPopularQueries, isLoading: loading, error: apiError, refetch } = useGetPopularQueriesQuery();
 
   // Статические популярные поиски (fallback)
   const staticPopularSearches: PopularSearchItem[] = [
@@ -175,57 +177,25 @@ const PopularSearches: React.FC<PopularSearchesProps> = ({
     }
   ];
 
-  // Загрузка популярных поисков
-  const loadPopularSearches = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Пытаемся загрузить с API
-      const response = await fetch(`${API_BASE_URL}/tire_search/popular`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        const apiSearches = data.popular_searches?.map((item: any, index: number) => ({
-          id: `api-${index}`,
-          query: item.query,
-          searchCount: item.count,
-          trend: item.trend || 'stable',
-          category: item.category || 'general',
-          lastSearched: new Date(item.last_searched || Date.now()),
-          resultsCount: item.results_count
-        })) || [];
-        
-        if (apiSearches.length > 0) {
-          setPopularSearches(apiSearches);
-        } else {
-          // Если API не вернул данные, используем статические
-          setPopularSearches(staticPopularSearches);
-        }
-      } else {
-        // Если API недоступен, используем статические данные
-        setPopularSearches(staticPopularSearches);
-      }
-    } catch (error) {
-      console.warn('API популярных поисков недоступен, используем статические данные:', error);
-      setPopularSearches(staticPopularSearches);
-    } finally {
-      setLoading(false);
+  // Обработка данных из API или fallback на статические
+  const popularSearches: PopularSearchItem[] = useMemo(() => {
+    if (apiPopularQueries && apiPopularQueries.length > 0) {
+      return apiPopularQueries.map((query: string, index: number) => ({
+        id: `api-${index}`,
+        query,
+        searchCount: Math.floor(Math.random() * 1000) + 100, // Генерируем случайное число для демо
+        trend: index < 3 ? 'up' : index < 6 ? 'stable' : 'down',
+        category: query.includes('BMW') || query.includes('Mercedes') ? 'brand' : 
+                 query.includes('R1') || query.includes('R2') ? 'size' : 'general',
+        lastSearched: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000), // Случайное время в последние 24 часа
+        resultsCount: Math.floor(Math.random() * 50) + 10
+      }));
     }
-  };
+    // Fallback на статические данные
+    return staticPopularSearches;
+  }, [apiPopularQueries]);
 
-  // Загрузка данных при монтировании
-  useEffect(() => {
-    loadPopularSearches();
-  }, []);
-
-  // Автообновление
-  useEffect(() => {
-    if (autoRefresh) {
-      const interval = setInterval(loadPopularSearches, 5 * 60 * 1000); // каждые 5 минут
-      return () => clearInterval(interval);
-    }
-  }, [autoRefresh]);
+  const error = apiError ? 'Ошибка загрузки популярных запросов' : null;
 
   // Получение иконки тренда
   const getTrendIcon = (trend: string) => {
@@ -303,7 +273,7 @@ const PopularSearches: React.FC<PopularSearchesProps> = ({
       <Box 
         sx={{ 
           p: 2, 
-          bgcolor: 'grey.50', 
+          bgcolor: colors.backgroundSecondary, 
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'space-between',
@@ -328,16 +298,18 @@ const PopularSearches: React.FC<PopularSearchesProps> = ({
         
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Tooltip title="Обновить">
-            <IconButton 
-              size="small" 
-              onClick={(e) => {
-                e.stopPropagation();
-                loadPopularSearches();
-              }}
-              disabled={loading}
-            >
-              <RefreshIcon />
-            </IconButton>
+            <span>
+              <IconButton 
+                size="small" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  refetch();
+                }}
+                disabled={loading}
+              >
+                <RefreshIcon />
+              </IconButton>
+            </span>
           </Tooltip>
           {compact && (
             <IconButton size="small">
@@ -363,7 +335,7 @@ const PopularSearches: React.FC<PopularSearchesProps> = ({
           // Ошибка загрузки
           <Box sx={{ p: 2 }}>
             <Alert severity="error" action={
-              <Button size="small" onClick={loadPopularSearches}>
+              <Button size="small" onClick={() => refetch()}>
                 Повторить
               </Button>
             }>

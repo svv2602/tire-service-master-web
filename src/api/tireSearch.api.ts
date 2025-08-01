@@ -14,32 +14,51 @@ export const tireSearchApi = baseApi.injectEndpoints({
     // Основной поиск шин
     searchTires: builder.mutation<TireSearchResponse, TireSearchQuery>({
       query: (searchQuery) => ({
-        url: 'api/v1/tire_search',
+        url: 'tire_search',
         method: 'POST',
         body: searchQuery,
       }),
       transformResponse: (response: any): TireSearchResponse => {
         return {
-          results: response.results.map((result: any) => ({
+          results: response.results?.map((result: any) => ({
             ...result,
-            full_name: `${result.brand_name} ${result.model_name}`,
-            years_display: result.year_from === result.year_to 
-              ? result.year_from.toString()
-              : `${result.year_from}-${result.year_to}`,
-            tire_sizes: result.tire_sizes.map((size: any) => ({
-              ...size,
-              display: `${size.width}/${size.height}R${size.diameter}`
-            }))
-          })),
+            // Преобразуем названия полей для соответствия интерфейсу
+            brand_name: result.brand || '',
+            model_name: result.model || '',
+            // Используем готовые данные от бэкенда
+            years_display: result.year_range || '',
+            // Преобразуем строки размеров в объекты TireSize
+            tire_sizes: (result.tire_sizes || []).map((sizeStr: string) => {
+              const match = sizeStr.match(/^(\d+)\/(\d+)R(\d+)$/);
+              if (match) {
+                const [, width, height, diameter] = match;
+                return {
+                  width: parseInt(width),
+                  height: parseInt(height),
+                  diameter: parseInt(diameter),
+                  type: result.stock_sizes?.includes(sizeStr) ? 'stock' : 'optional',
+                  display: sizeStr
+                };
+              }
+              // Fallback для некорректных размеров
+              return {
+                width: 0,
+                height: 0,
+                diameter: 0,
+                type: 'optional',
+                display: sizeStr
+              };
+            })
+          })) || [],
           total: response.total || 0,
-          page: response.page || 1,
-          per_page: response.per_page || 20,
-          has_more: response.has_more || false,
+          page: response.pagination?.offset ? Math.floor(response.pagination.offset / (response.pagination.limit || 20)) + 1 : 1,
+          per_page: response.pagination?.limit || 20,
+          has_more: response.pagination?.has_more || false,
           query_info: {
-            original_query: response.query_info?.original_query || '',
-            parsed_data: response.query_info?.parsed_data || {},
-            search_time_ms: response.query_info?.search_time_ms || 0,
-            used_llm: response.query_info?.used_llm || false
+            original_query: response.query || '',
+            parsed_data: response.parsed_data || {},
+            search_time_ms: 0,
+            used_llm: false
           },
           suggestions: response.suggestions || []
         };
@@ -55,7 +74,7 @@ export const tireSearchApi = baseApi.injectEndpoints({
     // Получение предложений для автодополнения
     getTireSuggestions: builder.query<TireSuggestion[], string>({
       query: (query) => ({
-        url: 'api/v1/tire_search/suggestions',
+        url: 'tire_search/suggestions',
         params: { q: query, limit: 10 }
       }),
       transformResponse: (response: any): TireSuggestion[] => {
@@ -67,7 +86,7 @@ export const tireSearchApi = baseApi.injectEndpoints({
 
     // Популярные запросы
     getPopularQueries: builder.query<string[], void>({
-      query: () => 'api/v1/tire_search/popular',
+      query: () => 'tire_search/popular',
       transformResponse: (response: any): string[] => {
         return response.popular_queries || [];
       },
@@ -77,7 +96,7 @@ export const tireSearchApi = baseApi.injectEndpoints({
 
     // Получение списка брендов
     getTireBrands: builder.query<Array<{ name: string; count: number }>, void>({
-      query: () => 'api/v1/tire_search/brands',
+      query: () => 'tire_search/brands',
       transformResponse: (response: any) => {
         return response.brands || [];
       },
@@ -88,7 +107,7 @@ export const tireSearchApi = baseApi.injectEndpoints({
     // Получение моделей для бренда
     getTireModels: builder.query<Array<{ name: string; count: number }>, string>({
       query: (brand) => ({
-        url: 'api/v1/tire_search/models',
+        url: 'tire_search/models',
         params: { brand }
       }),
       transformResponse: (response: any) => {
@@ -100,7 +119,7 @@ export const tireSearchApi = baseApi.injectEndpoints({
 
     // Получение доступных диаметров
     getTireDiameters: builder.query<number[], void>({
-      query: () => 'api/v1/tire_search/diameters',
+      query: () => 'tire_search/diameters',
       transformResponse: (response: any): number[] => {
         return response.diameters || [];
       },
@@ -110,7 +129,7 @@ export const tireSearchApi = baseApi.injectEndpoints({
 
     // Статистика поиска (только для админов)
     getTireSearchStatistics: builder.query<TireSearchStatistics, void>({
-      query: () => 'api/v1/tire_search/statistics',
+      query: () => 'tire_search/statistics',
       transformResponse: (response: any): TireSearchStatistics => {
         return {
           total_configurations: response.total_configurations || 0,
@@ -128,7 +147,7 @@ export const tireSearchApi = baseApi.injectEndpoints({
 
     // Получение конфигурации по ID
     getTireConfigurationById: builder.query<TireSearchResult, number>({
-      query: (id) => `api/v1/tire_search/configurations/${id}`,
+      query: (id) => `tire_search/configurations/${id}`,
       transformResponse: (response: any): TireSearchResult => {
         return {
           ...response,
@@ -147,7 +166,7 @@ export const tireSearchApi = baseApi.injectEndpoints({
     // Сохранение поискового запроса в историю
     saveSearchQuery: builder.mutation<void, { query: string; results_count: number }>({
       query: (data) => ({
-        url: 'api/v1/tire_search/history',
+        url: 'tire_search/history',
         method: 'POST',
         body: data
       }),
@@ -225,13 +244,13 @@ export type TireDiametersQueryResult = ReturnType<typeof useGetTireDiametersQuer
 // Константы для API
 export const TIRE_SEARCH_API_CONSTANTS = {
   ENDPOINTS: {
-    SEARCH: 'api/v1/tire_search',
-    SUGGESTIONS: 'api/v1/tire_search/suggestions',
-    POPULAR: 'api/v1/tire_search/popular',
-    BRANDS: 'api/v1/tire_search/brands',
-    MODELS: 'api/v1/tire_search/models',
-    DIAMETERS: 'api/v1/tire_search/diameters',
-    STATISTICS: 'api/v1/tire_search/statistics',
+    SEARCH: 'tire_search',
+    SUGGESTIONS: 'tire_search/suggestions',
+    POPULAR: 'tire_search/popular',
+    BRANDS: 'tire_search/brands',
+    MODELS: 'tire_search/models',
+    DIAMETERS: 'tire_search/diameters',
+    STATISTICS: 'tire_search/statistics',
   },
   CACHE_TAGS: {
     TIRE_SEARCH: 'TireSearch',
