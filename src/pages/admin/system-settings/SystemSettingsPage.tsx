@@ -46,10 +46,12 @@ import {
   Science as TestIcon,
   CheckCircle as CheckIcon,
   Error as ErrorIcon,
-  ExpandMore as ExpandMoreIcon
+  ExpandMore as ExpandMoreIcon,
+  DirectionsCar as TireDataIcon
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
+import TireDataManagement from '../../../components/admin/TireDataManagement';
 
 // Типы данных
 interface SystemSetting {
@@ -298,7 +300,8 @@ const SystemSettingsPage: React.FC = () => {
       storage: <StorageIcon />,
       analytics: <AnalyticsIcon />,
       speed: <SpeedIcon />,
-      settings: <SettingsIcon />
+      settings: <SettingsIcon />,
+      tire_data: <TireDataIcon />
     };
     return icons[iconName] || <SettingsIcon />;
   };
@@ -516,6 +519,18 @@ const SystemSettingsPage: React.FC = () => {
               />
             );
           })}
+          
+          {/* Специальный таб для управления данными шин */}
+          <Tab
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <TireDataIcon />
+                <Typography variant="body2">
+                  Данные шин
+                </Typography>
+              </Box>
+            }
+          />
         </Tabs>
       </Paper>
 
@@ -631,6 +646,11 @@ const SystemSettingsPage: React.FC = () => {
           </TabPanel>
         );
       })}
+
+      {/* Специальный таб для управления данными шин */}
+      <TabPanel value={currentTab} index={categoryKeys.length}>
+        <TireDataManagement />
+      </TabPanel>
 
       {/* Диалог подтверждения */}
       <Dialog
