@@ -137,11 +137,20 @@ const TireSearchPage: React.FC = () => {
     try {
       const result = await search(query.trim());
       
+      // Отладочная информация
+      console.log('Search result:', result);
+      console.log('conversation_mode field:', result?.conversation_mode);
+      console.log('success field:', result?.success);
+      console.log('message field:', result?.message);
+      console.log('follow_up_questions field:', result?.follow_up_questions);
+      
       // Проверяем, включен ли режим разговора
       if (result && 'conversation_mode' in result && result.conversation_mode) {
+        console.log('Activating conversation mode with data:', result);
         setIsConversationMode(true);
         setConversationData(result);
       } else {
+        console.log('No conversation mode, clearing data');
         setIsConversationMode(false);
         setConversationData(null);
       }

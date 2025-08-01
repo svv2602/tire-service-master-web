@@ -21,8 +21,11 @@ export const tireSearchApi = baseApi.injectEndpoints({
         body: searchQuery,
       }),
       transformResponse: (response: any): TireSearchResponse => {
-        // Новый формат ответа от бэкенда (Stage 1)
-        if (response.tire_sizes !== undefined) {
+        console.log('Raw API response:', response);
+        
+        // Новый формат ответа от бэкенда (Stage 1) - проверяем наличие полей нового формата
+        if (response.tire_sizes !== undefined || response.conversation_mode !== undefined || response.follow_up_questions !== undefined) {
+          console.log('Using Stage 1 format');
           return {
             results: response.tire_sizes?.map((size: any, index: number) => ({
               id: index,
@@ -58,7 +61,7 @@ export const tireSearchApi = baseApi.injectEndpoints({
             },
             suggestions: response.suggestions || [],
             // Новые поля для мини-чата
-            conversation_mode: response.conversation_mode || false,
+            conversation_mode: response.conversation_mode || response.success === false,
             follow_up_questions: response.follow_up_questions || [],
             message: response.message || '',
             success: response.success !== false
@@ -66,6 +69,7 @@ export const tireSearchApi = baseApi.injectEndpoints({
         }
 
         // Старый формат ответа (для совместимости)
+        console.log('Using legacy format');
         return {
           results: response.results?.map((result: any) => ({
             ...result,
@@ -109,7 +113,7 @@ export const tireSearchApi = baseApi.injectEndpoints({
           },
           suggestions: response.suggestions || [],
           // Новые поля для мини-чата
-          conversation_mode: response.conversation_mode || false,
+          conversation_mode: response.conversation_mode || response.success === false,
           follow_up_questions: response.follow_up_questions || [],
           message: response.message || '',
           success: response.success !== false

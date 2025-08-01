@@ -7,12 +7,18 @@ import {
   Button,
   Stack,
   Fade,
+  TextField,
+  InputAdornment,
+  IconButton,
+  Alert,
   useTheme
 } from '@mui/material';
 import {
   Chat as ChatIcon,
   Send as SendIcon,
-  AutoAwesome as AutoAwesomeIcon
+  AutoAwesome as AutoAwesomeIcon,
+  Refresh as RefreshIcon,
+  CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
 import type { 
   FollowUpQuestion, 
@@ -37,6 +43,8 @@ const TireConversation: React.FC<TireConversationProps> = ({
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
+  const [userInput, setUserInput] = useState('');
+  const [isInputMode, setIsInputMode] = useState(false);
 
   if (!searchResponse.conversation_mode) {
     return null;
@@ -52,6 +60,28 @@ const TireConversation: React.FC<TireConversationProps> = ({
       [question.field]: value
     }));
     onQuestionAnswer(question.field, value);
+  };
+
+  const handleUserInput = () => {
+    if (userInput.trim()) {
+      onNewSearch(userInput.trim());
+      setUserInput('');
+      setIsInputMode(false);
+    }
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      handleUserInput();
+    }
+  };
+
+  const handleStartNewChat = () => {
+    setSelectedAnswers({});
+    setUserInput('');
+    setIsInputMode(false);
+    // Можно добавить callback для сброса всего состояния чата
+    onNewSearch('');
   };
 
   const buildSearchQuery = () => {
@@ -92,19 +122,85 @@ const TireConversation: React.FC<TireConversationProps> = ({
         sx={{
           p: 3,
           mb: 3,
-          background: `linear-gradient(135deg, ${colors.backgroundPaper} 0%, ${colors.backgroundDefault} 100%)`,
+          background: `linear-gradient(135deg, ${colors.backgroundCard} 0%, ${colors.backgroundSecondary} 100%)`,
           border: `1px solid ${colors.primary}20`,
           borderRadius: 2
         }}
       >
         {/* Заголовок чата */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <ChatIcon sx={{ color: colors.primary, mr: 1 }} />
-          <Typography variant="h6" sx={{ color: colors.textPrimary }}>
-            Помощник по подбору шин
-          </Typography>
-          <AutoAwesomeIcon sx={{ color: colors.secondary, ml: 1, fontSize: 20 }} />
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <ChatIcon sx={{ color: colors.primary, mr: 1 }} />
+            <Typography variant="h6" sx={{ color: colors.textPrimary }}>
+              Помощник по подбору шин
+            </Typography>
+            <AutoAwesomeIcon sx={{ color: colors.warning, ml: 1, fontSize: 20 }} />
+          </Box>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<RefreshIcon />}
+            onClick={handleStartNewChat}
+            sx={{
+              color: colors.textSecondary,
+              borderColor: colors.borderPrimary,
+              '&:hover': {
+                borderColor: colors.primary,
+                backgroundColor: colors.primary + '10'
+              }
+            }}
+          >
+            Новый чат
+          </Button>
         </Box>
+
+        {/* Отображение распознанных данных */}
+        {searchResponse.query_info?.parsed_data && Object.keys(searchResponse.query_info.parsed_data).length > 0 && (
+          <Alert 
+            severity="info" 
+            icon={<CheckCircleIcon />}
+            sx={{ mb: 2 }}
+          >
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+              Уже распознано:
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {searchResponse.query_info.parsed_data.brand && (
+                <Chip 
+                  label={`Марка: ${searchResponse.query_info.parsed_data.brand}`}
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                />
+              )}
+              {searchResponse.query_info.parsed_data.model && (
+                <Chip 
+                  label={`Модель: ${searchResponse.query_info.parsed_data.model}`}
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                />
+              )}
+              {searchResponse.query_info.parsed_data.year && (
+                <Chip 
+                  label={`Год: ${searchResponse.query_info.parsed_data.year}`}
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                />
+              )}
+              {(searchResponse.query_info.parsed_data as any).seasonality && (
+                <Chip 
+                  label={`Сезон: ${(searchResponse.query_info.parsed_data as any).seasonality === 'winter' ? 'Зимние' : 
+                    (searchResponse.query_info.parsed_data as any).seasonality === 'summer' ? 'Летние' : 'Всесезонные'}`}
+                  size="small"
+                  color="success"
+                  variant="outlined"
+                />
+              )}
+            </Box>
+          </Alert>
+        )}
 
         {/* Сообщение системы */}
         {searchResponse.message && (
@@ -114,11 +210,19 @@ const TireConversation: React.FC<TireConversationProps> = ({
               mb: 2,
               backgroundColor: colors.primary + '10',
               borderRadius: 1,
-              borderLeft: `4px solid ${colors.primary}`
+              borderLeft: `4px solid ${colors.primary}`,
+              position: 'relative'
             }}
           >
-            <Typography variant="body1" sx={{ color: colors.textPrimary }}>
+            <Typography variant="body1" sx={{ color: colors.textPrimary, mb: 1 }}>
               {searchResponse.message}
+            </Typography>
+            <Typography variant="caption" sx={{ 
+              color: colors.textSecondary,
+              fontStyle: 'italic',
+              display: 'block'
+            }}>
+              👆 Кликните по предложению ниже или введите свой вариант
             </Typography>
           </Box>
         )}
@@ -127,7 +231,7 @@ const TireConversation: React.FC<TireConversationProps> = ({
         {searchResponse.suggestions && searchResponse.suggestions.length > 0 && (
           <Box sx={{ mb: 3 }}>
             <Typography variant="subtitle2" sx={{ mb: 1, color: colors.textSecondary }}>
-              Выберите подходящий вариант:
+              💡 Выберите подходящий вариант или кликните по любому предложению:
             </Typography>
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
               {searchResponse.suggestions.map((suggestion, index) => (
@@ -136,19 +240,95 @@ const TireConversation: React.FC<TireConversationProps> = ({
                   label={suggestion}
                   onClick={() => handleSuggestionClick(suggestion)}
                   sx={{
-                    backgroundColor: colors.backgroundPaper,
+                    backgroundColor: colors.backgroundCard,
                     color: colors.textPrimary,
                     border: `1px solid ${colors.primary}30`,
                     '&:hover': {
                       backgroundColor: colors.primary + '20',
-                      borderColor: colors.primary
+                      borderColor: colors.primary,
+                      transform: 'translateY(-1px)',
+                      boxShadow: `0 4px 8px ${colors.primary}20`
                     },
                     cursor: 'pointer',
-                    mb: 1
+                    mb: 1,
+                    transition: 'all 0.2s ease',
+                    fontSize: '0.875rem',
+                    fontWeight: 500
                   }}
                 />
               ))}
             </Stack>
+            
+            {/* Кнопка для переключения в режим ввода */}
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+              <Button
+                variant="text"
+                size="small"
+                onClick={() => setIsInputMode(!isInputMode)}
+                sx={{
+                  color: colors.textSecondary,
+                  '&:hover': {
+                    backgroundColor: colors.primary + '10'
+                  }
+                }}
+              >
+                {isInputMode ? '↑ Скрыть поле ввода' : '✏️ Ввести свой вариант'}
+              </Button>
+            </Box>
+          </Box>
+        )}
+
+        {/* Поле ввода текста */}
+        {isInputMode && (
+          <Box sx={{ mb: 3 }}>
+            <TextField
+              fullWidth
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Введите марку и модель автомобиля (например: BMW X5 2020)"
+              variant="outlined"
+              size="medium"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton 
+                      onClick={handleUserInput}
+                      disabled={!userInput.trim()}
+                      sx={{
+                        color: colors.primary,
+                        '&:disabled': {
+                          color: colors.textMuted
+                        }
+                      }}
+                    >
+                      <SendIcon />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+                sx: {
+                  backgroundColor: colors.backgroundField,
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: colors.borderPrimary
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: colors.primary
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: colors.primary
+                  }
+                }
+              }}
+              sx={{
+                '& .MuiInputBase-input': {
+                  color: colors.textPrimary
+                },
+                '& .MuiInputBase-input::placeholder': {
+                  color: colors.textMuted,
+                  opacity: 1
+                }
+              }}
+            />
           </Box>
         )}
 

@@ -176,7 +176,12 @@ export const useTireSearch = (options: UseTireSearchOptions = {}): UseTireSearch
         year: filters.year_from
       };
 
-      const response = await searchTires(searchQuery).unwrap();
+      const result = await searchTires(searchQuery);
+      const response = result.data;
+      
+      if (!response) {
+        throw new Error('No response data');
+      }
 
       setSearchState(prev => ({
         ...prev,
@@ -240,7 +245,12 @@ export const useTireSearch = (options: UseTireSearchOptions = {}): UseTireSearch
         year: searchState.filters.year_from
       };
 
-      const response = await searchTires(searchQuery).unwrap();
+      const result = await searchTires(searchQuery);
+      const response = result.data;
+      
+      if (!response) {
+        throw new Error('No response data');
+      }
 
       setSearchState(prev => ({
         ...prev,
@@ -277,7 +287,12 @@ export const useTireSearch = (options: UseTireSearchOptions = {}): UseTireSearch
         year: searchState.filters.year_from
       };
 
-      const response = await searchTires(searchQuery).unwrap();
+      const result = await searchTires(searchQuery);
+      const response = result.data;
+      
+      if (!response) {
+        throw new Error('No response data');
+      }
 
       setSearchState(prev => ({
         ...prev,
