@@ -241,18 +241,14 @@ export const suppliersApi = baseApi.injectEndpoints({
     //   ],
     // }),
 
-    // Загрузка прайса поставщика
+    // Загрузка прайса поставщика администратором
     uploadSupplierPrice: builder.mutation<UploadPriceResponse, {
-      supplier_id?: number;
+      supplier_id: number;
       file?: File;
       xml_content?: string;
     }>({
       query: ({ supplier_id, file, xml_content }) => {
         const formData = new FormData();
-        
-        if (supplier_id) {
-          formData.append('supplier_id', supplier_id.toString());
-        }
         
         if (file) {
           formData.append('file', file);
@@ -261,7 +257,7 @@ export const suppliersApi = baseApi.injectEndpoints({
         }
 
         return {
-          url: 'suppliers/upload_price',
+          url: `suppliers/${supplier_id}/admin_upload_price`,
           method: 'POST',
           body: formData,
         };
