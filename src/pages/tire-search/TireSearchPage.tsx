@@ -20,8 +20,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import TireSearchBar from '../../components/tire-search/TireSearchBar/TireSearchBar';
 import TireSearchResults from '../../components/tire-search/TireSearchResults/TireSearchResults';
+import SupplierProductsResults from '../../components/tire-search/SupplierProductsResults';
 import { SearchHistory, PopularSearches, TireConversation } from '../../components/tire-search';
 import { useTireSearch, useTireFavorites } from '../../hooks/useTireSearch';
+import { useSupplierProductsSearch } from '../../hooks/useSupplierProductsSearch';
 import { tireSearchCacheUtils } from '../../api/tireSearch.api';
 import { useAppDispatch } from '../../store';
 import { getThemeColors } from '../../styles';
@@ -73,6 +75,20 @@ const TireSearchPage: React.FC = () => {
 
   const { favorites, toggleFavorite, isFavorite } = useTireFavorites();
 
+  // Хук для поиска товаров поставщиков
+  const {
+    groups: supplierGroups,
+    loading: supplierLoading,
+    error: supplierError,
+    searchProducts: searchSupplierProducts,
+    clearResults: clearSupplierResults,
+    totalGroups: supplierTotalGroups,
+    totalProducts: supplierTotalProducts,
+  } = useSupplierProductsSearch({
+    autoSearch: false,
+    enableFilters: true
+  });
+
   // Инициализация поиска из URL параметров
   useEffect(() => {
     const queryFromUrl = searchParams.get('q');
@@ -123,6 +139,52 @@ const TireSearchPage: React.FC = () => {
     tireSearchCacheUtils.prefetchPopularData(dispatch);
   }, [dispatch]);
 
+  // Обработка поиска товаров поставщиков на основе parsed_data
+  const handleSupplierProductsSearch = async (parsedData: any) => {
+    try {
+      // Очищаем предыдущие результаты
+      clearSupplierResults();
+      
+      // Извлекаем параметры поиска из parsed_data
+      const searchParams: any = {};
+      
+      if (parsedData.tire_brands?.length > 0) {
+        searchParams.brand = parsedData.tire_brands[0]; // Берем первый бренд
+      }
+      
+      if (parsedData.seasonality) {
+        // Конвертируем сезонность в нужный формат
+        const seasonMap: { [key: string]: string } = {
+          'зимние': 'winter',
+          'летние': 'summer', 
+          'всесезонные': 'all_season',
+          'winter': 'winter',
+          'summer': 'summer',
+          'all_season': 'all_season'
+        };
+        searchParams.season = seasonMap[parsedData.seasonality.toLowerCase()] || parsedData.seasonality;
+      }
+      
+      if (parsedData.tire_sizes?.length > 0) {
+        const firstSize = parsedData.tire_sizes[0];
+        if (firstSize.width) searchParams.width = parseInt(firstSize.width);
+        if (firstSize.height) searchParams.height = parseInt(firstSize.height);
+        if (firstSize.diameter) searchParams.diameter = firstSize.diameter.toString();
+      }
+      
+      // Только товары в наличии
+      searchParams.in_stock_only = true;
+      
+      console.log('Searching supplier products with params:', searchParams);
+      
+      // Выполняем поиск товаров поставщиков
+      await searchSupplierProducts(searchParams);
+      
+    } catch (error) {
+      console.error('Supplier products search error:', error);
+    }
+  };
+
   // Обработка поиска
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
@@ -153,6 +215,11 @@ const TireSearchPage: React.FC = () => {
         console.log('No conversation mode, clearing data');
         setIsConversationMode(false);
         setConversationData(null);
+      }
+      
+      // Автоматический поиск товаров поставщиков если есть parsed_data
+      if (result?.parsed_data) {
+        await handleSupplierProductsSearch(result.parsed_data);
       }
       
       if (searchState.results.length === 0 && !isConversationMode) {
@@ -345,6 +412,25 @@ const TireSearchPage: React.FC = () => {
               onFavoriteToggle={handleFavoriteToggle}
               onSearchExample={handleSearch}
               favorites={favorites}
+            />
+            
+            {/* Результаты поиска товаров поставщиков */}
+            <SupplierProductsResults
+              groups={supplierGroups}
+              loading={supplierLoading}
+              error={supplierError || undefined}
+              showAllOffers={true}
+              onProductClick={(product) => {
+                console.log('Клик по товару поставщика:', product);
+                // Можно добавить логику открытия товара в новой вкладке
+                if (product.product_url) {
+                  window.open(product.product_url, '_blank', 'noopener,noreferrer');
+                }
+              }}
+              onSupplierClick={(supplierId) => {
+                console.log('Клик по поставщику:', supplierId);
+                // Можно добавить логику перехода к странице поставщика
+              }}
             />
           </Box>
         </Fade>

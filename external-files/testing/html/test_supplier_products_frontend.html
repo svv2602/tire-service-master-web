@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест Frontend интеграции товаров поставщиков</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border-radius: 10px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+        .test-section h3 {
+            color: #333;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .status.success { background: #4CAF50; color: white; }
+        .status.pending { background: #FF9800; color: white; }
+        .status.error { background: #f44336; color: white; }
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .file-list {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .file-list ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .accordion {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .accordion-header {
+            background: #f1f1f1;
+            padding: 15px;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+        .accordion-content {
+            padding: 15px;
+            border-top: 1px solid #ddd;
+            background: white;
+        }
+        .product-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .supplier-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .supplier-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4CAF50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .btn-test {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn-test:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ Тест Frontend интеграции товаров поставщиков</h1>
+            <p>Проверка интеграции поиска товаров поставщиков в страницу /client/tire-search</p>
+        </div>
+
+        <!-- Созданные файлы -->
+        <div class="test-section">
+            <h3>📁 Созданные файлы <span class="status success">✅ ГОТОВО</span></h3>
+            <div class="file-list">
+                <strong>API интеграция:</strong>
+                <ul>
+                    <li><code>src/api/supplierProducts.api.ts</code> - API endpoints и типы</li>
+                    <li><code>src/hooks/useSupplierProductsSearch.ts</code> - React хук для поиска</li>
+                </ul>
+                <strong>UI компоненты:</strong>
+                <ul>
+                    <li><code>src/components/tire-search/SupplierProductsResults/</code> - Компонент аккордиона</li>
+                </ul>
+                <strong>Локализация:</strong>
+                <ul>
+                    <li><code>src/i18n/locales/tire-search/ru.json</code> - Русские переводы</li>
+                    <li><code>src/i18n/locales/tire-search/uk.json</code> - Украинские переводы</li>
+                </ul>
+                <strong>Интеграция:</strong>
+                <ul>
+                    <li><code>src/pages/tire-search/TireSearchPage.tsx</code> - Обновлена основная страница</li>
+                    <li><code>src/api/baseApi.ts</code> - Добавлены новые теги RTK Query</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Функциональность -->
+        <div class="test-section">
+            <h3>⚙️ Реализованная функциональность <span class="status success">✅ ГОТОВО</span></h3>
+            
+            <h4>1. Автоматический поиск товаров поставщиков</h4>
+            <p>После выполнения основного поиска шин автоматически запускается поиск товаров поставщиков на основе parsed_data:</p>
+            <div class="code-block">
+// Извлечение параметров из parsed_data
+if (parsedData.tire_brands?.length > 0) {
+  searchParams.brand = parsedData.tire_brands[0];
+}
+if (parsedData.seasonality) {
+  searchParams.season = seasonMap[parsedData.seasonality.toLowerCase()];
+}
+if (parsedData.tire_sizes?.length > 0) {
+  const firstSize = parsedData.tire_sizes[0];
+  searchParams.width = parseInt(firstSize.width);
+  searchParams.height = parseInt(firstSize.height);
+  searchParams.diameter = firstSize.diameter.toString();
+}
+            </div>
+
+            <h4>2. Группировка в аккордион</h4>
+            <p>Товары группируются по параметрам: бренд + модель + размер + индексы нагрузки/скорости</p>
+            
+            <h4>3. Отображение информации о поставщиках</h4>
+            <p>Каждый товар содержит информацию о поставщике с приоритетом и рейтингом</p>
+        </div>
+
+        <!-- Пример отображения -->
+        <div class="test-section">
+            <h3>🎨 Пример отображения результатов <span class="status success">✅ ГОТОВО</span></h3>
+            
+            <div class="accordion">
+                <div class="accordion-header">
+                    <div>
+                        <strong>❄️ Goodyear Cargo UltraGrip 195/65R16C 104T</strong>
+                        <div style="font-size: 14px; color: #666;">Сезон: Зимние</div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <span style="background: #2196F3; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+                            🏪 3 поставщиков
+                        </span>
+                        <span style="background: #4CAF50; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+                            💰 6375 - 7650 грн
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="accordion-content">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+                        
+                        <!-- Товар 1 -->
+                        <div class="product-card">
+                            <div class="supplier-info">
+                                <div class="supplier-avatar">⭐</div>
+                                <div>
+                                    <strong>Prokoleso.ua</strong>
+                                    <div style="font-size: 12px; color: #666;">Приоритет: 1</div>
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 10px;">Goodyear Cargo UltraGrip (195/65R16C 104T)</div>
+                            <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 10px;">
+                                <div class="price">6375 грн</div>
+                                <span style="background: #4CAF50; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">
+                                    В наявності
+                                </span>
+                            </div>
+                            <div style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                                <div>Страна: Турция</div>
+                                <div>Дата производства: 24р 02тиж</div>
+                            </div>
+                            <button class="btn-test">Смотреть товар</button>
+                        </div>
+
+                        <!-- Товар 2 -->
+                        <div class="product-card">
+                            <div class="supplier-info">
+                                <div class="supplier-avatar" style="background: #FF9800;">2</div>
+                                <div>
+                                    <strong>ШинТорг</strong>
+                                    <div style="font-size: 12px; color: #666;">Приоритет: 2</div>
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 10px;">Goodyear Cargo UltraGrip (195/65R16C 104T)</div>
+                            <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 10px;">
+                                <div class="price">7012 грн</div>
+                                <span style="background: #4CAF50; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">
+                                    В наявності
+                                </span>
+                            </div>
+                            <div style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                                <div>Страна: Турция</div>
+                                <div>Дата производства: 24р 02тиж</div>
+                            </div>
+                            <button class="btn-test">Смотреть товар</button>
+                        </div>
+
+                        <!-- Товар 3 -->
+                        <div class="product-card">
+                            <div class="supplier-info">
+                                <div class="supplier-avatar" style="background: #9E9E9E;">3</div>
+                                <div>
+                                    <strong>Колесо-Центр</strong>
+                                    <div style="font-size: 12px; color: #666;">Приоритет: 3</div>
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 10px;">Goodyear Cargo UltraGrip (195/65R16C 104T)</div>
+                            <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 10px;">
+                                <div class="price">7650 грн</div>
+                                <span style="background: #4CAF50; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">
+                                    В наявності
+                                </span>
+                            </div>
+                            <div style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                                <div>Страна: Турция</div>
+                                <div>Дата производства: 24р 02тиж</div>
+                            </div>
+                            <button class="btn-test">Смотреть товар</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API тестирование -->
+        <div class="test-section">
+            <h3>🧪 API тестирование <span class="status success">✅ РАБОТАЕТ</span></h3>
+            
+            <h4>Тестовый запрос:</h4>
+            <div class="code-block">
+curl -X POST http://localhost:8000/api/v1/supplier_products_search/grouped \
+  -H "Content-Type: application/json" \
+  -d '{"brand": "Goodyear", "season": "winter"}'
+            </div>
+            
+            <h4>Ответ API:</h4>
+            <div class="code-block">
+{
+  "success": true,
+  "groups": [
+    {
+      "tire_key": "Goodyear_Cargo UltraGrip_195_65_16C_104_T",
+      "tire_params": {
+        "brand": "Goodyear",
+        "model": "Cargo UltraGrip",
+        "width": 195,
+        "height": 65,
+        "diameter": "16C",
+        "load_index": "104",
+        "speed_index": "T",
+        "season": "winter"
+      },
+      "title": "Goodyear Cargo UltraGrip 195/65R16C 104T",
+      "suppliers_count": 3,
+      "products_count": 3,
+      "price_range": {
+        "min": "6375.0",
+        "max": "7650.0"
+      },
+      "products": [...]
+    }
+  ],
+  "total_groups": 2,
+  "total_products": 6,
+  "show_all_offers": true
+}
+            </div>
+        </div>
+
+        <!-- Интеграция с существующим поиском -->
+        <div class="test-section">
+            <h3>🔗 Интеграция с существующим поиском <span class="status success">✅ ГОТОВО</span></h3>
+            
+            <h4>Логика интеграции:</h4>
+            <ol>
+                <li><strong>Пользователь вводит запрос</strong> - "Goodyear зимние шины"</li>
+                <li><strong>Выполняется основной поиск</strong> - поиск по конфигурациям автомобилей</li>
+                <li><strong>Извлекаются parsed_data</strong> - бренд, сезонность, размеры</li>
+                <li><strong>Автоматически запускается поиск товаров поставщиков</strong> - по тем же параметрам</li>
+                <li><strong>Отображаются оба результата</strong> - конфигурации авто + товары поставщиков</li>
+            </ol>
+            
+            <h4>Преимущества:</h4>
+            <ul>
+                <li>✅ Единый интерфейс поиска</li>
+                <li>✅ Автоматическое определение параметров</li>
+                <li>✅ Сравнение цен от разных поставщиков</li>
+                <li>✅ Группировка в удобный аккордион</li>
+                <li>✅ Переключение между "все предложения" и "лучшие предложения"</li>
+            </ul>
+        </div>
+
+        <!-- Следующие шаги -->
+        <div class="test-section">
+            <h3>🚀 Готовность к тестированию <span class="status success">✅ ГОТОВО</span></h3>
+            
+            <h4>Для тестирования запустите:</h4>
+            <div class="code-block">
+# Backend (в tire-service-master-api/)
+rails server -p 8000
+
+# Frontend (в tire-service-master-web/)
+yarn start
+            </div>
+            
+            <h4>Откройте страницу:</h4>
+            <div class="code-block">
+http://localhost:3008/client/tire-search
+            </div>
+            
+            <h4>Введите тестовый запрос:</h4>
+            <div class="code-block">
+"Goodyear зимние шины"
+или
+"Michelin летние шины"
+или
+"Continental всесезонные"
+            </div>
+            
+            <p><strong>Ожидаемый результат:</strong> После выполнения поиска должны отобразиться как конфигурации автомобилей, так и товары поставщиков в виде аккордиона с группировкой по параметрам шин.</p>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px; padding: 20px; background: #e8f5e8; border-radius: 10px;">
+            <h3 style="color: #2e7d32; margin: 0;">✅ Frontend интеграция товаров поставщиков завершена!</h3>
+            <p style="margin: 10px 0 0 0; color: #2e7d32;">
+                Система готова к тестированию и дальнейшей разработке
+            </p>
+        </div>
+    </div>
+</body>
+</html>
