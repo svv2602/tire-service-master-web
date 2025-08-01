@@ -37,7 +37,9 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  CircularProgress
+  CircularProgress,
+  FormControlLabel,
+  Switch
 } from '@mui/material';
 import {
   CloudUpload as UploadIcon,
@@ -117,6 +119,13 @@ const TireDataManagement: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState(false);
   const [importing, setImporting] = useState(false);
+  
+  // Опции импорта
+  const [importOptions, setImportOptions] = useState({
+    skip_invalid_rows: false,
+    fix_suspicious_sizes: false,
+    encoding_fallback: 'utf-8'
+  });
   
   // Диалоги
   const [helpDialog, setHelpDialog] = useState(false);
@@ -252,7 +261,8 @@ const TireDataManagement: React.FC = () => {
         headers: getAuthHeaders(),
         body: JSON.stringify({ 
           csv_path: csvPath,
-          version: version || undefined
+          version: version || undefined,
+          ...importOptions
         })
       });
       
@@ -507,6 +517,84 @@ const TireDataManagement: React.FC = () => {
                             </Grid>
                           ))}
                         </Grid>
+
+                        {/* Опции исправления ошибок */}
+                        {!validationResult.valid && (
+                          <Box sx={{ mt: 3 }}>
+                            <Typography variant="h6" gutterBottom>
+                              Опции исправления ошибок
+                            </Typography>
+                            
+                            <Grid container spacing={2}>
+                              <Grid item xs={12} md={6}>
+                                <Card>
+                                  <CardContent>
+                                    <Typography variant="subtitle2" gutterBottom>
+                                      Обработка поврежденных строк
+                                    </Typography>
+                                    <FormControlLabel
+                                      control={
+                                        <Switch
+                                          checked={importOptions.skip_invalid_rows}
+                                          onChange={(e) => setImportOptions(prev => ({
+                                            ...prev,
+                                            skip_invalid_rows: e.target.checked
+                                          }))}
+                                        />
+                                      }
+                                      label="Пропускать поврежденные строки"
+                                    />
+                                    <Typography variant="caption" color="text.secondary" display="block">
+                                      Строки с ошибками формата CSV будут пропущены
+                                    </Typography>
+                                  </CardContent>
+                                </Card>
+                              </Grid>
+                              
+                              <Grid item xs={12} md={6}>
+                                <Card>
+                                  <CardContent>
+                                    <Typography variant="subtitle2" gutterBottom>
+                                      Обработка размеров шин
+                                    </Typography>
+                                    <FormControlLabel
+                                      control={
+                                        <Switch
+                                          checked={importOptions.fix_suspicious_sizes}
+                                          onChange={(e) => setImportOptions(prev => ({
+                                            ...prev,
+                                            fix_suspicious_sizes: e.target.checked
+                                          }))}
+                                        />
+                                      }
+                                      label="Исправлять подозрительные размеры"
+                                    />
+                                    <Typography variant="caption" color="text.secondary" display="block">
+                                      Автоматическое исправление нереалистичных размеров
+                                    </Typography>
+                                  </CardContent>
+                                </Card>
+                              </Grid>
+                            </Grid>
+                            
+                            <Box sx={{ mt: 3, display: 'flex', gap: 1 }}>
+                              <Button
+                                variant="outlined"
+                                onClick={() => setActiveStep(0)}
+                              >
+                                Назад к настройкам
+                              </Button>
+                              <Button
+                                variant="contained"
+                                color="warning"
+                                onClick={() => setActiveStep(2)}
+                                disabled={!importOptions.skip_invalid_rows && !importOptions.fix_suspicious_sizes}
+                              >
+                                Импорт с исправлениями
+                              </Button>
+                            </Box>
+                          </Box>
+                        )}
 
                         {validationResult.valid && (
                           <Box sx={{ mt: 3, display: 'flex', gap: 1 }}>
