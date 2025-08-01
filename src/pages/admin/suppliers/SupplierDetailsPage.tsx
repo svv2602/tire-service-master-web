@@ -39,10 +39,10 @@ import {
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { 
+import {
   useGetSupplierByIdQuery,
   useGetSupplierProductsQuery,
-  useGetSupplierPriceVersionsQuery,
+  // useGetSupplierPriceVersionsQuery, // Временно отключено
   type SupplierProduct,
   type SupplierPriceVersion,
 } from '../../../api/suppliers.api';
@@ -110,17 +110,23 @@ const SupplierDetailsPage: React.FC = () => {
     skip: !supplierId || currentTab !== 1,
   });
 
-  const { 
-    data: versionsResponse, 
-    isLoading: isLoadingVersions,
-    refetch: refetchVersions
-  } = useGetSupplierPriceVersionsQuery({
-    id: supplierId,
-    page: versionsPage,
-    per_page: 10,
-  }, {
-    skip: !supplierId || currentTab !== 2,
-  });
+  // Временно отключено - endpoint не реализован
+  // const { 
+  //   data: versionsResponse, 
+  //   isLoading: isLoadingVersions,
+  //   refetch: refetchVersions
+  // } = useGetSupplierPriceVersionsQuery({
+  //   id: supplierId,
+  //   page: versionsPage,
+  //   per_page: 10,
+  // }, {
+  //   skip: !supplierId || currentTab !== 2,
+  // });
+
+  // Заглушки для отключенного функционала
+  const versionsResponse = { data: [], meta: { current_page: 1, total_pages: 1, total_count: 0, per_page: 10 } };
+  const isLoadingVersions = false;
+  const refetchVersions = () => {};
 
   const supplier = supplierResponse?.supplier;
   const products = productsResponse?.data || [];

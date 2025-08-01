@@ -111,6 +111,24 @@ export const suppliersApi = baseApi.injectEndpoints({
           search: params.search,
         },
       }),
+      transformResponse: (response: any) => ({
+        data: (response.suppliers || []).map((supplier: any) => ({
+          ...supplier,
+          statistics: {
+            products_count: supplier.products_count || 0,
+            in_stock_products_count: supplier.in_stock_products_count || 0,
+            last_version: supplier.last_version || null,
+            sync_status: supplier.sync_status || 'never',
+            last_sync_ago: supplier.last_sync_ago || null,
+          },
+        })),
+        meta: {
+          current_page: response.pagination?.current_page || 1,
+          total_pages: response.pagination?.total_pages || 1,
+          total_count: response.pagination?.total_count || 0,
+          per_page: response.pagination?.per_page || 20,
+        },
+      }),
       providesTags: ['Supplier'],
     }),
 
@@ -171,6 +189,15 @@ export const suppliersApi = baseApi.injectEndpoints({
           search: params.search,
         },
       }),
+      transformResponse: (response: any) => ({
+        data: response.products || [],
+        meta: {
+          current_page: response.pagination?.current_page || 1,
+          total_pages: response.pagination?.total_pages || 1,
+          total_count: response.pagination?.total_count || 0,
+          per_page: response.pagination?.per_page || 20,
+        },
+      }),
       providesTags: (result, error, { id }) => [
         { type: 'SupplierProducts', id },
       ],
@@ -184,23 +211,23 @@ export const suppliersApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // Получение версий прайсов поставщика
-    getSupplierPriceVersions: builder.query<PaginatedResponse<SupplierPriceVersion>, {
-      id: number;
-      page?: number;
-      per_page?: number;
-    }>({
-      query: ({ id, ...params }) => ({
-        url: `suppliers/${id}/price_versions`,
-        params: {
-          page: params.page || 1,
-          per_page: params.per_page || 10,
-        },
-      }),
-      providesTags: (result, error, { id }) => [
-        { type: 'Supplier', id },
-      ],
-    }),
+    // Получение версий прайсов поставщика (временно отключено - endpoint не реализован)
+    // getSupplierPriceVersions: builder.query<PaginatedResponse<SupplierPriceVersion>, {
+    //   id: number;
+    //   page?: number;
+    //   per_page?: number;
+    // }>({
+    //   query: ({ id, ...params }) => ({
+    //     url: `suppliers/${id}/price_versions`,
+    //     params: {
+    //       page: params.page || 1,
+    //       per_page: params.per_page || 10,
+    //     },
+    //   }),
+    //   providesTags: (result, error, { id }) => [
+    //     { type: 'Supplier', id },
+    //   ],
+    // }),
 
     // Загрузка прайса поставщика
     uploadSupplierPrice: builder.mutation<UploadPriceResponse, {
@@ -264,7 +291,7 @@ export const {
   useDeleteSupplierMutation,
   useGetSupplierProductsQuery,
   useGetSupplierStatisticsQuery,
-  useGetSupplierPriceVersionsQuery,
+  // useGetSupplierPriceVersionsQuery, // Временно отключено
   useUploadSupplierPriceMutation,
   useToggleSupplierActiveMutation,
   useRegenerateSupplierApiKeyMutation,
