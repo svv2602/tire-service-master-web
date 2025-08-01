@@ -31,7 +31,7 @@ interface UseTireSearchReturn {
   searchState: TireSearchState;
   
   // Функции поиска
-  search: (query: string, filters?: TireSearchFilters) => Promise<void>;
+  search: (query: string, filters?: TireSearchFilters) => Promise<any>;
   searchWithFilters: (filters: TireSearchFilters) => Promise<void>;
   clearSearch: () => void;
   
@@ -159,7 +159,7 @@ export const useTireSearch = (options: UseTireSearchOptions = {}): UseTireSearch
         error: null,
         has_more: false
       }));
-      return;
+      return null;
     }
 
     setSearchState(prev => ({ ...prev, loading: true, error: null }));
@@ -198,6 +198,9 @@ export const useTireSearch = (options: UseTireSearchOptions = {}): UseTireSearch
         saveSearchQuery({ query: query.trim(), results_count: response.results.length });
       }
 
+      // Возвращаем response для обработки conversation_mode
+      return response;
+
     } catch (error: any) {
       setSearchState(prev => ({
         ...prev,
@@ -207,6 +210,7 @@ export const useTireSearch = (options: UseTireSearchOptions = {}): UseTireSearch
         total: 0,
         has_more: false
       }));
+      return null;
     }
   }, [searchTires, saveHistory, saveSearchQuery]);
 

@@ -20,7 +20,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import TireSearchBar from '../../components/tire-search/TireSearchBar/TireSearchBar';
 import TireSearchResults from '../../components/tire-search/TireSearchResults/TireSearchResults';
-import { SearchHistory, PopularSearches } from '../../components/tire-search';
+import { SearchHistory, PopularSearches, TireConversation } from '../../components/tire-search';
 import { useTireSearch, useTireFavorites } from '../../hooks/useTireSearch';
 import { tireSearchCacheUtils } from '../../api/tireSearch.api';
 import { useAppDispatch } from '../../store';
@@ -47,6 +47,10 @@ const TireSearchPage: React.FC = () => {
     message: '',
     severity: 'info'
   });
+  
+  // Состояние для мини-чата
+  const [conversationData, setConversationData] = useState<any>(null);
+  const [isConversationMode, setIsConversationMode] = useState(false);
 
   // Хуки для поиска
   const {
@@ -131,9 +135,18 @@ const TireSearchPage: React.FC = () => {
     }
 
     try {
-      await search(query.trim());
+      const result = await search(query.trim());
       
-      if (searchState.results.length === 0) {
+      // Проверяем, включен ли режим разговора
+      if (result && 'conversation_mode' in result && result.conversation_mode) {
+        setIsConversationMode(true);
+        setConversationData(result);
+      } else {
+        setIsConversationMode(false);
+        setConversationData(null);
+      }
+      
+      if (searchState.results.length === 0 && !isConversationMode) {
         setNotification({
           open: true,
           message: 'По вашему запросу ничего не найдено. Попробуйте другие ключевые слова.',
@@ -191,6 +204,22 @@ const TireSearchPage: React.FC = () => {
     if (resultsElement) {
       resultsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+  };
+
+  // Обработчики для мини-чата
+  const handleConversationSuggestion = (suggestion: string) => {
+    setQuery(suggestion);
+    handleSearch(suggestion);
+  };
+
+  const handleConversationAnswer = (field: string, value: string) => {
+    // Сохраняем ответ и обновляем состояние
+    console.log(`Answered ${field}: ${value}`);
+  };
+
+  const handleConversationNewSearch = (query: string) => {
+    setQuery(query);
+    handleSearch(query);
   };
 
   // Прокрутка наверх
@@ -281,6 +310,16 @@ const TireSearchPage: React.FC = () => {
               compact={false}
             />
           </Box>
+        )}
+
+        {/* Мини-чат для уточнения запроса */}
+        {isConversationMode && conversationData && (
+          <TireConversation
+            searchResponse={conversationData}
+            onSuggestionClick={handleConversationSuggestion}
+            onQuestionAnswer={handleConversationAnswer}
+            onNewSearch={handleConversationNewSearch}
+          />
         )}
 
         {/* Результаты поиска */}

@@ -53,6 +53,11 @@ export interface TireSearchResponse {
     used_llm: boolean;
   };
   suggestions?: string[];
+  // Новые поля для мини-чата
+  conversation_mode?: boolean;
+  follow_up_questions?: FollowUpQuestion[];
+  message?: string;
+  success?: boolean;
 }
 
 export interface ParsedSearchData {
@@ -72,6 +77,35 @@ export interface TireSuggestion {
   count?: number;
   brand?: string;
   model?: string;
+}
+
+// Интерфейсы для мини-чата
+export interface FollowUpQuestion {
+  type: 'brand_selection' | 'model_selection' | 'seasonality_selection' | 'size_selection';
+  question: string;
+  field: string;
+  context?: Record<string, any>;
+  options?: Array<{
+    value: string;
+    label: string;
+  }>;
+}
+
+export interface ConversationState {
+  isActive: boolean;
+  currentStep: number;
+  collectedData: Partial<TireSearchQuery>;
+  questions: FollowUpQuestion[];
+  messages: ConversationMessage[];
+}
+
+export interface ConversationMessage {
+  id: string;
+  type: 'user' | 'system';
+  content: string;
+  timestamp: Date;
+  suggestions?: string[];
+  questions?: FollowUpQuestion[];
 }
 
 export interface TireSearchStatistics {

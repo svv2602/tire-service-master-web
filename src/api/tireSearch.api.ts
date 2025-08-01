@@ -5,7 +5,9 @@ import type {
   TireSearchResult,
   TireSuggestion,
   TireSearchStatistics,
-  ParsedSearchData
+  ParsedSearchData,
+  FollowUpQuestion,
+  ConversationState
 } from '../types/tireSearch';
 
 // Расширяем базовый API для поиска шин
@@ -19,6 +21,51 @@ export const tireSearchApi = baseApi.injectEndpoints({
         body: searchQuery,
       }),
       transformResponse: (response: any): TireSearchResponse => {
+        // Новый формат ответа от бэкенда (Stage 1)
+        if (response.tire_sizes !== undefined) {
+          return {
+            results: response.tire_sizes?.map((size: any, index: number) => ({
+              id: index,
+              brand_id: 0,
+              model_id: 0,
+              brand_name: response.car_info?.brand || '',
+              model_name: response.car_info?.model || '',
+              full_name: `${response.car_info?.brand || ''} ${response.car_info?.model || ''}`.trim(),
+              year_from: response.car_info?.year || 0,
+              year_to: response.car_info?.year || 0,
+              years_display: response.car_info?.year?.toString() || '',
+              tire_sizes: [{
+                width: size.width,
+                height: size.height,
+                diameter: size.diameter,
+                type: size.type || 'stock',
+                display: `${size.width}/${size.height}R${size.diameter}`
+              }],
+              search_aliases: [],
+              search_tokens: '',
+              data_version: '1.0',
+              last_updated: new Date().toISOString()
+            })) || [],
+            total: response.tire_sizes?.length || 0,
+            page: 1,
+            per_page: 20,
+            has_more: false,
+            query_info: {
+              original_query: response.query || '',
+              parsed_data: response.parsed_data || {},
+              search_time_ms: 0,
+              used_llm: false
+            },
+            suggestions: response.suggestions || [],
+            // Новые поля для мини-чата
+            conversation_mode: response.conversation_mode || false,
+            follow_up_questions: response.follow_up_questions || [],
+            message: response.message || '',
+            success: response.success !== false
+          };
+        }
+
+        // Старый формат ответа (для совместимости)
         return {
           results: response.results?.map((result: any) => ({
             ...result,
@@ -60,7 +107,12 @@ export const tireSearchApi = baseApi.injectEndpoints({
             search_time_ms: 0,
             used_llm: false
           },
-          suggestions: response.suggestions || []
+          suggestions: response.suggestions || [],
+          // Новые поля для мини-чата
+          conversation_mode: response.conversation_mode || false,
+          follow_up_questions: response.follow_up_questions || [],
+          message: response.message || '',
+          success: response.success !== false
         };
       },
       transformErrorResponse: (response: any) => {
