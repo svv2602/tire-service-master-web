@@ -162,6 +162,7 @@ const SystemSettingsPage: React.FC = () => {
 
   // Сохранение настройки
   const saveSetting = async (key: string, value: string) => {
+    console.log('💾 Saving setting:', { key, value });
     setSaving(key);
     try {
       const response = await fetch(`${API_BASE_URL}/admin/system_settings/${key}`, {
@@ -173,6 +174,7 @@ const SystemSettingsPage: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Setting saved successfully:', data);
         
         // Обновляем настройку в состоянии
         setSettings(prev => {
@@ -194,10 +196,11 @@ const SystemSettingsPage: React.FC = () => {
         showNotification(`Настройка "${key}" сохранена`, 'success');
       } else {
         const errorData = await response.json();
+        console.error('❌ Server error response:', { status: response.status, error: errorData });
         throw new Error(errorData.error || 'Ошибка сохранения');
       }
     } catch (error) {
-      console.error('Error saving setting:', error);
+      console.error('❌ Error saving setting:', error);
       showNotification(`Ошибка сохранения: ${error}`, 'error');
     } finally {
       setSaving(null);
@@ -258,6 +261,11 @@ const SystemSettingsPage: React.FC = () => {
       ...prev,
       [key]: value
     }));
+    
+    // Автосохранение через 1 секунду после изменения
+    setTimeout(() => {
+      saveSetting(key, value);
+    }, 1000);
   };
 
   // Получение текущего значения (с учетом ожидающих изменений)
