@@ -180,7 +180,7 @@ const SupplierDetailsPage: React.FC = () => {
     );
   }
 
-  if (supplierError || !supplier) {
+  if (supplierError || !supplier || !supplier.statistics) {
     return (
       <AdminPageWrapper>
         <Box sx={tablePageStyles.pageContainer}>

@@ -135,6 +135,18 @@ export const suppliersApi = baseApi.injectEndpoints({
     // Получение поставщика по ID
     getSupplierById: builder.query<{ supplier: SupplierWithStats }, number>({
       query: (id) => `suppliers/${id}`,
+      transformResponse: (response: any) => ({
+        supplier: {
+          ...response.supplier,
+          statistics: {
+            products_count: response.supplier.products_count || 0,
+            in_stock_products_count: response.supplier.in_stock_products_count || 0,
+            last_version: response.supplier.last_version || null,
+            sync_status: response.supplier.sync_status || 'never',
+            last_sync_ago: response.supplier.last_sync_ago || null,
+          },
+        },
+      }),
       providesTags: (result, error, id) => [
         { type: 'Supplier', id },
       ],
