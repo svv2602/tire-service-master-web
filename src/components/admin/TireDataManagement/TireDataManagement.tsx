@@ -567,10 +567,15 @@ const TireDataManagement: React.FC = () => {
                                           }))}
                                         />
                                       }
-                                      label="Исправлять подозрительные размеры"
+                                      label="Исправлять размеры шин"
                                     />
-                                    <Typography variant="caption" color="text.secondary" display="block">
-                                      Автоматическое исправление нереалистичных размеров
+                                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                                      Автоматическое исправление проблем в размерах:
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary" display="block" sx={{ fontSize: '0.7rem' }}>
+                                      • 165/0R13 → 165/80R13 (нулевая высота → 80%)<br/>
+                                      • 28/9R15 → сохраняется (американские дюймовые)<br/>
+                                      • Экстремальные значения нормализуются
                                     </Typography>
                                   </CardContent>
                                 </Card>
