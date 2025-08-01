@@ -39,7 +39,9 @@ import {
   ListItemText,
   CircularProgress,
   FormControlLabel,
-  Switch
+  Switch,
+  Tabs,
+  Tab
 } from '@mui/material';
 import {
   CloudUpload as UploadIcon,
@@ -56,8 +58,37 @@ import {
   Description as FileIcon,
   Timeline as StatsIcon,
   History as HistoryIcon,
-  HelpOutline as HelpIcon
+  HelpOutline as HelpIcon,
+  Edit as EditIcon,
+  DeleteSweep as ClearAllIcon
 } from '@mui/icons-material';
+
+// TabPanel компонент
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`tire-data-tabpanel-${index}`}
+      aria-labelledby={`tire-data-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          {children}
+        </Box>
+      )}
+    </div>
+  );
+}
 
 // Типы данных
 interface TireDataStats {
@@ -126,6 +157,9 @@ const TireDataManagement: React.FC = () => {
     fix_suspicious_sizes: false,
     encoding_fallback: 'utf-8'
   });
+  
+  // Вкладки
+  const [currentTab, setCurrentTab] = useState(0);
   
   // Диалоги
   const [helpDialog, setHelpDialog] = useState(false);
@@ -357,7 +391,33 @@ const TireDataManagement: React.FC = () => {
         </Box>
       </Box>
 
-      {/* Текущая статистика */}
+      {/* Вкладки */}
+      <Paper sx={{ mb: 3 }}>
+        <Tabs 
+          value={currentTab} 
+          onChange={(event, newValue) => setCurrentTab(newValue)}
+          sx={{ borderBottom: 1, borderColor: 'divider' }}
+        >
+          <Tab 
+            label="Загрузка данных" 
+            icon={<UploadIcon />} 
+            iconPosition="start"
+            id="tire-data-tab-0"
+            aria-controls="tire-data-tabpanel-0"
+          />
+          <Tab 
+            label="Редактирование" 
+            icon={<EditIcon />} 
+            iconPosition="start"
+            id="tire-data-tab-1"
+            aria-controls="tire-data-tabpanel-1"
+          />
+        </Tabs>
+      </Paper>
+
+      {/* TabPanel для загрузки данных */}
+      <TabPanel value={currentTab} index={0}>
+        {/* Текущая статистика */}
       {stats && (
         <Alert severity="info" sx={{ mb: 3 }}>
           <Typography variant="body2">
@@ -926,6 +986,294 @@ const TireDataManagement: React.FC = () => {
           <Button onClick={() => setStatsDialog(false)}>Закрыть</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Диалог подтверждения */}
+      <Dialog open={confirmDialog.open} onClose={() => setConfirmDialog(prev => ({ ...prev, open: false }))}>
+        <DialogTitle>{confirmDialog.title}</DialogTitle>
+        <DialogContent>
+          <Typography>{confirmDialog.message}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDialog(prev => ({ ...prev, open: false }))}>
+            Отмена
+          </Button>
+          <Button 
+            onClick={() => {
+              confirmDialog.onConfirm();
+              setConfirmDialog(prev => ({ ...prev, open: false }));
+            }}
+            color="primary"
+            variant="contained"
+          >
+            Подтвердить
+          </Button>
+        </DialogActions>
+      </Dialog>
+      </TabPanel>
+
+      {/* TabPanel для редактирования */}
+      <TabPanel value={currentTab} index={1}>
+        <TireDataEditingPanel 
+          stats={stats}
+          onRefresh={loadStats}
+          getAuthHeaders={getAuthHeaders}
+        />
+      </TabPanel>
+    </Box>
+  );
+};
+
+// Компонент для вкладки редактирования
+interface TireDataEditingPanelProps {
+  stats: TireDataStats | null;
+  onRefresh: () => void;
+  getAuthHeaders: () => Record<string, string>;
+}
+
+const TireDataEditingPanel: React.FC<TireDataEditingPanelProps> = ({ stats, onRefresh, getAuthHeaders }) => {
+  const [loading, setLoading] = useState(false);
+  const [clearingData, setClearingData] = useState(false);
+  const [versions, setVersions] = useState<any[]>([]);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    open: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
+
+  // Загружаем список версий
+  const loadVersions = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/v1/admin/tire_data/status', {
+        credentials: 'include',
+        headers: getAuthHeaders()
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        setVersions(data.data.available_versions || []);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки версий:', error);
+    }
+  };
+
+  // Полная очистка данных
+  const handleClearAllData = async () => {
+    setClearingData(true);
+    try {
+      const response = await fetch('http://localhost:8000/api/v1/admin/tire_data/import', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({
+          csv_path: '/dev/null', // Заглушка
+          force_reload: true,
+          clear_only: true // Новый параметр для только очистки
+        })
+      });
+      
+      const result = await response.json();
+      if (result.status === 'success') {
+        onRefresh();
+        alert('Данные успешно очищены');
+      } else {
+        alert(`Ошибка: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Ошибка очистки:', error);
+      alert('Произошла ошибка при очистке данных');
+    } finally {
+      setClearingData(false);
+    }
+  };
+
+  // Удаление версии
+  const handleDeleteVersion = async (version: string) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/v1/admin/tire_data/version/${version}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: getAuthHeaders()
+      });
+      
+      if (response.ok) {
+        await loadVersions();
+        onRefresh();
+        alert(`Версия ${version} удалена`);
+      }
+    } catch (error) {
+      console.error('Ошибка удаления версии:', error);
+    }
+  };
+
+  // Откат к версии
+  const handleRollbackToVersion = async (version: string) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/v1/admin/tire_data/rollback/${version}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: getAuthHeaders()
+      });
+      
+      if (response.ok) {
+        await loadVersions();
+        onRefresh();
+        alert(`Выполнен откат к версии ${version}`);
+      }
+    } catch (error) {
+      console.error('Ошибка отката:', error);
+    }
+  };
+
+  React.useEffect(() => {
+    loadVersions();
+  }, []);
+
+  return (
+    <Box>
+      {/* Текущее состояние */}
+      {stats && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <Typography variant="body2">
+            <strong>Текущее состояние:</strong> {stats.configurations_count} конфигураций,
+            версия {stats.current_version}, последнее обновление: {stats.last_update}
+          </Typography>
+        </Alert>
+      )}
+
+      <Grid container spacing={3}>
+        {/* Полная очистка данных */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom color="error">
+                <ClearAllIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Полная очистка данных
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                ⚠️ Удаляет все данные шин, сохраняя бренды и модели, используемые в бронированиях.
+                Операция необратима!
+              </Typography>
+              <Alert severity="warning" sx={{ mb: 2 }}>
+                <Typography variant="body2">
+                  <strong>Внимание:</strong> Эта операция запрещена в продакшене и удалит:
+                </Typography>
+                <Box component="ul" sx={{ mt: 1, mb: 0 }}>
+                  <li>Все конфигурации шин</li>
+                  <li>Неиспользуемые бренды и модели</li>
+                  <li>Все версии данных</li>
+                </Box>
+              </Alert>
+            </CardContent>
+            <CardActions>
+              <Button
+                variant="contained"
+                color="error"
+                startIcon={<ClearAllIcon />}
+                onClick={() => setConfirmDialog({
+                  open: true,
+                  title: 'Подтверждение полной очистки',
+                  message: 'Вы действительно хотите удалить все данные шин? Эта операция необратима!',
+                  onConfirm: handleClearAllData
+                })}
+                disabled={clearingData}
+              >
+                {clearingData ? 'Очистка...' : 'Очистить все данные'}
+              </Button>
+            </CardActions>
+          </Card>
+        </Grid>
+
+        {/* Управление версиями */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                <HistoryIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Управление версиями
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Просмотр, удаление и откат к предыдущим версиям данных.
+              </Typography>
+              
+              {versions.length > 0 ? (
+                <Box>
+                  {versions.map((version, index) => (
+                    <Paper key={version.version} sx={{ p: 2, mb: 1, bgcolor: index === 0 ? 'action.hover' : 'background.paper' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Box>
+                          <Typography variant="subtitle2">
+                            {version.version}
+                            {index === 0 && <Chip label="Текущая" size="small" color="primary" sx={{ ml: 1 }} />}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {version.imported_at}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          {index !== 0 && (
+                            <>
+                              <Tooltip title="Откатиться к этой версии">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => setConfirmDialog({
+                                    open: true,
+                                    title: 'Подтверждение отката',
+                                    message: `Откатиться к версии ${version.version}?`,
+                                    onConfirm: () => handleRollbackToVersion(version.version)
+                                  })}
+                                >
+                                  <RestoreIcon />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Удалить версию">
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={() => setConfirmDialog({
+                                    open: true,
+                                    title: 'Подтверждение удаления',
+                                    message: `Удалить версию ${version.version}?`,
+                                    onConfirm: () => handleDeleteVersion(version.version)
+                                  })}
+                                >
+                                  <DeleteIcon />
+                                </IconButton>
+                              </Tooltip>
+                            </>
+                          )}
+                        </Box>
+                      </Box>
+                    </Paper>
+                  ))}
+                </Box>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Нет доступных версий
+                </Typography>
+              )}
+            </CardContent>
+            <CardActions>
+              <Button
+                variant="outlined"
+                startIcon={<RefreshIcon />}
+                onClick={loadVersions}
+                disabled={loading}
+              >
+                Обновить список
+              </Button>
+            </CardActions>
+          </Card>
+        </Grid>
+      </Grid>
 
       {/* Диалог подтверждения */}
       <Dialog open={confirmDialog.open} onClose={() => setConfirmDialog(prev => ({ ...prev, open: false }))}>
