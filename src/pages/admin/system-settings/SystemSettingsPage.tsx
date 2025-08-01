@@ -175,13 +175,23 @@ const SystemSettingsPage: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         console.log('✅ Setting saved successfully:', data);
+        console.log('📝 Updating settings state:', { 
+          key, 
+          category: data.setting?.category, 
+          newValue: data.setting?.value,
+          oldValue: getCurrentValue(key, '') 
+        });
         
         // Обновляем настройку в состоянии
         setSettings(prev => {
           const newSettings = { ...prev };
           const category = data.setting.category;
-          if (newSettings[category]) {
+          if (newSettings[category] && data.setting) {
+            console.log('🔄 Before update:', newSettings[category][key]);
             newSettings[category][key] = data.setting;
+            console.log('🔄 After update:', newSettings[category][key]);
+          } else {
+            console.warn('⚠️ Category not found or setting missing:', { category, settingExists: !!data.setting });
           }
           return newSettings;
         });
@@ -262,10 +272,7 @@ const SystemSettingsPage: React.FC = () => {
       [key]: value
     }));
     
-    // Автосохранение через 1 секунду после изменения
-    setTimeout(() => {
-      saveSetting(key, value);
-    }, 1000);
+    // TODO: Добавить debounced автосохранение
   };
 
   // Получение текущего значения (с учетом ожидающих изменений)
