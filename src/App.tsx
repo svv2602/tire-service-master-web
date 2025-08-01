@@ -39,6 +39,11 @@ const PartnerFormPage = lazy(() => import('./pages/partners/PartnerFormPage'));
 // Ленивая загрузка страниц заявок партнеров
 const PartnerApplicationsPage = lazy(() => import('./pages/partner-applications/PartnerApplicationsPage'));
 
+// Ленивая загрузка страниц поставщиков
+const SuppliersPage = lazy(() => import('./pages/admin/suppliers/SuppliersPage'));
+const SupplierDetailsPage = lazy(() => import('./pages/admin/suppliers/SupplierDetailsPage'));
+const SupplierUploadPage = lazy(() => import('./pages/admin/suppliers/SupplierUploadPage'));
+
 // Ленивая загрузка страниц сервисных точек
 const ServicePointsPage = lazy(() => import('./pages/service-points/ServicePointsPage'));
 const ServicePointFormPage = lazy(() => import('./pages/service-points/ServicePointFormPage'));
@@ -304,6 +309,11 @@ const App: React.FC = () => {
                         
                         {/* Управление заявками партнеров */}
                         <Route path="partner-applications" element={<PartnerApplicationsPage />} />
+                        
+                        {/* Управление поставщиками */}
+                        <Route path="suppliers" element={<SuppliersPage />} />
+                        <Route path="suppliers/:id" element={<SupplierDetailsPage />} />
+                        <Route path="suppliers/:id/upload" element={<SupplierUploadPage />} />
                         
                         {/* Управление сервисными точками */}
                         <Route path="service-points" element={<ServicePointsPage />} />

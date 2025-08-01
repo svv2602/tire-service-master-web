@@ -27,6 +27,21 @@ export const getTablePageStyles = (theme: Theme) => ({
     fontWeight: 'bold',
     color: theme.palette.text.primary,
   },
+  pageTitle: {
+    fontSize: '1.5rem',
+    fontWeight: 'bold',
+    color: theme.palette.text.primary,
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(1),
+  },
+  addButton: {
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.primary.contrastText,
+    '&:hover': {
+      backgroundColor: theme.palette.primary.dark,
+    },
+  },
   subtitle: {
     fontSize: '0.875rem',
     color: theme.palette.text.secondary,

@@ -46,6 +46,7 @@ import {
   DirectionsCar as CarIcon,
   Build as ServiceIcon,
   Business as CompanyIcon,
+  Store as StoreIcon,
   ExpandLess,
   ExpandMore,
   Assessment as ReportIcon,
@@ -315,6 +316,13 @@ const MainLayout: React.FC = () => {
             path: '/admin/partner-applications',
             roles: [UserRole.ADMIN, UserRole.MANAGER],
             description: t('navigation.descriptions.partnerApplications'),
+          },
+          {
+            text: t('navigation.suppliers'),
+            icon: <StoreIcon />,
+            path: '/admin/suppliers',
+            roles: [UserRole.ADMIN, UserRole.MANAGER],
+            description: t('navigation.descriptions.suppliers'),
           },
           {
             text: t('navigation.operators'),

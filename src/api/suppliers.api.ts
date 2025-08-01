@@ -1,0 +1,271 @@
+import { baseApi } from './baseApi';
+
+// Типы для поставщиков
+export interface Supplier {
+  id: number;
+  firm_id: string;
+  name: string;
+  api_key: string;
+  is_active: boolean;
+  priority: number;
+  last_sync_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SupplierFormData {
+  firm_id: string;
+  name: string;
+  is_active: boolean;
+  priority: number;
+}
+
+export interface SupplierStatistics {
+  products_count: number;
+  in_stock_products_count: number;
+  last_version: string | null;
+  sync_status: 'never' | 'success' | 'failed' | 'syncing';
+  last_sync_ago: string | null;
+}
+
+export interface SupplierWithStats extends Supplier {
+  statistics: SupplierStatistics;
+}
+
+export interface SupplierPriceVersion {
+  id: number;
+  version: string;
+  file_checksum: string | null;
+  products_count: number;
+  processed_count: number;
+  errors_count: number;
+  processing_time_ms: number | null;
+  uploaded_at: string;
+  created_at: string;
+  updated_at: string;
+  success_rate: number;
+  error_rate: number;
+  processing_time_seconds: number | null;
+  status: 'processing' | 'completed' | 'failed';
+}
+
+export interface SupplierProduct {
+  id: number;
+  external_id: string;
+  brand: string;
+  brand_normalized: string;
+  model: string;
+  name: string;
+  width: number;
+  height: number;
+  diameter: string;
+  load_index: string | null;
+  speed_index: string | null;
+  season: string;
+  price_uah: string | null;
+  stock_status: string | null;
+  in_stock: boolean;
+  description: string | null;
+  image_url: string | null;
+  product_url: string | null;
+  country: string | null;
+  year_week: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    current_page: number;
+    total_pages: number;
+    total_count: number;
+    per_page: number;
+  };
+}
+
+export interface UploadPriceResponse {
+  success: boolean;
+  message: string;
+  version?: string;
+  processing_started?: boolean;
+  supplier_id?: number;
+}
+
+// API эндпоинты для поставщиков
+export const suppliersApi = baseApi.injectEndpoints({
+  endpoints: (builder) => ({
+    // Получение списка поставщиков
+    getSuppliers: builder.query<PaginatedResponse<SupplierWithStats>, { 
+      page?: number; 
+      per_page?: number; 
+      active_only?: boolean;
+      search?: string;
+    }>({
+      query: (params = {}) => ({
+        url: 'suppliers',
+        params: {
+          page: params.page || 1,
+          per_page: params.per_page || 20,
+          active_only: params.active_only,
+          search: params.search,
+        },
+      }),
+      providesTags: ['Supplier'],
+    }),
+
+    // Получение поставщика по ID
+    getSupplierById: builder.query<{ supplier: SupplierWithStats }, number>({
+      query: (id) => `suppliers/${id}`,
+      providesTags: (result, error, id) => [
+        { type: 'Supplier', id },
+      ],
+    }),
+
+    // Создание поставщика
+    createSupplier: builder.mutation<{ supplier: Supplier }, SupplierFormData>({
+      query: (data) => ({
+        url: 'suppliers',
+        method: 'POST',
+        body: { supplier: data },
+      }),
+      invalidatesTags: ['Supplier'],
+    }),
+
+    // Обновление поставщика
+    updateSupplier: builder.mutation<{ supplier: Supplier }, { id: number; data: SupplierFormData }>({
+      query: ({ id, data }) => ({
+        url: `suppliers/${id}`,
+        method: 'PATCH',
+        body: { supplier: data },
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: 'Supplier', id },
+        'Supplier',
+      ],
+    }),
+
+    // Удаление поставщика
+    deleteSupplier: builder.mutation<{ message: string }, number>({
+      query: (id) => ({
+        url: `suppliers/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Supplier'],
+    }),
+
+    // Получение товаров поставщика
+    getSupplierProducts: builder.query<PaginatedResponse<SupplierProduct>, {
+      id: number;
+      page?: number;
+      per_page?: number;
+      in_stock_only?: boolean;
+      search?: string;
+    }>({
+      query: ({ id, ...params }) => ({
+        url: `suppliers/${id}/products`,
+        params: {
+          page: params.page || 1,
+          per_page: params.per_page || 20,
+          in_stock_only: params.in_stock_only,
+          search: params.search,
+        },
+      }),
+      providesTags: (result, error, { id }) => [
+        { type: 'SupplierProducts', id },
+      ],
+    }),
+
+    // Получение статистики поставщика
+    getSupplierStatistics: builder.query<SupplierStatistics, number>({
+      query: (id) => `suppliers/${id}/statistics`,
+      providesTags: (result, error, id) => [
+        { type: 'Supplier', id },
+      ],
+    }),
+
+    // Получение версий прайсов поставщика
+    getSupplierPriceVersions: builder.query<PaginatedResponse<SupplierPriceVersion>, {
+      id: number;
+      page?: number;
+      per_page?: number;
+    }>({
+      query: ({ id, ...params }) => ({
+        url: `suppliers/${id}/price_versions`,
+        params: {
+          page: params.page || 1,
+          per_page: params.per_page || 10,
+        },
+      }),
+      providesTags: (result, error, { id }) => [
+        { type: 'Supplier', id },
+      ],
+    }),
+
+    // Загрузка прайса поставщика
+    uploadSupplierPrice: builder.mutation<UploadPriceResponse, {
+      supplier_id?: number;
+      file?: File;
+      xml_content?: string;
+    }>({
+      query: ({ supplier_id, file, xml_content }) => {
+        const formData = new FormData();
+        
+        if (supplier_id) {
+          formData.append('supplier_id', supplier_id.toString());
+        }
+        
+        if (file) {
+          formData.append('file', file);
+        } else if (xml_content) {
+          formData.append('xml_content', xml_content);
+        }
+
+        return {
+          url: 'suppliers/upload_price',
+          method: 'POST',
+          body: formData,
+        };
+      },
+      invalidatesTags: ['Supplier', 'SupplierProducts'],
+    }),
+
+    // Переключение активности поставщика
+    toggleSupplierActive: builder.mutation<{ supplier: Supplier }, number>({
+      query: (id) => ({
+        url: `suppliers/${id}/toggle_active`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: (result, error, id) => [
+        { type: 'Supplier', id },
+        'Supplier',
+      ],
+    }),
+
+    // Регенерация API ключа поставщика
+    regenerateSupplierApiKey: builder.mutation<{ supplier: Supplier }, number>({
+      query: (id) => ({
+        url: `suppliers/${id}/regenerate_api_key`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: (result, error, id) => [
+        { type: 'Supplier', id },
+      ],
+    }),
+  }),
+});
+
+// Экспорт хуков
+export const {
+  useGetSuppliersQuery,
+  useGetSupplierByIdQuery,
+  useCreateSupplierMutation,
+  useUpdateSupplierMutation,
+  useDeleteSupplierMutation,
+  useGetSupplierProductsQuery,
+  useGetSupplierStatisticsQuery,
+  useGetSupplierPriceVersionsQuery,
+  useUploadSupplierPriceMutation,
+  useToggleSupplierActiveMutation,
+  useRegenerateSupplierApiKeyMutation,
+} = suppliersApi;
