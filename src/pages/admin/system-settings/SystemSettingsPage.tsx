@@ -417,10 +417,39 @@ const SystemSettingsPage: React.FC = () => {
     loadSettings();
   }, []);
 
-  // Получение списка категорий для табов
-  const categoryKeys = Object.keys(categories);
-  const currentCategoryKey = categoryKeys[currentTab] || 'general';
-  const currentCategorySettings = settings[currentCategoryKey] || {};
+  // Группировка категорий для новых табов
+  const tabGroups = [
+    {
+      name: 'Поиск и интеграции',
+      icon: <SearchIcon />,
+      categories: ['tire_search', 'integrations', 'database'],
+      description: 'Настройки поиска шин, интеграций с внешними сервисами и базы данных'
+    },
+    {
+      name: 'Аналитика и производительность', 
+      icon: <AnalyticsIcon />,
+      categories: ['analytics', 'performance'],
+      description: 'Настройки аналитики и производительности системы'
+    }
+  ];
+
+  // Получение настроек для текущего таба
+  const getCurrentTabSettings = () => {
+    const currentGroup = tabGroups[currentTab];
+    if (!currentGroup) return {};
+    
+    const groupSettings: Record<string, SystemSetting> = {};
+    currentGroup.categories.forEach(categoryKey => {
+      const categorySettings = settings[categoryKey] || {};
+      Object.entries(categorySettings).forEach(([key, setting]) => {
+        groupSettings[key] = setting;
+      });
+    });
+    
+    return groupSettings;
+  };
+
+  const currentTabSettings = getCurrentTabSettings();
 
   if (loading) {
     return (
@@ -485,31 +514,37 @@ const SystemSettingsPage: React.FC = () => {
           variant="scrollable"
           scrollButtons="auto"
         >
-          {categoryKeys.map((categoryKey, index) => {
-            const category = categories[categoryKey];
-            const categorySettingsCount = Object.keys(settings[categoryKey] || {}).length;
-            const changedInCategory = Object.keys(pendingChanges).filter(key => 
-              Object.keys(settings[categoryKey] || {}).includes(key)
-            ).length;
+          {tabGroups.map((group, index) => {
+            // Подсчитываем общее количество настроек в группе
+            const groupSettingsCount = group.categories.reduce((count, categoryKey) => {
+              return count + Object.keys(settings[categoryKey] || {}).length;
+            }, 0);
+            
+            // Подсчитываем изменения в группе
+            const changedInGroup = Object.keys(pendingChanges).filter(key => {
+              return group.categories.some(categoryKey => 
+                Object.keys(settings[categoryKey] || {}).includes(key)
+              );
+            }).length;
             
             return (
               <Tab
-                key={categoryKey}
+                key={`group-${index}`}
                 label={
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {getCategoryIcon(category.icon)}
+                    {group.icon}
                     <Typography variant="body2">
-                      {category.name}
+                      {group.name}
                     </Typography>
                     <Chip 
-                      label={categorySettingsCount} 
+                      label={groupSettingsCount} 
                       size="small" 
                       color="primary" 
                       variant="outlined"
                     />
-                    {changedInCategory > 0 && (
+                    {changedInGroup > 0 && (
                       <Chip 
-                        label={changedInCategory} 
+                        label={changedInGroup} 
                         size="small" 
                         color="warning"
                       />
@@ -535,58 +570,80 @@ const SystemSettingsPage: React.FC = () => {
       </Paper>
 
       {/* Содержимое вкладок */}
-      {categoryKeys.map((categoryKey, index) => {
-        const category = categories[categoryKey];
-        const categorySettings = settings[categoryKey] || {};
-        
-        return (
-          <TabPanel key={categoryKey} value={currentTab} index={index}>
+      {tabGroups.map((group, index) => (
+        <TabPanel key={`tab-${index}`} value={currentTab} index={index}>
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" gutterBottom>
-                {category.name}
+                {group.name}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {category.description}
+                {group.description}
               </Typography>
             </Box>
 
-            <Grid container spacing={3}>
-              {Object.entries(categorySettings).map(([key, setting]) => {
-                const isSaving = saving === key;
-                const isTesting = testing === key;
-                
-                return (
-                <Grid item xs={12} key={key}>
-                  <Card variant="outlined">
-                    <CardContent>
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
-                        <Box sx={{ flex: 1 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                            <Typography variant="subtitle1" fontWeight="medium">
-                              {key}
-                            </Typography>
-                            {setting.default && (
-                              <Chip label="По умолчанию" size="small" variant="outlined" />
-                            )}
-                            {hasChanges(key) && (
-                              <Chip label="Изменено" size="small" color="warning" />
-                            )}
-                          </Box>
-                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                            {setting.description}
+            {/* Группировка настроек по категориям */}
+            {group.categories.map((categoryKey) => {
+              const categorySettings = settings[categoryKey] || {};
+              const categoryInfo = categories[categoryKey];
+              
+              if (Object.keys(categorySettings).length === 0) return null;
+              
+              return (
+                <Box key={categoryKey} sx={{ mb: 4 }}>
+                  <Box sx={{ 
+                    mb: 2, 
+                    pb: 1, 
+                    borderBottom: '2px solid', 
+                    borderColor: 'primary.main',
+                    borderRadius: '2px'
+                  }}>
+                    <Typography variant="h6" sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 1, 
+                      fontSize: '1.1rem',
+                      fontWeight: 600,
+                      color: 'primary.main'
+                    }}>
+                      {getCategoryIcon(categoryInfo?.icon || 'settings')}
+                      {categoryInfo?.name || categoryKey}
+                    </Typography>
+                    {categoryInfo?.description && (
+                      <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mt: 0.5 }}>
+                        {categoryInfo.description}
+                      </Typography>
+                    )}
+                  </Box>
+                  
+                  <Grid container spacing={2}>
+                    {Object.entries(categorySettings).map(([key, setting]) => {
+                      const isSaving = saving === key;
+                      const isTesting = testing === key;
+                      
+                      return (
+                      <Grid item xs={12} md={6} lg={4} key={key}>
+                  <Card variant="outlined" sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    <CardContent sx={{ flex: 1 }}>
+                      <Box sx={{ mb: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+                          <Typography variant="subtitle2" fontWeight="medium" sx={{ fontSize: '0.9rem' }}>
+                            {key}
                           </Typography>
-                          
-                          {/* Дополнительная информация */}
-                          {(setting.min_value !== undefined || setting.max_value !== undefined) && (
-                            <Typography variant="caption" color="text.secondary">
-                              Диапазон: {setting.min_value || '∞'} - {setting.max_value || '∞'}
-                            </Typography>
+                          {setting.default && (
+                            <Chip label="По умолчанию" size="small" variant="outlined" />
+                          )}
+                          {hasChanges(key) && (
+                            <Chip label="Изменено" size="small" color="warning" />
                           )}
                         </Box>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: '0.8rem' }}>
+                          {setting.description}
+                        </Typography>
                         
-                        {setting.updated_at && (
+                        {/* Дополнительная информация */}
+                        {(setting.min_value !== undefined || setting.max_value !== undefined) && (
                           <Typography variant="caption" color="text.secondary">
-                            Обновлено: {new Date(setting.updated_at).toLocaleString()}
+                            Диапазон: {setting.min_value || '∞'} - {setting.max_value || '∞'}
                           </Typography>
                         )}
                       </Box>
@@ -595,10 +652,16 @@ const SystemSettingsPage: React.FC = () => {
                       <Box sx={{ mb: 2 }}>
                         {renderSettingField(setting, isSaving, isTesting)}
                       </Box>
+                      
+                      {setting.updated_at && (
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                          Обновлено: {new Date(setting.updated_at).toLocaleDateString()}
+                        </Typography>
+                      )}
                     </CardContent>
                     
-                    <CardActions sx={{ justifyContent: 'space-between' }}>
-                      <Box sx={{ display: 'flex', gap: 1 }}>
+                    <CardActions sx={{ justifyContent: 'space-between', pt: 0 }}>
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                         {/* Скрываем кнопку сохранения для boolean полей (автосохранение) */}
                         {setting.type !== 'boolean' && (
                           <Button
@@ -607,6 +670,7 @@ const SystemSettingsPage: React.FC = () => {
                             startIcon={isSaving ? <CircularProgress size={16} /> : <SaveIcon />}
                             onClick={() => saveSetting(key, getCurrentValue(key, setting.value))}
                             disabled={!hasChanges(key) || isSaving}
+                            sx={{ fontSize: '0.75rem' }}
                           >
                             {isSaving ? 'Сохранение...' : 'Сохранить'}
                           </Button>
@@ -619,36 +683,40 @@ const SystemSettingsPage: React.FC = () => {
                             startIcon={isTesting ? <CircularProgress size={16} /> : <TestIcon />}
                             onClick={() => testConnection(key, getCurrentValue(key, setting.value))}
                             disabled={isTesting}
+                            sx={{ fontSize: '0.75rem' }}
                           >
                             {isTesting ? 'Тестирование...' : 'Тест'}
                           </Button>
                         )}
+                        
+                        {hasChanges(key) && setting.type !== 'boolean' && (
+                          <Button
+                            size="small"
+                            onClick={() => setPendingChanges(prev => {
+                              const newChanges = { ...prev };
+                              delete newChanges[key];
+                              return newChanges;
+                            })}
+                            sx={{ fontSize: '0.75rem' }}
+                          >
+                            Отменить
+                          </Button>
+                        )}
                       </Box>
-                      
-                      {hasChanges(key) && setting.type !== 'boolean' && (
-                        <Button
-                          size="small"
-                          onClick={() => setPendingChanges(prev => {
-                            const newChanges = { ...prev };
-                            delete newChanges[key];
-                            return newChanges;
-                          })}
-                        >
-                          Отменить
-                        </Button>
-                      )}
                     </CardActions>
                   </Card>
                 </Grid>
-                );
-              })}
-            </Grid>
-          </TabPanel>
-        );
-      })}
+                      );
+                    })}
+                  </Grid>
+                </Box>
+              );
+            })}
+        </TabPanel>
+      ))}
 
       {/* Специальный таб для управления данными шин */}
-      <TabPanel value={currentTab} index={categoryKeys.length}>
+      <TabPanel value={currentTab} index={tabGroups.length}>
         <TireDataManagement />
       </TabPanel>
 
