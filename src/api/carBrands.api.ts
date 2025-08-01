@@ -21,6 +21,14 @@ interface ApiCarBrandsResponse {
     models_count?: number;
   }>;
   total_items: number;
+  pagination?: {
+    current_page: number;
+    per_page: number;
+    total_pages: number;
+    total_count: number;
+    has_next_page: boolean;
+    has_prev_page: boolean;
+  };
 }
 
 export const carBrandsApi = baseApi.injectEndpoints({
@@ -30,18 +38,24 @@ export const carBrandsApi = baseApi.injectEndpoints({
         url: 'car_brands',
         params,
       }),
-      transformResponse: (response: ApiCarBrandsResponse) => ({
-        data: response.car_brands.map(brand => ({
-          ...brand,
-          models_count: brand.models_count ?? 0, // Берём из API, если есть
-        })),
-        meta: {
-          current_page: 1,
-          total_pages: 1,
-          total_count: response.total_items,
-          per_page: 25
-        }
-      }),
+      transformResponse: (response: ApiCarBrandsResponse, meta: any, arg: CarBrandFilter) => {
+        const page = arg.page || 0;
+        const per_page = arg.per_page || 25;
+        const total_pages = Math.ceil(response.total_items / per_page);
+        
+        return {
+          data: response.car_brands.map(brand => ({
+            ...brand,
+            models_count: brand.models_count ?? 0, // Берём из API, если есть
+          })),
+          pagination: {
+            current_page: page,
+            total_pages: total_pages,
+            total_count: response.total_items,
+            per_page: per_page
+          }
+        };
+      },
       providesTags: (result) =>
         result?.data && Array.isArray(result.data)
           ? [
