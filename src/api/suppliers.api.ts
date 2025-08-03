@@ -53,7 +53,6 @@ export interface SupplierProduct {
   id: number;
   external_id: string;
   brand: string;
-  brand_normalized: string;
   model: string;
   name: string;
   width: number;
@@ -61,6 +60,8 @@ export interface SupplierProduct {
   diameter: string;
   load_index: string | null;
   speed_index: string | null;
+  size: string; // tire_size от API
+  load_speed_index: string; // объединенные индексы
   season: string;
   price_uah: string | null;
   stock_status: string | null;
@@ -70,7 +71,6 @@ export interface SupplierProduct {
   product_url: string | null;
   country: string | null;
   year_week: string | null;
-  created_at: string;
   updated_at: string;
 }
 
@@ -191,6 +191,9 @@ export const suppliersApi = baseApi.injectEndpoints({
       per_page?: number;
       in_stock_only?: boolean;
       search?: string;
+      updated_after?: string;
+      updated_before?: string;
+      sort_by?: string;
     }>({
       query: ({ id, ...params }) => ({
         url: `suppliers/${id}/products`,
@@ -199,6 +202,9 @@ export const suppliersApi = baseApi.injectEndpoints({
           per_page: params.per_page || 20,
           in_stock_only: params.in_stock_only,
           search: params.search,
+          updated_after: params.updated_after,
+          updated_before: params.updated_before,
+          sort_by: params.sort_by,
         },
       }),
       transformResponse: (response: any) => ({

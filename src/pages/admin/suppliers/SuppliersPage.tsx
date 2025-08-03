@@ -221,23 +221,39 @@ const SuppliersPage: React.FC = () => {
     setIsDeleteDialogOpen(true);
   };
 
+  // Получение текста статуса синхронизации
+  const getSyncStatusText = (status: string) => {
+    switch (status) {
+      case 'never': return 'Не синхронизировано';
+      case 'recent': return 'Недавно';
+      case 'today': return 'Сегодня';
+      case 'week': return 'На неделе';
+      case 'old': return 'Давно';
+      default: return 'Неизвестно';
+    }
+  };
+
   // Получение цвета статуса синхронизации
   const getSyncStatusColor = (status: string) => {
     switch (status) {
-      case 'success': return 'success';
-      case 'failed': return 'error';
-      case 'syncing': return 'warning';
+      case 'never': return 'default';
+      case 'recent': return 'success';
+      case 'today': return 'success';
+      case 'week': return 'warning';
+      case 'old': return 'error';
       default: return 'default';
     }
   };
 
-  // Получение иконки статуса синхронизации
-  const getSyncStatusIcon = (status: string) => {
+  // Получение тултипа статуса синхронизации
+  const getSyncStatusTooltip = (status: string) => {
     switch (status) {
-      case 'success': return <CheckCircleIcon fontSize="small" />;
-      case 'failed': return <ErrorIcon fontSize="small" />;
-      case 'syncing': return <ScheduleIcon fontSize="small" />;
-      default: return <ScheduleIcon fontSize="small" />;
+      case 'never': return 'Прайс-лист еще не загружался';
+      case 'recent': return 'Обновлено в течение последнего часа';
+      case 'today': return 'Обновлено сегодня';
+      case 'week': return 'Обновлено на этой неделе';
+      case 'old': return 'Устарело (более недели назад)';
+      default: return 'Статус неизвестен';
     }
   };
 
@@ -365,18 +381,14 @@ const SuppliersPage: React.FC = () => {
                     <Typography variant="subtitle2" gutterBottom>
                       Синхронизация:
                     </Typography>
-                    <Chip
-                      icon={getSyncStatusIcon(supplier.statistics.sync_status)}
-                      label={
-                        supplier.statistics.sync_status === 'never' ? 'Не синхронизировано' :
-                        supplier.statistics.sync_status === 'success' ? 'Успешно' :
-                        supplier.statistics.sync_status === 'failed' ? 'Ошибка' :
-                        'В процессе'
-                      }
-                      size="small"
-                      color={getSyncStatusColor(supplier.statistics.sync_status)}
-                      variant="outlined"
-                    />
+                    <Tooltip title={getSyncStatusTooltip(supplier.statistics.sync_status)} placement="top">
+                      <Chip
+                        label={getSyncStatusText(supplier.statistics.sync_status)}
+                        size="small"
+                        color={getSyncStatusColor(supplier.statistics.sync_status)}
+                        variant="outlined"
+                      />
+                    </Tooltip>
                     {supplier.statistics.last_sync_ago && (
                       <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
                         {supplier.statistics.last_sync_ago}

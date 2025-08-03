@@ -23,7 +23,14 @@ import {
   LinearProgress,
   Tooltip,
   IconButton,
+  Dialog,
+  DialogContent,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material/Select';
 import {
   ArrowBack as ArrowBackIcon,
   Edit as EditIcon,
@@ -36,12 +43,14 @@ import {
   Error as ErrorIcon,
   Schedule as ScheduleIcon,
   Store as StoreIcon,
+  Close as CloseIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   useGetSupplierByIdQuery,
   useGetSupplierProductsQuery,
+  useRegenerateSupplierApiKeyMutation,
   // useGetSupplierPriceVersionsQuery, // Временно отключено
   type SupplierProduct,
   type SupplierPriceVersion,
@@ -49,6 +58,7 @@ import {
 import { getTablePageStyles } from '../../../styles/tablePageStyles';
 import { useTheme } from '@mui/material/styles';
 import AdminPageWrapper from '../../../components/admin/AdminPageWrapper';
+import { Pagination } from '../../../components/ui/Pagination/Pagination';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -83,6 +93,11 @@ const SupplierDetailsPage: React.FC = () => {
   const [versionsPage, setVersionsPage] = useState(1);
   const [productsSearch, setProductsSearch] = useState('');
   const [inStockOnly, setInStockOnly] = useState(false);
+  const [updatedAfter, setUpdatedAfter] = useState('');
+  const [updatedBefore, setUpdatedBefore] = useState('');
+  const [sortBy, setSortBy] = useState('default');
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<{ url: string; alt: string } | null>(null);
 
   const supplierId = parseInt(id || '0');
 
@@ -106,24 +121,14 @@ const SupplierDetailsPage: React.FC = () => {
     per_page: 20,
     in_stock_only: inStockOnly,
     search: productsSearch || undefined,
+    updated_after: updatedAfter || undefined,
+    updated_before: updatedBefore || undefined,
+    sort_by: sortBy !== 'default' ? sortBy : undefined,
   }, {
-    skip: !supplierId || currentTab !== 1,
+    skip: !supplierId || currentTab !== 0,
   });
 
-  // Временно отключено - endpoint не реализован
-  // const { 
-  //   data: versionsResponse, 
-  //   isLoading: isLoadingVersions,
-  //   refetch: refetchVersions
-  // } = useGetSupplierPriceVersionsQuery({
-  //   id: supplierId,
-  //   page: versionsPage,
-  //   per_page: 10,
-  // }, {
-  //   skip: !supplierId || currentTab !== 2,
-  // });
-
-  // Заглушки для отключенного функционала
+  // Временная заглушка для версий прайсов
   const versionsResponse = { data: [], meta: { current_page: 1, total_pages: 1, total_count: 0, per_page: 10 } };
   const isLoadingVersions = false;
   const refetchVersions = () => {};
@@ -157,6 +162,82 @@ const SupplierDetailsPage: React.FC = () => {
       case 'failed': return 'error';
       case 'processing': return 'warning';
       default: return 'default';
+    }
+  };
+
+  const getSyncStatusText = (status: string) => {
+    switch (status) {
+      case 'never': return 'Не синхронизировано';
+      case 'recent': return 'Недавно (< 1 часа)';
+      case 'today': return 'Сегодня';
+      case 'week': return 'На этой неделе';
+      case 'old': return 'Давно (> 1 недели)';
+      default: return 'Неизвестно';
+    }
+  };
+
+  const getSyncStatusColor = (status: string) => {
+    switch (status) {
+      case 'never': return 'default';
+      case 'recent': return 'success';
+      case 'today': return 'success';
+      case 'week': return 'warning';
+      case 'old': return 'error';
+      default: return 'default';
+    }
+  };
+
+  const getSyncStatusTooltip = (status: string) => {
+    switch (status) {
+      case 'never': return 'Прайс-лист еще не загружался';
+      case 'recent': return 'Данные обновлены в течение последнего часа';
+      case 'today': return 'Данные обновлены сегодня';
+      case 'week': return 'Данные обновлены на этой неделе';
+      case 'old': return 'Данные устарели (обновлены более недели назад)';
+      default: return 'Статус синхронизации неизвестен';
+    }
+  };
+
+  const handleImageClick = (imageUrl: string, alt: string) => {
+    setSelectedImage({ url: imageUrl, alt });
+    setImageModalOpen(true);
+  };
+
+  const handleCloseImageModal = () => {
+    setImageModalOpen(false);
+    setSelectedImage(null);
+  };
+
+  // Функции для работы с фильтрами
+  const handleSortChange = (event: SelectChangeEvent) => {
+    setSortBy(event.target.value);
+    setProductsPage(1); // Сбрасываем на первую страницу
+  };
+
+  const handleClearFilters = () => {
+    setProductsSearch('');
+    setInStockOnly(false);
+    setUpdatedAfter('');
+    setUpdatedBefore('');
+    setSortBy('default');
+    setProductsPage(1);
+  };
+
+  const hasActiveFilters = productsSearch || inStockOnly || updatedAfter || updatedBefore || sortBy !== 'default';
+
+  // API мутации
+  const [regenerateApiKey, { isLoading: isRegeneratingApiKey }] = useRegenerateSupplierApiKeyMutation();
+
+  // Обработчик регенерации API ключа
+  const handleRegenerateApiKey = async () => {
+    if (window.confirm('Вы уверены, что хотите регенерировать API ключ? Старый ключ станет недействительным.')) {
+      try {
+        await regenerateApiKey(supplierId).unwrap();
+        // Обновляем данные поставщика для получения нового ключа
+        refetchSupplier();
+      } catch (error) {
+        console.error('Ошибка регенерации API ключа:', error);
+      }
     }
   };
 
@@ -294,18 +375,14 @@ const SupplierDetailsPage: React.FC = () => {
                   Синхронизация
                 </Typography>
                 <Box display="flex" alignItems="center" gap={1} mb={1}>
-                  <Chip
-                    icon={getVersionStatusIcon(supplier.statistics.sync_status)}
-                    label={
-                      supplier.statistics.sync_status === 'never' ? 'Не синхронизировано' :
-                      supplier.statistics.sync_status === 'success' ? 'Успешно' :
-                      supplier.statistics.sync_status === 'failed' ? 'Ошибка' :
-                      'В процессе'
-                    }
-                    size="small"
-                    color={getVersionStatusColor(supplier.statistics.sync_status)}
-                    variant="outlined"
-                  />
+                  <Tooltip title={getSyncStatusTooltip(supplier.statistics.sync_status)} placement="top">
+                    <Chip
+                      label={getSyncStatusText(supplier.statistics.sync_status)}
+                      size="small"
+                      color={getSyncStatusColor(supplier.statistics.sync_status)}
+                      variant="outlined"
+                    />
+                  </Tooltip>
                 </Box>
                 {supplier.statistics.last_sync_ago && (
                   <Typography variant="body2" color="text.secondary">
@@ -325,13 +402,296 @@ const SupplierDetailsPage: React.FC = () => {
         {/* Вкладки */}
         <Paper sx={{ width: '100%' }}>
           <Tabs value={currentTab} onChange={handleTabChange} aria-label="supplier tabs">
-            <Tab label="API ключ" />
             <Tab label={`Товары (${supplier.statistics.products_count})`} />
+            <Tab label="API ключ" />
             <Tab label="История прайсов" />
           </Tabs>
 
-          {/* Вкладка API ключа */}
+          {/* Вкладка товаров */}
           <TabPanel value={currentTab} index={0}>
+            <Box>
+              {/* Фильтры товаров */}
+              <Box sx={{ mb: 2 }}>
+                {/* Первая строка фильтров */}
+                <Box display="flex" gap={2} mb={2} flexWrap="wrap" alignItems="center">
+                  <TextField
+                    placeholder="Поиск по названию, бренду, модели, ID..."
+                    value={productsSearch}
+                    onChange={(e) => setProductsSearch(e.target.value)}
+                    size="small"
+                    sx={{ minWidth: 300, flexGrow: 1 }}
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={inStockOnly}
+                        onChange={(e) => setInStockOnly(e.target.checked)}
+                      />
+                    }
+                    label="Только в наличии"
+                  />
+                  <FormControl size="small" sx={{ minWidth: 160 }}>
+                    <InputLabel>Сортировка</InputLabel>
+                    <Select
+                      value={sortBy}
+                      label="Сортировка"
+                      onChange={handleSortChange}
+                    >
+                      <MenuItem value="default">По умолчанию</MenuItem>
+                      <MenuItem value="updated_at">По дате обновления</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <IconButton onClick={() => refetchProducts()} disabled={isLoadingProducts}>
+                    <RefreshIcon />
+                  </IconButton>
+                </Box>
+
+                {/* Вторая строка фильтров - фильтры по дате */}
+                <Box display="flex" gap={2} mb={1} flexWrap="wrap" alignItems="center">
+                  <TextField
+                    label="Обновлено после"
+                    type="date"
+                    value={updatedAfter}
+                    onChange={(e) => setUpdatedAfter(e.target.value)}
+                    size="small"
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ minWidth: 150 }}
+                  />
+                  <TextField
+                    label="Обновлено до"
+                    type="date"
+                    value={updatedBefore}
+                    onChange={(e) => setUpdatedBefore(e.target.value)}
+                    size="small"
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ minWidth: 150 }}
+                  />
+                  {hasActiveFilters && (
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={handleClearFilters}
+                      sx={{ minWidth: 'auto', px: 2 }}
+                    >
+                      Сбросить фильтры
+                    </Button>
+                  )}
+                </Box>
+
+                {/* Индикатор активных фильтров */}
+                {hasActiveFilters && (
+                  <Alert severity="info" sx={{ py: 0.5 }}>
+                    <Typography variant="caption">
+                      Применены фильтры: {[
+                        productsSearch && 'поиск',
+                        inStockOnly && 'только в наличии',
+                        updatedAfter && 'обновлено после',
+                        updatedBefore && 'обновлено до',
+                        sortBy !== 'default' && 'сортировка'
+                      ].filter(Boolean).join(', ')}
+                    </Typography>
+                  </Alert>
+                )}
+              </Box>
+
+              {/* Загрузка товаров */}
+              {isLoadingProducts && <LinearProgress sx={{ mb: 2 }} />}
+
+              {/* Таблица товаров */}
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Фото</TableCell>
+                      <TableCell>Товар</TableCell>
+                      <TableCell>Размер</TableCell>
+                      <TableCell>Индексы</TableCell>
+                      <TableCell>Сезон</TableCell>
+                      <TableCell>Цена</TableCell>
+                      <TableCell>Страна</TableCell>
+                      <TableCell>Год</TableCell>
+                      <TableCell>Наличие</TableCell>
+                      <TableCell>Обновлен</TableCell>
+                      <TableCell>URL</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {products.map((product: SupplierProduct) => (
+                      <TableRow key={product.id}>
+                        {/* Фото */}
+                        <TableCell>
+                          <Box sx={{ width: 60, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {product.image_url ? (
+                              <Box
+                                component="img"
+                                src={product.image_url}
+                                alt={`${product.brand} ${product.model}`}
+                                onClick={() => handleImageClick(product.image_url!, `${product.brand} ${product.model}`)}
+                                sx={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover',
+                                  borderRadius: '4px',
+                                  border: '1px solid #e0e0e0',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease',
+                                  '&:hover': {
+                                    opacity: 0.8,
+                                    transform: 'scale(1.05)',
+                                    border: '1px solid #1976d2'
+                                  }
+                                }}
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  e.currentTarget.parentElement!.innerHTML = '<span style="color: #999; font-size: 12px;">Нет фото</span>';
+                                }}
+                              />
+                            ) : (
+                              <Typography variant="caption" color="text.secondary" textAlign="center">
+                                Нет фото
+                              </Typography>
+                            )}
+                          </Box>
+                        </TableCell>
+                        
+                        {/* Товар */}
+                        <TableCell>
+                          <Box>
+                            <Tooltip title={product.description || product.name || 'Описание отсутствует'} placement="top">
+                              <Typography variant="body2" fontWeight="bold">
+                                {product.brand} {product.model}
+                              </Typography>
+                            </Tooltip>
+                            <Typography variant="caption" color="text.secondary" display="block">
+                              ID: {product.external_id}
+                            </Typography>
+                            {product.description && (
+                              <Typography variant="caption" color="text.secondary" 
+                                sx={{ 
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical',
+                                  overflow: 'hidden',
+                                  maxWidth: '200px'
+                                }}
+                              >
+                                {product.description}
+                              </Typography>
+                            )}
+                          </Box>
+                        </TableCell>
+                        
+                        {/* Размер */}
+                        <TableCell>
+                          <Typography variant="body2" fontWeight="bold">
+                            {product.size || `${product.width}/${product.height}R${product.diameter}`}
+                          </Typography>
+                        </TableCell>
+                        
+                        {/* Индексы */}
+                        <TableCell>
+                          {(product.load_index || product.speed_index) ? (
+                            <Chip
+                              label={`${product.load_index || '—'}${product.speed_index || '—'}`}
+                              size="small"
+                              variant="filled"
+                              color="primary"
+                            />
+                          ) : (
+                            <Typography variant="caption" color="text.secondary">—</Typography>
+                          )}
+                        </TableCell>
+                        
+                        {/* Сезон */}
+                        <TableCell>
+                          <Chip
+                            label={
+                              product.season === 'winter' ? 'Зимние' :
+                              product.season === 'summer' ? 'Летние' :
+                              'Всесезонные'
+                            }
+                            size="small"
+                            variant="outlined"
+                          />
+                        </TableCell>
+                        
+                        {/* Цена */}
+                        <TableCell>
+                          {product.price_uah ? `${parseFloat(product.price_uah).toLocaleString()} грн` : '—'}
+                        </TableCell>
+                        
+                        {/* Страна */}
+                        <TableCell>
+                          <Typography variant="body2">
+                            {product.country || '—'}
+                          </Typography>
+                        </TableCell>
+                        
+                        {/* Год */}
+                        <TableCell>
+                          <Typography variant="body2">
+                            {product.year_week || '—'}
+                          </Typography>
+                        </TableCell>
+                        
+                        {/* Наличие */}
+                        <TableCell>
+                          <Chip
+                            label={product.in_stock ? 'В наличии' : 'Нет в наличии'}
+                            size="small"
+                            color={product.in_stock ? 'success' : 'default'}
+                            variant="outlined"
+                          />
+                        </TableCell>
+                        
+                        {/* Обновлен */}
+                        <TableCell>
+                          <Typography variant="caption">
+                            {formatDateTime(product.updated_at)}
+                          </Typography>
+                        </TableCell>
+                        
+                        {/* URL */}
+                        <TableCell>
+                          {product.product_url ? (
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              href={product.product_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              sx={{ minWidth: 'auto', px: 1 }}
+                            >
+                              Перейти
+                            </Button>
+                          ) : (
+                            <Typography variant="caption" color="text.secondary">—</Typography>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
+              {/* Пагинация товаров */}
+              {products.length > 0 && productsMeta && productsMeta.total_pages > 1 && !isLoadingProducts && (
+                <Box sx={tablePageStyles.paginationContainer}>
+                  <Pagination
+                    count={productsMeta.total_pages}
+                    page={productsPage}
+                    onChange={(newPage) => setProductsPage(newPage)}
+                    disabled={isLoadingProducts}
+                    showFirstButton
+                    showLastButton
+                  />
+                </Box>
+              )}
+            </Box>
+          </TabPanel>
+
+          {/* Вкладка API ключа */}
+          <TabPanel value={currentTab} index={1}>
             <Box>
               <Typography variant="h6" gutterBottom>
                 API ключ для загрузки прайсов
@@ -347,7 +707,7 @@ const SupplierDetailsPage: React.FC = () => {
                   readOnly: true,
                   endAdornment: (
                     <Tooltip title="Регенерировать ключ">
-                      <IconButton>
+                      <IconButton onClick={handleRegenerateApiKey} disabled={isRegeneratingApiKey}>
                         <KeyIcon />
                       </IconButton>
                     </Tooltip>
@@ -358,123 +718,6 @@ const SupplierDetailsPage: React.FC = () => {
               <Typography variant="body2" color="text.secondary">
                 Endpoint для загрузки: POST /api/v1/suppliers/upload_price
               </Typography>
-            </Box>
-          </TabPanel>
-
-          {/* Вкладка товаров */}
-          <TabPanel value={currentTab} index={1}>
-            <Box>
-              {/* Фильтры товаров */}
-              <Box display="flex" gap={2} mb={2}>
-                <TextField
-                  placeholder="Поиск товаров..."
-                  value={productsSearch}
-                  onChange={(e) => setProductsSearch(e.target.value)}
-                  size="small"
-                  sx={{ minWidth: 300 }}
-                />
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={inStockOnly}
-                      onChange={(e) => setInStockOnly(e.target.checked)}
-                    />
-                  }
-                  label="Только в наличии"
-                />
-                <IconButton onClick={() => refetchProducts()} disabled={isLoadingProducts}>
-                  <RefreshIcon />
-                </IconButton>
-              </Box>
-
-              {/* Загрузка товаров */}
-              {isLoadingProducts && <LinearProgress sx={{ mb: 2 }} />}
-
-              {/* Таблица товаров */}
-              <TableContainer component={Paper}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Товар</TableCell>
-                      <TableCell>Размер</TableCell>
-                      <TableCell>Сезон</TableCell>
-                      <TableCell>Цена</TableCell>
-                      <TableCell>Наличие</TableCell>
-                      <TableCell>Обновлен</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {products.map((product: SupplierProduct) => (
-                      <TableRow key={product.id}>
-                        <TableCell>
-                          <Box>
-                            <Typography variant="body2" fontWeight="bold">
-                              {product.brand} {product.model}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              ID: {product.external_id}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell>
-                          {product.width}/{product.height}R{product.diameter}
-                          {product.load_index && product.speed_index && (
-                            <> {product.load_index}{product.speed_index}</>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={
-                              product.season === 'winter' ? 'Зимние' :
-                              product.season === 'summer' ? 'Летние' :
-                              'Всесезонные'
-                            }
-                            size="small"
-                            variant="outlined"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {product.price_uah ? `${parseFloat(product.price_uah).toLocaleString()} грн` : '—'}
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={product.in_stock ? 'В наличии' : 'Нет в наличии'}
-                            size="small"
-                            color={product.in_stock ? 'success' : 'default'}
-                            variant="outlined"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="caption">
-                            {formatDateTime(product.updated_at)}
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-
-              {/* Пагинация товаров */}
-              {productsMeta && productsMeta.total_pages > 1 && (
-                <Box sx={tablePageStyles.paginationContainer}>
-                  <Button
-                    disabled={productsPage <= 1}
-                    onClick={() => setProductsPage(productsPage - 1)}
-                  >
-                    Назад
-                  </Button>
-                  <Typography variant="body2">
-                    Страница {productsPage} из {productsMeta.total_pages}
-                  </Typography>
-                  <Button
-                    disabled={productsPage >= productsMeta.total_pages}
-                    onClick={() => setProductsPage(productsPage + 1)}
-                  >
-                    Далее
-                  </Button>
-                </Box>
-              )}
             </Box>
           </TabPanel>
 
@@ -507,7 +750,19 @@ const SupplierDetailsPage: React.FC = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {versions.map((version: SupplierPriceVersion) => (
+                    {versions.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            История загрузок прайсов пуста
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                            Загрузите первый прайс-лист через вкладку "API ключ" или страницу загрузки
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      versions.map((version: SupplierPriceVersion) => (
                       <TableRow key={version.id}>
                         <TableCell>
                           <Typography variant="body2" fontWeight="bold">
@@ -563,7 +818,7 @@ const SupplierDetailsPage: React.FC = () => {
                           </Tooltip>
                         </TableCell>
                       </TableRow>
-                    ))}
+                    )))}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -592,6 +847,66 @@ const SupplierDetailsPage: React.FC = () => {
           </TabPanel>
         </Paper>
       </Box>
+
+      {/* Модальное окно для просмотра изображения */}
+      <Dialog
+        open={imageModalOpen}
+        onClose={handleCloseImageModal}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: 'transparent',
+            boxShadow: 'none',
+            overflow: 'visible'
+          }
+        }}
+      >
+        <DialogContent sx={{ p: 0, position: 'relative', textAlign: 'center' }}>
+          {selectedImage && (
+            <>
+              <Box
+                component="img"
+                src={selectedImage.url}
+                alt={selectedImage.alt}
+                sx={{
+                  maxWidth: '100%',
+                  maxHeight: '80vh',
+                  objectFit: 'contain',
+                  borderRadius: '8px',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+                }}
+              />
+              <IconButton
+                onClick={handleCloseImageModal}
+                sx={{
+                  position: 'absolute',
+                  top: -8,
+                  right: -8,
+                  bgcolor: 'rgba(0,0,0,0.7)',
+                  color: 'white',
+                  '&:hover': {
+                    bgcolor: 'rgba(0,0,0,0.9)'
+                  }
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  display: 'block', 
+                  mt: 1, 
+                  color: 'white',
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.7)'
+                }}
+              >
+                {selectedImage.alt}
+              </Typography>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </AdminPageWrapper>
   );
 };
