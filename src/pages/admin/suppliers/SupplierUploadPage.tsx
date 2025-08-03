@@ -98,7 +98,19 @@ const SupplierUploadPage: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Ошибка загрузки прайса:', error);
-      setUploadError(error?.data?.error || 'Произошла ошибка при загрузке прайса');
+      
+      // Обработка ошибки слишком большого файла
+      if (error?.status === 413 || error?.data?.file_size_mb) {
+        const fileSize = error?.data?.file_size_mb || 'неизвестен';
+        const maxSize = error?.data?.max_size_mb || 25;
+        const suggestion = error?.data?.suggestion || '';
+        
+        setUploadError(
+          `Файл слишком большой (${fileSize}MB). Максимальный размер: ${maxSize}MB. ${suggestion}`
+        );
+      } else {
+        setUploadError(error?.data?.error || 'Произошла ошибка при загрузке прайса');
+      }
     }
   };
 
@@ -228,14 +240,14 @@ const SupplierUploadPage: React.FC = () => {
                         </Button>
                       </label>
                       <Typography variant="body2" color="text.secondary">
-                        Поддерживаются файлы .xml размером до 50MB
+                        Поддерживаются файлы .xml размером до 25MB
                       </Typography>
                     </Paper>
 
                     {uploadedFile && (
                       <Alert severity="info" sx={{ mb: 2 }}>
                         <Typography variant="body2">
-                          Выбран файл: <strong>{uploadedFile.name}</strong>
+                          Выбран файл: <strong>{uploadedFile.name}</strong> ({(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           Размер: {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
