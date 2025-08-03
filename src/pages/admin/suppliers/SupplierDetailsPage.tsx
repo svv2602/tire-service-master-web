@@ -51,7 +51,7 @@ import {
   useGetSupplierByIdQuery,
   useGetSupplierProductsQuery,
   useRegenerateSupplierApiKeyMutation,
-  // useGetSupplierPriceVersionsQuery, // Временно отключено
+  useGetSupplierPriceVersionsQuery,
   type SupplierProduct,
   type SupplierPriceVersion,
 } from '../../../api/suppliers.api';
@@ -128,10 +128,17 @@ const SupplierDetailsPage: React.FC = () => {
     skip: !supplierId || currentTab !== 0,
   });
 
-  // Временная заглушка для версий прайсов
-  const versionsResponse = { data: [], meta: { current_page: 1, total_pages: 1, total_count: 0, per_page: 10 } };
-  const isLoadingVersions = false;
-  const refetchVersions = () => {};
+  const { 
+    data: versionsResponse, 
+    isLoading: isLoadingVersions,
+    refetch: refetchVersions
+  } = useGetSupplierPriceVersionsQuery({
+    id: supplierId,
+    page: versionsPage,
+    per_page: 10,
+  }, {
+    skip: !supplierId || currentTab !== 2,
+  });
 
   const supplier = supplierResponse?.supplier;
   const products = productsResponse?.data || [];

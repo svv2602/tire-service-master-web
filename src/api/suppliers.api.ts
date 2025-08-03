@@ -229,23 +229,28 @@ export const suppliersApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // Получение версий прайсов поставщика (временно отключено - endpoint не реализован)
-    // getSupplierPriceVersions: builder.query<PaginatedResponse<SupplierPriceVersion>, {
-    //   id: number;
-    //   page?: number;
-    //   per_page?: number;
-    // }>({
-    //   query: ({ id, ...params }) => ({
-    //     url: `suppliers/${id}/price_versions`,
-    //     params: {
-    //       page: params.page || 1,
-    //       per_page: params.per_page || 10,
-    //     },
-    //   }),
-    //   providesTags: (result, error, { id }) => [
-    //     { type: 'Supplier', id },
-    //   ],
-    // }),
+    // Получение версий прайсов поставщика
+    getSupplierPriceVersions: builder.query<PaginatedResponse<SupplierPriceVersion>, {
+      id: number;
+      page?: number;
+      per_page?: number;
+    }>({
+      query: ({ id, ...params }) => ({
+        url: `suppliers/${id}/price_versions`,
+        params: {
+          page: params.page || 1,
+          per_page: params.per_page || 10,
+        },
+      }),
+      transformResponse: (response: any): PaginatedResponse<SupplierPriceVersion> => ({
+        data: response.data || [],
+        meta: response.meta || { current_page: 1, total_pages: 1, total_count: 0, per_page: 10 },
+      }),
+      providesTags: (result, error, { id }) => [
+        { type: 'Supplier', id },
+        { type: 'SupplierPriceVersions', id },
+      ],
+    }),
 
     // Загрузка прайса поставщика администратором
     uploadSupplierPrice: builder.mutation<UploadPriceResponse, {
@@ -305,7 +310,7 @@ export const {
   useDeleteSupplierMutation,
   useGetSupplierProductsQuery,
   useGetSupplierStatisticsQuery,
-  // useGetSupplierPriceVersionsQuery, // Временно отключено
+  useGetSupplierPriceVersionsQuery,
   useUploadSupplierPriceMutation,
   useToggleSupplierActiveMutation,
   useRegenerateSupplierApiKeyMutation,
