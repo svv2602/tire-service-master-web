@@ -52,6 +52,13 @@ const TireOffersPage: React.FC = () => {
   const [inStockOnly, setInStockOnly] = useState(true);
   const [sortBy, setSortBy] = useState('price_asc');
   
+  // Дополнительные фильтры
+  const [widthFilter, setWidthFilter] = useState(searchParams.get('width') || '');
+  const [heightFilter, setHeightFilter] = useState(searchParams.get('height') || '');
+  const [diameterFilter, setDiameterFilter] = useState(searchParams.get('diameter') || '');
+  const [seasonFilter, setSeasonFilter] = useState(searchParams.get('seasonality') || '');
+  const [brandFilter, setBrandFilter] = useState(searchParams.get('brand') || searchParams.get('manufacturer') || '');
+  
   // Состояние модального окна для изображений
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<{ url: string; alt: string } | null>(null);
@@ -60,8 +67,33 @@ const TireOffersPage: React.FC = () => {
   const tireSize = searchParams.get('size') || '';
   const brand = searchParams.get('brand') || '';
   const seasonality = searchParams.get('seasonality') || '';
+  const manufacturer = searchParams.get('manufacturer') || '';
+
+  // Автоматически извлекаем размеры из параметра size при загрузке
+  useEffect(() => {
+    if (tireSize && !widthFilter && !heightFilter && !diameterFilter) {
+      // Парсим размер вида "225/60R16"
+      const sizeMatch = tireSize.match(/^(\d+)\/(\d+)R(\d+)$/);
+      if (sizeMatch) {
+        const [, width, height, diameter] = sizeMatch;
+        setWidthFilter(width);
+        setHeightFilter(height);
+        setDiameterFilter(diameter);
+      }
+    }
+  }, [tireSize, widthFilter, heightFilter, diameterFilter]);
+
+  // Синхронизируем фильтры с URL параметрами
+  useEffect(() => {
+    if (seasonality && !seasonFilter) {
+      setSeasonFilter(seasonality);
+    }
+    if ((brand || manufacturer) && !brandFilter) {
+      setBrandFilter(brand || manufacturer);
+    }
+  }, [seasonality, brand, manufacturer, seasonFilter, brandFilter]);
   
-  // API запрос
+  // API запрос с расширенными фильтрами
   const {
     data: offersResponse,
     isLoading,
@@ -70,9 +102,15 @@ const TireOffersPage: React.FC = () => {
   } = useGetAllSupplierProductsQuery({
     page,
     per_page: 20,
-    search: `${tireSize} ${brand} ${seasonality} ${search}`.trim(),
+    search: search.trim(),
     in_stock_only: inStockOnly,
-    sort_by: sortBy
+    sort_by: sortBy,
+    // Добавляем дополнительные параметры фильтрации
+    width: widthFilter ? parseInt(widthFilter) : undefined,
+    height: heightFilter ? parseInt(heightFilter) : undefined,
+    diameter: diameterFilter || undefined,
+    season: seasonFilter || undefined,
+    brand: brandFilter || undefined
   });
 
   // Обновление поиска при изменении параметров URL
@@ -157,7 +195,8 @@ const TireOffersPage: React.FC = () => {
   // Рендер фильтров
   const renderFilters = () => (
     <Paper sx={{ p: 2, mb: 3 }}>
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
+      {/* Основная строка фильтров */}
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center" sx={{ mb: 2 }}>
         <TextField
           placeholder="Дополнительный поиск по названию, бренду..."
           value={search}
@@ -198,6 +237,77 @@ const TireOffersPage: React.FC = () => {
             <RefreshIcon />
           </IconButton>
         </Tooltip>
+      </Stack>
+
+      {/* Дополнительные фильтры */}
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+        <TextField
+          label="Ширина"
+          placeholder="225"
+          value={widthFilter}
+          onChange={(e) => setWidthFilter(e.target.value)}
+          size="small"
+          sx={{ width: 100 }}
+          type="number"
+        />
+        
+        <TextField
+          label="Высота"
+          placeholder="60"
+          value={heightFilter}
+          onChange={(e) => setHeightFilter(e.target.value)}
+          size="small"
+          sx={{ width: 100 }}
+          type="number"
+        />
+        
+        <TextField
+          label="Диаметр"
+          placeholder="16"
+          value={diameterFilter}
+          onChange={(e) => setDiameterFilter(e.target.value)}
+          size="small"
+          sx={{ width: 100 }}
+        />
+        
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel>Сезонность</InputLabel>
+          <Select
+            value={seasonFilter}
+            label="Сезонность"
+            onChange={(e) => setSeasonFilter(e.target.value)}
+          >
+            <MenuItem value="">Все</MenuItem>
+            <MenuItem value="зимние">Зимние</MenuItem>
+            <MenuItem value="летние">Летние</MenuItem>
+            <MenuItem value="всесезонные">Всесезонные</MenuItem>
+          </Select>
+        </FormControl>
+        
+        <TextField
+          label="Бренд"
+          placeholder="Michelin, Continental..."
+          value={brandFilter}
+          onChange={(e) => setBrandFilter(e.target.value)}
+          size="small"
+          sx={{ minWidth: 180 }}
+        />
+        
+        <Button
+          variant="outlined"
+          onClick={() => {
+            setWidthFilter('');
+            setHeightFilter('');
+            setDiameterFilter('');
+            setSeasonFilter('');
+            setBrandFilter('');
+            setSearch('');
+            setPage(1);
+          }}
+          size="small"
+        >
+          Сбросить
+        </Button>
       </Stack>
     </Paper>
   );

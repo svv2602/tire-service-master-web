@@ -313,6 +313,11 @@ export const suppliersApi = baseApi.injectEndpoints({
       search?: string;
       in_stock_only?: boolean;
       sort_by?: string;
+      width?: number;
+      height?: number;
+      diameter?: string;
+      season?: string;
+      brand?: string;
     }>({
       query: (params) => ({
         url: 'suppliers/products/all',
@@ -322,6 +327,11 @@ export const suppliersApi = baseApi.injectEndpoints({
           search: params.search,
           in_stock_only: params.in_stock_only,
           sort_by: params.sort_by,
+          width: params.width,
+          height: params.height,
+          diameter: params.diameter,
+          season: params.season,
+          brand: params.brand,
         },
       }),
       transformResponse: (response: any) => ({

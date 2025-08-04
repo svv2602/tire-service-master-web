@@ -99,17 +99,38 @@ export const extractSearchParams = (query: string, parsedData?: any) => {
     params.seasonality = 'всесезонные';
   }
 
-  // Можно добавить определение производителя по популярным брендам
+  // Определение производителя по популярным брендам (русские и английские названия)
   const popularBrands = [
-    'continental', 'michelin', 'bridgestone', 'pirelli', 'goodyear',
-    'nokian', 'hankook', 'kumho', 'toyo', 'yokohama'
+    { en: 'continental', ru: ['континенталь', 'континентал'] },
+    { en: 'michelin', ru: ['мишлен', 'мишелин'] },
+    { en: 'bridgestone', ru: ['бриджстоун', 'бриджстон'] },
+    { en: 'pirelli', ru: ['пирелли', 'пирели'] },
+    { en: 'goodyear', ru: ['гудиер', 'гудьир'] },
+    { en: 'nokian', ru: ['нокиан', 'нокия'] },
+    { en: 'hankook', ru: ['ханкук', 'хэнкук'] },
+    { en: 'kumho', ru: ['кумхо', 'кумхо'] },
+    { en: 'toyo', ru: ['тойо'] },
+    { en: 'yokohama', ru: ['йокохама', 'йокогама'] },
+    { en: 'dunlop', ru: ['данлоп'] },
+    { en: 'cooper', ru: ['купер'] },
+    { en: 'maxxis', ru: ['максис', 'макссис'] },
+    { en: 'falken', ru: ['фалькен', 'фалкен'] }
   ];
   
   for (const brand of popularBrands) {
-    if (queryLower.includes(brand)) {
-      params.manufacturer = brand;
+    // Проверяем английское название
+    if (queryLower.includes(brand.en)) {
+      params.manufacturer = brand.en;
       break;
     }
+    // Проверяем русские варианты
+    for (const ruVariant of brand.ru) {
+      if (queryLower.includes(ruVariant)) {
+        params.manufacturer = brand.en; // Сохраняем английское название для API
+        break;
+      }
+    }
+    if (params.manufacturer) break;
   }
 
   return params;
