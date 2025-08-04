@@ -72,6 +72,13 @@ export interface SupplierProduct {
   country: string | null;
   year_week: string | null;
   updated_at: string;
+  supplier?: {
+    id: number;
+    name: string;
+    firm_id: string;
+    priority: number;
+    is_active: boolean;
+  };
 }
 
 export interface PaginatedResponse<T> {
@@ -298,6 +305,36 @@ export const suppliersApi = baseApi.injectEndpoints({
         { type: 'Supplier', id },
       ],
     }),
+
+    // Получение товаров всех поставщиков (для клиентов)
+    getAllSupplierProducts: builder.query<PaginatedResponse<SupplierProduct>, {
+      page?: number;
+      per_page?: number;
+      search?: string;
+      in_stock_only?: boolean;
+      sort_by?: string;
+    }>({
+      query: (params) => ({
+        url: 'suppliers/products/all',
+        params: {
+          page: params.page || 1,
+          per_page: params.per_page || 20,
+          search: params.search,
+          in_stock_only: params.in_stock_only,
+          sort_by: params.sort_by,
+        },
+      }),
+      transformResponse: (response: any) => ({
+        data: response.products || [],
+        meta: {
+          current_page: response.pagination?.current_page || 1,
+          total_pages: response.pagination?.total_pages || 1,
+          total_count: response.pagination?.total_count || 0,
+          per_page: response.pagination?.per_page || 20,
+        },
+      }),
+      providesTags: ['SupplierProducts'],
+    }),
   }),
 });
 
@@ -314,4 +351,5 @@ export const {
   useUploadSupplierPriceMutation,
   useToggleSupplierActiveMutation,
   useRegenerateSupplierApiKeyMutation,
+  useGetAllSupplierProductsQuery,
 } = suppliersApi;

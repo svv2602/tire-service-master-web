@@ -176,6 +176,7 @@ const TireCalculatorPage = lazy(() => import('./pages/tire-calculator/TireCalcul
 
 // Ленивая загрузка страницы поиска шин
 const TireSearchPage = lazy(() => import('./pages/tire-search/TireSearchPage'));
+const TireOffersPage = lazy(() => import('./pages/client/TireOffersPage'));
 
 // Ленивая загрузка админской страницы управления данными поиска шин
 const TireDataManagementPage = lazy(() => import('./pages/admin/tire-search/TireDataManagementPage'));
@@ -249,6 +250,7 @@ const App: React.FC = () => {
           <Route path="/client/services" element={<ClientServicesPage />} />
           <Route path="/client/search" element={<ClientSearchPage />} />
           <Route path="/client/tire-search" element={<TireSearchPage />} />
+          <Route path="/client/tire-offers" element={<TireOffersPage />} />
           <Route path="/business-application" element={<BusinessApplicationPage />} />
           <Route path="/client/service-point/:id" element={<ClientServicePointDetailPage />} />
                       <Route path="/client/tire-calculator" element={<TireCalculatorPage />} />

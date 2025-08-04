@@ -17,7 +17,9 @@ import {
   LinearProgress,
   Fade,
   Collapse,
-  useTheme
+  useTheme,
+  ToggleButton,
+  ToggleButtonGroup
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -25,19 +27,25 @@ import {
   ViewList as ViewListIcon,
   ViewModule as ViewModuleIcon,
   TrendingUp as TrendingUpIcon,
-  Info as InfoIcon
+  Info as InfoIcon,
+  Category as CategoryIcon,
+  FormatListBulleted as FormatListBulletedIcon
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import TireConfigurationCard from '../TireConfigurationCard/TireConfigurationCard';
+import TireDiameterCard from '../TireDiameterCard';
 import Pagination from '../../ui/Pagination/Pagination';
 import { getThemeColors } from '../../../styles';
+import { groupResultsByDiameter, extractSearchParams, createTireOffersUrl } from '../../../utils/tireSearchUtils';
 import type { 
   TireSearchResultsProps,
   TireSearchResult,
+  TireSize,
   TIRE_SEARCH_CONSTANTS 
 } from '../../../types/tireSearch';
 
-type ViewMode = 'grid' | 'list';
+type ViewMode = 'grid' | 'list' | 'diameter';
 type SortOption = 'relevance' | 'brand' | 'model' | 'year';
 
 const TireSearchResults: React.FC<TireSearchResultsProps> = ({
@@ -56,7 +64,8 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
   const { t } = useTranslation(['tireSearch', 'common']);
   const theme = useTheme();
   const colors = getThemeColors(theme);
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState<ViewMode>('diameter');
   const [sortBy, setSortBy] = useState<SortOption>('relevance');
   const [showSearchInfo, setShowSearchInfo] = useState(false);
 
@@ -80,6 +89,22 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
     });
   }, [results, sortBy]);
 
+  // Группировка результатов по диаметрам
+  const diameterGroups = React.useMemo(() => {
+    return groupResultsByDiameter(sortedResults);
+  }, [sortedResults]);
+
+  // Извлечение параметров поиска из первого результата или контекста
+  const searchParams = React.useMemo(() => {
+    if (results.length === 0) return {};
+    
+    // Попробуем извлечь параметры из первого результата
+    const firstResult = results[0];
+    const query = firstResult.search_tokens || '';
+    
+    return extractSearchParams(query);
+  }, [results]);
+
   // Обработка изменения страницы
   const handlePageChange = (newPage: number) => {
     onPageChange?.(newPage);
@@ -98,6 +123,12 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
   // Обработка переключения избранного
   const handleFavoriteToggle = (resultId: number) => {
     onFavoriteToggle?.(resultId);
+  };
+
+  // Обработка клика по размеру шины - переход к клиентской странице предложений
+  const handleSizeClick = (size: TireSize, searchParams: any) => {
+    const offersUrl = createTireOffersUrl(size, searchParams);
+    navigate(offersUrl);
   };
 
   // Рендер загрузки
@@ -198,7 +229,10 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
           Результаты поиска
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Найдено {total} конфигураций шин
+          {viewMode === 'diameter' 
+            ? `Найдено ${diameterGroups.length} диаметров (${total} конфигураций)`
+            : `Найдено ${total} конфигураций шин`
+          }
         </Typography>
       </Box>
 
@@ -230,24 +264,23 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
         </FormControl>
 
         {/* Переключение вида */}
-        <Box sx={{ display: 'flex', border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-          <Button
-            size="small"
-            variant={viewMode === 'grid' ? 'contained' : 'text'}
-            onClick={() => setViewMode('grid')}
-            sx={{ minWidth: 40, borderRadius: '4px 0 0 4px' }}
-          >
+        <ToggleButtonGroup
+          value={viewMode}
+          exclusive
+          onChange={(e, newMode) => newMode && setViewMode(newMode)}
+          size="small"
+          sx={{ border: '1px solid', borderColor: 'divider' }}
+        >
+          <ToggleButton value="diameter" aria-label="по диаметрам">
+            <CategoryIcon />
+          </ToggleButton>
+          <ToggleButton value="grid" aria-label="сетка">
             <ViewModuleIcon />
-          </Button>
-          <Button
-            size="small"
-            variant={viewMode === 'list' ? 'contained' : 'text'}
-            onClick={() => setViewMode('list')}
-            sx={{ minWidth: 40, borderRadius: '0 4px 4px 0' }}
-          >
+          </ToggleButton>
+          <ToggleButton value="list" aria-label="список">
             <ViewListIcon />
-          </Button>
-        </Box>
+          </ToggleButton>
+        </ToggleButtonGroup>
       </Box>
     </Box>
   );
@@ -281,6 +314,28 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
 
   // Рендер результатов
   const renderResults = () => {
+    // Режим по диаметрам
+    if (viewMode === 'diameter') {
+      return (
+        <Grid container spacing={3}>
+          {diameterGroups.map((group) => (
+            <Grid item xs={12} md={6} lg={4} key={group.diameter}>
+              <Fade in timeout={300}>
+                <div>
+                  <TireDiameterCard
+                    diameterGroup={group}
+                    onSizeClick={handleSizeClick}
+                    searchParams={searchParams}
+                  />
+                </div>
+              </Fade>
+            </Grid>
+          ))}
+        </Grid>
+      );
+    }
+
+    // Обычные режимы (grid/list)
     const gridProps = viewMode === 'grid' 
       ? { xs: 12, sm: 6, lg: 4 }
       : { xs: 12 };

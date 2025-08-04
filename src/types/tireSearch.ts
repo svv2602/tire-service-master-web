@@ -303,3 +303,13 @@ export const TIRE_SEARCH_ERRORS = {
   SERVER_ERROR: 'SERVER_ERROR',
   TIMEOUT: 'TIMEOUT'
 } as const;
+
+// Тип для группировки результатов по диаметрам
+export interface TireDiameterGroup {
+  diameter: number;
+  configurations: TireSearchResult[];
+  totalSizes: number;
+  brands: string[];
+  yearRange: { from: number; to: number };
+  sizes: TireSize[];
+}
