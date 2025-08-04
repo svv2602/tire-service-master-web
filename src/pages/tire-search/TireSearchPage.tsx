@@ -290,10 +290,24 @@ const TireSearchPage: React.FC = () => {
     
     // Если suggestion содержит бренд, извлекаем только модель
     let modelQuery = suggestion;
-    if (brand && suggestion.toLowerCase().includes(brand.toLowerCase())) {
+    
+    // Проверяем разные варианты брендов в suggestion
+    const knownBrands = ['Mazda', 'BMW', 'Mercedes', 'Audi', 'Toyota', 'Honda', 'Volkswagen', 'Ford'];
+    let detectedBrand = brand;
+    
+    // Если бренд не найден в контексте, пытаемся определить из suggestion
+    if (!detectedBrand) {
+      for (const knownBrand of knownBrands) {
+        if (suggestion.toLowerCase().includes(knownBrand.toLowerCase())) {
+          detectedBrand = knownBrand;
+          break;
+        }
+      }
+    }
+    
+    if (detectedBrand && suggestion.toLowerCase().includes(detectedBrand.toLowerCase())) {
       // Убираем бренд из строки, оставляем только модель
-      // Используем более точное регулярное выражение
-      const brandRegex = new RegExp(`^${brand}\\s+`, 'gi');
+      const brandRegex = new RegExp(`^${detectedBrand}\\s+`, 'gi');
       modelQuery = suggestion.replace(brandRegex, '').trim();
       
       // Если после удаления бренда ничего не осталось, используем весь suggestion
@@ -306,9 +320,10 @@ const TireSearchPage: React.FC = () => {
     console.log('Suggestion click:', { 
       original: suggestion, 
       extracted: modelQuery, 
-      brand, 
+      brand: detectedBrand, 
       context 
     });
+    console.log('Calling handleSearch with filters:', { context });
     handleSearch(modelQuery, { context });
   };
 
@@ -426,23 +441,24 @@ const TireSearchPage: React.FC = () => {
           />
         )}
 
-        {/* Результаты поиска */}
-        <Fade in timeout={500}>
-          <Box id="search-results-section">
-            <TireSearchResults
-              results={searchState.results}
-              loading={isLoading}
-              error={hasError ? searchState.error : null}
-              total={searchState.total}
-              page={searchState.page}
-              onPageChange={handlePageChange}
-              onResultClick={handleResultClick}
-              onFavoriteToggle={handleFavoriteToggle}
-              onSearchExample={handleSearch}
-              favorites={favorites}
-            />
+        {/* Результаты поиска - скрываем в режиме диалога */}
+        {!isConversationMode && (
+          <Fade in timeout={500}>
+            <Box id="search-results-section">
+              <TireSearchResults
+                results={searchState.results}
+                loading={isLoading}
+                error={hasError ? searchState.error : null}
+                total={searchState.total}
+                page={searchState.page}
+                onPageChange={handlePageChange}
+                onResultClick={handleResultClick}
+                onFavoriteToggle={handleFavoriteToggle}
+                onSearchExample={handleSearch}
+                favorites={favorites}
+              />
             
-            {/* Результаты поиска товаров поставщиков */}
+            {/* Результаты поиска товаров поставщиков - скрываем в режиме диалога */}
             <SupplierProductsResults
               groups={supplierGroups}
               loading={supplierLoading}
@@ -460,6 +476,7 @@ const TireSearchPage: React.FC = () => {
             />
           </Box>
         </Fade>
+        )}
 
         {/* Дополнительная информация */}
         {!isLoading && !hasResults && !hasError && searchState.query && (

@@ -181,6 +181,9 @@ export const useTireSearch = (options: UseTireSearchOptions = {}): UseTireSearch
         locale: i18n.language,
         context: filters.context
       };
+      
+      console.log('useTireSearch - searchQuery:', searchQuery);
+      console.log('useTireSearch - filters.context:', filters.context);
 
       const result = await searchTires(searchQuery);
       const response = result.data;
