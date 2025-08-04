@@ -192,15 +192,26 @@ export const useTireSearch = (options: UseTireSearchOptions = {}): UseTireSearch
         throw new Error('No response data');
       }
 
-      setSearchState(prev => ({
-        ...prev,
-        results: response.results,
-        total: response.total,
-        page: 1,
-        has_more: response.has_more,
-        loading: false,
-        error: null
-      }));
+      // Обновляем результаты только если это НЕ conversational режим
+      // В conversational режиме результаты не должны отображаться в основном списке
+      if (!response.conversation_mode) {
+        setSearchState(prev => ({
+          ...prev,
+          results: response.results,
+          total: response.total,
+          page: 1,
+          has_more: response.has_more,
+          loading: false,
+          error: null
+        }));
+      } else {
+        // В conversational режиме только убираем loading и ошибки
+        setSearchState(prev => ({
+          ...prev,
+          loading: false,
+          error: null
+        }));
+      }
 
       // Сохраняем запрос в историю
       if (saveHistory && query.trim()) {
