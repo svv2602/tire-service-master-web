@@ -23,7 +23,9 @@ import {
   Stack,
   IconButton,
   Tooltip,
-  Avatar
+  Avatar,
+  Dialog,
+  DialogContent
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -31,7 +33,8 @@ import {
   OpenInNew as OpenInNewIcon,
   LocalOffer as LocalOfferIcon,
   Store as StoreIcon,
-  Category as CategoryIcon
+  Category as CategoryIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -48,6 +51,10 @@ const TireOffersPage: React.FC = () => {
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [inStockOnly, setInStockOnly] = useState(true);
   const [sortBy, setSortBy] = useState('price_asc');
+  
+  // Состояние модального окна для изображений
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<{ url: string; alt: string } | null>(null);
   
   // Извлекаем параметры из URL
   const tireSize = searchParams.get('size') || '';
@@ -95,6 +102,17 @@ const TireOffersPage: React.FC = () => {
       // Показываем информацию о поставщике
       alert(`Поставщик: ${product.supplier.name}\nID: ${product.supplier.firm_id}\nПриоритет: ${product.supplier.priority}`);
     }
+  };
+
+  // Обработчики модального окна для изображений
+  const handleImageClick = (imageUrl: string, alt: string) => {
+    setSelectedImage({ url: imageUrl, alt });
+    setImageModalOpen(true);
+  };
+
+  const handleCloseImageModal = () => {
+    setImageModalOpen(false);
+    setSelectedImage(null);
   };
 
   // Рендер заголовка страницы
@@ -202,6 +220,7 @@ const TireOffersPage: React.FC = () => {
         <Table>
           <TableHead>
             <TableRow>
+              <TableCell>Фото</TableCell>
               <TableCell>Поставщик</TableCell>
               <TableCell>Товар</TableCell>
               <TableCell>Размер</TableCell>
@@ -215,6 +234,43 @@ const TireOffersPage: React.FC = () => {
           <TableBody>
             {offersResponse.data.map((product: SupplierProduct) => (
               <TableRow key={product.id} hover>
+                {/* Фото товара */}
+                <TableCell>
+                  <Box sx={{ width: 60, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {product.image_url ? (
+                      <Box
+                        component="img"
+                        src={product.image_url}
+                        alt={`${product.brand} ${product.model}`}
+                        onClick={() => handleImageClick(product.image_url!, `${product.brand} ${product.model}`)}
+                        sx={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          borderRadius: '4px',
+                          border: '1px solid #e0e0e0',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            opacity: 0.8,
+                            transform: 'scale(1.05)',
+                            border: '1px solid #1976d2'
+                          }
+                        }}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.parentElement!.innerHTML = '<span style="color: #999; font-size: 12px;">Нет фото</span>';
+                        }}
+                      />
+                    ) : (
+                      <Typography variant="caption" color="text.secondary" textAlign="center">
+                        Нет фото
+                      </Typography>
+                    )}
+                  </Box>
+                </TableCell>
+                
+                {/* Поставщик */}
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
@@ -373,6 +429,66 @@ const TireOffersPage: React.FC = () => {
       
       {renderOffersTable()}
       {renderPagination()}
+
+      {/* Модальное окно для просмотра изображения */}
+      <Dialog
+        open={imageModalOpen}
+        onClose={handleCloseImageModal}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: 'transparent',
+            boxShadow: 'none',
+            overflow: 'visible'
+          }
+        }}
+      >
+        <DialogContent sx={{ p: 0, position: 'relative', textAlign: 'center' }}>
+          {selectedImage && (
+            <>
+              <Box
+                component="img"
+                src={selectedImage.url}
+                alt={selectedImage.alt}
+                sx={{
+                  maxWidth: '100%',
+                  maxHeight: '80vh',
+                  objectFit: 'contain',
+                  borderRadius: '8px',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+                }}
+              />
+              <IconButton
+                onClick={handleCloseImageModal}
+                sx={{
+                  position: 'absolute',
+                  top: -8,
+                  right: -8,
+                  bgcolor: 'rgba(0,0,0,0.7)',
+                  color: 'white',
+                  '&:hover': {
+                    bgcolor: 'rgba(0,0,0,0.9)'
+                  }
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  display: 'block', 
+                  mt: 1, 
+                  color: 'white',
+                  textShadow: '1px 1px 2px rgba(0,0,0,0.7)'
+                }}
+              >
+                {selectedImage.alt}
+              </Typography>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 };
