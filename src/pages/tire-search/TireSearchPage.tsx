@@ -205,6 +205,8 @@ const TireSearchPage: React.FC = () => {
       console.log('success field:', result?.success);
       console.log('message field:', result?.message);
       console.log('follow_up_questions field:', result?.follow_up_questions);
+      console.log('tire_sizes field:', result?.tire_sizes?.length, 'results');
+      console.log('tire_sizes diameters:', result?.tire_sizes?.map((s: any) => s.diameter).filter((v: any, i: number, a: any[]) => a.indexOf(v) === i));
       
       // Проверяем, включен ли режим разговора
       if (result && 'conversation_mode' in result && result.conversation_mode) {
@@ -323,6 +325,8 @@ const TireSearchPage: React.FC = () => {
       brand: detectedBrand, 
       context 
     });
+    console.log('conversationData:', conversationData);
+    console.log('conversationData?.context:', conversationData?.context);
     console.log('Calling handleSearch with filters:', { context });
     handleSearch(modelQuery, { context });
   };

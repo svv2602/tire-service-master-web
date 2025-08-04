@@ -60,6 +60,7 @@ export interface TireSearchResponse {
   follow_up_questions?: FollowUpQuestion[];
   message?: string;
   success?: boolean;
+  context?: Record<string, any>;
 }
 
 export interface ParsedSearchData {
