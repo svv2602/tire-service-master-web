@@ -54,6 +54,7 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
   error = null,
   total = 0,
   page = 1,
+  query = '',
   onPageChange,
   onResultClick,
   onFavoriteToggle,
@@ -94,16 +95,13 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
     return groupResultsByDiameter(sortedResults);
   }, [sortedResults]);
 
-  // Извлечение параметров поиска из первого результата или контекста
+  // Извлечение параметров поиска из переданного query
   const searchParams = React.useMemo(() => {
-    if (results.length === 0) return {};
+    if (!query) return {};
     
-    // Попробуем извлечь параметры из первого результата
-    const firstResult = results[0];
-    const query = firstResult.search_tokens || '';
-    
+    // Используем переданный исходный поисковый запрос
     return extractSearchParams(query);
-  }, [results]);
+  }, [query]);
 
   // Обработка изменения страницы
   const handlePageChange = (newPage: number) => {

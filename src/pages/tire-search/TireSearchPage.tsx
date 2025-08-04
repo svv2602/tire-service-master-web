@@ -455,6 +455,7 @@ const TireSearchPage: React.FC = () => {
                 error={hasError ? searchState.error : null}
                 total={searchState.total}
                 page={searchState.page}
+                query={searchState.query}
                 onPageChange={handlePageChange}
                 onResultClick={handleResultClick}
                 onFavoriteToggle={handleFavoriteToggle}

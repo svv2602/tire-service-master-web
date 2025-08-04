@@ -188,6 +188,7 @@ export interface TireSearchResultsProps {
   error?: string | null;
   total?: number;
   page?: number;
+  query?: string; // Добавляем исходный поисковый запрос
   onPageChange?: (page: number) => void;
   onResultClick?: (result: TireSearchResult) => void;
   onFavoriteToggle?: (resultId: number) => void;
