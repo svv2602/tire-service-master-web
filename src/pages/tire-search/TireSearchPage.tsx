@@ -284,10 +284,32 @@ const TireSearchPage: React.FC = () => {
 
   // Обработчики для мини-чата
   const handleConversationSuggestion = (suggestion: string) => {
-    setQuery(suggestion);
-    // Передаем контекст из conversationData
+    // Извлекаем модель из suggestion (например, "Mazda 6" -> "6")
     const context = conversationData?.context || {};
-    handleSearch(suggestion, { context });
+    const brand = context.brand || '';
+    
+    // Если suggestion содержит бренд, извлекаем только модель
+    let modelQuery = suggestion;
+    if (brand && suggestion.toLowerCase().includes(brand.toLowerCase())) {
+      // Убираем бренд из строки, оставляем только модель
+      // Используем более точное регулярное выражение
+      const brandRegex = new RegExp(`^${brand}\\s+`, 'gi');
+      modelQuery = suggestion.replace(brandRegex, '').trim();
+      
+      // Если после удаления бренда ничего не осталось, используем весь suggestion
+      if (!modelQuery) {
+        modelQuery = suggestion;
+      }
+    }
+    
+    setQuery(modelQuery);
+    console.log('Suggestion click:', { 
+      original: suggestion, 
+      extracted: modelQuery, 
+      brand, 
+      context 
+    });
+    handleSearch(modelQuery, { context });
   };
 
   const handleConversationAnswer = (field: string, value: string) => {
