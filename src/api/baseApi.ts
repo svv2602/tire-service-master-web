@@ -35,6 +35,10 @@ const baseQuery = fetchBaseQuery({
 });
 
 // Обертка для обработки ошибок авторизации
+// Защита от зацикливания refresh запросов
+let isRefreshing = false;
+let lastRefreshTime = 0;
+
 const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
   // 🔍 ЛОГИРОВАНИЕ ЗАПРОСА
   console.log('🚀 BaseAPI запрос:', {
@@ -59,33 +63,55 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
   if (result.error && result.error.status === 401) {
     console.log('🔄 Получена 401 ошибка, пытаемся обновить токен...');
     
-    // Пытаемся обновить токен
-    const refreshResult = await baseQuery(
-      {
-        url: 'auth/refresh',
-        method: 'POST',
-      },
-      api,
-      extraOptions
-    );
+    // Защита от зацикливания
+    const now = Date.now();
+    if (isRefreshing || (now - lastRefreshTime < 5000)) {
+      console.warn('⚠️ Refresh токена уже выполняется или был недавно, пропускаем');
+      return result;
+    }
+
+    // Проверяем, что это не запрос на refresh (избегаем бесконечный цикл)
+    const requestUrl = typeof args === 'string' ? args : args.url;
+    if (requestUrl === 'auth/refresh') {
+      console.log('❌ Ошибка refresh запроса, выходим из системы');
+      api.dispatch({ type: 'auth/logout' });
+      return result;
+    }
+
+    isRefreshing = true;
+    lastRefreshTime = now;
     
-    if (refreshResult.data) {
-      console.log('✅ Токен успешно обновлен');
+    try {
+      // Пытаемся обновить токен
+      const refreshResult = await baseQuery(
+        {
+          url: 'auth/refresh',
+          method: 'POST',
+        },
+        api,
+        extraOptions
+      );
       
-      // Извлекаем новый токен из ответа
-      const newToken = (refreshResult.data as any)?.access_token || (refreshResult.data as any)?.tokens?.access;
-      
-      if (newToken) {
-        // Обновляем токен в Redux store
-        api.dispatch({ type: 'auth/updateAccessToken', payload: newToken });
-        console.log('🔄 Токен обновлен в Redux store');
+      if (refreshResult.data) {
+        console.log('✅ Токен успешно обновлен');
+        
+        // Извлекаем новый токен из ответа
+        const newToken = (refreshResult.data as any)?.access_token || (refreshResult.data as any)?.tokens?.access;
+        
+        if (newToken) {
+          // Обновляем токен в Redux store
+          api.dispatch({ type: 'auth/updateAccessToken', payload: newToken });
+          console.log('🔄 Токен обновлен в Redux store');
+        }
+        
+        // Повторяем исходный запрос
+        result = await baseQuery(args, api, extraOptions);
+      } else {
+        console.log('❌ Не удалось обновить токен');
+        api.dispatch({ type: 'auth/logout' });
       }
-      
-      // Повторяем исходный запрос
-      result = await baseQuery(args, api, extraOptions);
-    } else {
-      console.log('❌ Не удалось обновить токен');
-      // Можно добавить логику для перенаправления на страницу входа
+    } finally {
+      isRefreshing = false;
     }
   }
   
