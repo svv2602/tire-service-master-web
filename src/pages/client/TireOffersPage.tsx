@@ -83,6 +83,19 @@ const TireOffersPage: React.FC = () => {
     }
   }, [tireSize, widthFilter, heightFilter, diameterFilter]);
 
+  // Преобразование сезонности для API
+  const convertSeasonForAPI = (season: string): string => {
+    const seasonMap: { [key: string]: string } = {
+      'зимние': 'winter',
+      'летние': 'summer', 
+      'всесезонные': 'all_season',
+      'winter': 'winter',
+      'summer': 'summer',
+      'all_season': 'all_season'
+    };
+    return seasonMap[season.toLowerCase()] || season;
+  };
+
   // Синхронизируем фильтры с URL параметрами
   useEffect(() => {
     if (seasonality && !seasonFilter) {
@@ -109,7 +122,7 @@ const TireOffersPage: React.FC = () => {
     width: widthFilter ? parseInt(widthFilter) : undefined,
     height: heightFilter ? parseInt(heightFilter) : undefined,
     diameter: diameterFilter || undefined,
-    season: seasonFilter || undefined,
+    season: seasonFilter ? convertSeasonForAPI(seasonFilter) : undefined,
     brand: brandFilter || undefined
   });
 
