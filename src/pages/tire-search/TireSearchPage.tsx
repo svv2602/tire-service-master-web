@@ -186,7 +186,7 @@ const TireSearchPage: React.FC = () => {
   };
 
   // Обработка поиска
-  const handleSearch = async (query: string) => {
+  const handleSearch = async (query: string, filters?: any) => {
     if (!query.trim()) {
       setNotification({
         open: true,
@@ -197,7 +197,7 @@ const TireSearchPage: React.FC = () => {
     }
 
     try {
-      const result = await search(query.trim());
+      const result = await search(query.trim(), filters);
       
       // Отладочная информация
       console.log('Search result:', result);
@@ -285,16 +285,22 @@ const TireSearchPage: React.FC = () => {
   // Обработчики для мини-чата
   const handleConversationSuggestion = (suggestion: string) => {
     setQuery(suggestion);
-    handleSearch(suggestion);
+    // Передаем контекст из conversationData
+    const context = conversationData?.context || {};
+    handleSearch(suggestion, { context });
   };
 
   const handleConversationAnswer = (field: string, value: string) => {
     // Сохраняем ответ и обновляем состояние
     console.log(`Answered ${field}: ${value}`);
+    // Передаем ответ как новый поиск с контекстом
+    const context = conversationData?.context || {};
+    handleSearch(value, { context });
   };
 
   const handleConversationNewSearch = (query: string) => {
     setQuery(query);
+    // Для нового поиска не передаем контекст (начинаем сначала)
     handleSearch(query);
   };
 

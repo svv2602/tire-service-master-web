@@ -178,7 +178,8 @@ export const useTireSearch = (options: UseTireSearchOptions = {}): UseTireSearch
         brand: filters.brand?.[0],
         diameter: filters.diameter?.[0],
         year: filters.year_from,
-        locale: i18n.language
+        locale: i18n.language,
+        context: filters.context
       };
 
       const result = await searchTires(searchQuery);

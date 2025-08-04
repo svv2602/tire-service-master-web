@@ -11,6 +11,7 @@ export interface TireSearchQuery {
   offset?: number;
   use_llm?: boolean;
   locale?: string;
+  context?: Record<string, any>;
 }
 
 export interface TireSearchResult {
@@ -141,6 +142,7 @@ export interface TireSearchFilters {
   year_to?: number;
   sort_by?: 'relevance' | 'brand' | 'model' | 'year';
   sort_order?: 'asc' | 'desc';
+  context?: Record<string, any>;
 }
 
 export interface TireSearchState {
