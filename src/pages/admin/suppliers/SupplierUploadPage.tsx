@@ -23,6 +23,9 @@ import {
   CloudUpload as CloudUploadIcon,
   TextFields as TextFieldsIcon,
   CheckCircle as CheckCircleIcon,
+  Code as CodeIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -48,6 +51,7 @@ const SupplierUploadPage: React.FC = () => {
   const [xmlContent, setXmlContent] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadResult, setUploadResult] = useState<UploadPriceResponse | null>(null);
+  const [showXmlExample, setShowXmlExample] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   const supplierId = parseInt(id || '0');
@@ -364,39 +368,115 @@ const SupplierUploadPage: React.FC = () => {
                   <strong>Формат файла:</strong> XML в формате hotline.xml
                 </Typography>
 
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<CodeIcon />}
+                  endIcon={showXmlExample ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                  onClick={() => setShowXmlExample(!showXmlExample)}
+                  sx={{ mb: 2 }}
+                >
+                  {showXmlExample ? 'Скрыть пример XML' : 'Показать пример XML файла'}
+                </Button>
+
+                {showXmlExample && (
+                  <Paper 
+                    sx={{ 
+                      p: 2, 
+                      backgroundColor: theme.palette.mode === 'dark' ? 'grey.900' : 'grey.50',
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      maxHeight: 300,
+                      overflow: 'auto',
+                      mb: 2
+                    }}
+                  >
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        fontFamily: 'monospace', 
+                        fontSize: '0.7rem',
+                        whiteSpace: 'pre-wrap',
+                        color: theme.palette.mode === 'dark' ? 'grey.300' : 'text.primary'
+                      }}
+                    >
+{`<?xml version="1.0" encoding="UTF-8"?>
+<price>
+  <date>2025-08-03 10:00</date>
+  <firmName>Ваше название компании</firmName>
+  <firmId>${supplier.firm_id}</firmId>
+  <categories>
+    <category>
+      <id>1</id>
+      <name>Автошины</name>
+    </category>
+  </categories>
+  <items>
+    <item>
+      <id>12345</id>
+      <categoryId>1</categoryId>
+      <vendor>Michelin</vendor>
+      <name>Michelin CrossClimate (195/65R15 91H)</name>
+      <description>Высококачественные всесезонные шины</description>
+      <url>https://example.com/michelin-crossclimate</url>
+      <image>https://example.com/images/michelin.jpg</image>
+      <priceRUAH>2500</priceRUAH>
+      <stock>В наявності</stock>
+      <param name="Тип">Всесезонні шини</param>
+      <param name="Ширина профілю шины, мм">195</param>
+      <param name="Висота профілю шины, %">65</param>
+      <param name="Внутрішній діаметр покришки, дюйми">15</param>
+      <param name="Вантажопідйомність, кг">91</param>
+      <param name="Швидкість максимальна, км/г">H</param>
+      <param name="Країна виготовлення">Франция</param>
+      <param name="Рік виготовлення">24р 15тиж</param>
+      <condition>0</condition>
+    </item>
+  </items>
+</price>`}
+                    </Typography>
+                  </Paper>
+                )}
+
                 <Typography variant="body2" paragraph>
                   <strong>Обязательные поля:</strong>
                 </Typography>
                 <Box component="ul" sx={{ pl: 2, mt: 0 }}>
                   <li>
-                    <Typography variant="body2">firmId - должен совпадать с {supplier.firm_id}</Typography>
+                    <Typography variant="body2"><code>firmId</code> - должен быть <strong>{supplier.firm_id}</strong></Typography>
                   </li>
                   <li>
-                    <Typography variant="body2">Название товара (name)</Typography>
+                    <Typography variant="body2"><code>name</code> - полное название шины с размером</Typography>
                   </li>
                   <li>
-                    <Typography variant="body2">Цена (priceRUAH)</Typography>
+                    <Typography variant="body2"><code>priceRUAH</code> - цена в гривнах</Typography>
                   </li>
                   <li>
-                    <Typography variant="body2">Наличие (stock)</Typography>
+                    <Typography variant="body2"><code>stock</code> - наличие ("В наявності" или "Немає в наявності")</Typography>
                   </li>
                 </Box>
 
                 <Typography variant="body2" paragraph>
-                  <strong>Параметры шин:</strong>
+                  <strong>Параметры шин (param name):</strong>
                 </Typography>
                 <Box component="ul" sx={{ pl: 2, mt: 0 }}>
                   <li>
-                    <Typography variant="body2">Тип (сезонность)</Typography>
+                    <Typography variant="body2"><code>Тип</code> - "Зимові шини", "Літні шини", "Всесезонні шини"</Typography>
                   </li>
                   <li>
-                    <Typography variant="body2">Ширина профиля</Typography>
+                    <Typography variant="body2"><code>Ширина профілю шины, мм</code> - ширина (195, 205, 215...)</Typography>
                   </li>
                   <li>
-                    <Typography variant="body2">Высота профиля</Typography>
+                    <Typography variant="body2"><code>Висота профілю шины, %</code> - высота (65, 55, 45...)</Typography>
                   </li>
                   <li>
-                    <Typography variant="body2">Диаметр</Typography>
+                    <Typography variant="body2"><code>Внутрішній діаметр покришки, дюйми</code> - диаметр (15, 16, 17...)</Typography>
+                  </li>
+                  <li>
+                    <Typography variant="body2"><code>Вантажопідйомність, кг</code> - индекс нагрузки (91, 95, 104...)</Typography>
+                  </li>
+                  <li>
+                    <Typography variant="body2"><code>Швидкість максимальна, км/г</code> - индекс скорости (H, V, W...)</Typography>
                   </li>
                 </Box>
 
@@ -408,26 +488,57 @@ const SupplierUploadPage: React.FC = () => {
                 </Alert>
               </CardContent>
             </Card>
-
-            {/* API информация */}
-            <Card sx={{ mt: 2 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  API загрузка
-                </Typography>
-                <Typography variant="body2" paragraph>
-                  Для автоматической загрузки используйте:
-                </Typography>
-                <Paper sx={{ p: 2, backgroundColor: 'grey.100' }}>
-                  <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
-                    POST /api/v1/suppliers/upload_price<br/>
-                    Authorization: Bearer {supplier.api_key.substring(0, 20)}...
-                  </Typography>
-                </Paper>
-              </CardContent>
-            </Card>
           </Grid>
         </Grid>
+
+        {/* API информация на всю ширину */}
+        <Card sx={{ mt: 3 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              API загрузка
+            </Typography>
+            <Typography variant="body2" paragraph>
+              Для автоматической загрузки используйте:
+            </Typography>
+            <Paper 
+              sx={{ 
+                p: 2, 
+                backgroundColor: theme.palette.mode === 'dark' ? 'grey.900' : 'grey.100',
+                border: theme.palette.mode === 'dark' ? '1px solid' : 'none',
+                borderColor: 'divider',
+                overflow: 'auto'
+              }}
+            >
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  fontFamily: 'monospace', 
+                  fontSize: '0.75rem',
+                  whiteSpace: 'pre-wrap',
+                  color: theme.palette.mode === 'dark' ? 'grey.300' : 'text.primary',
+                  wordBreak: 'break-all',
+                  overflowWrap: 'break-word'
+                }}
+              >
+                {`curl -X POST http://localhost:8000/api/v1/suppliers/upload_price \\
+  -H "X-API-Key: ${supplier.api_key}" \\
+  -F "file=@your_price_file.xml"
+
+# Или с XML в теле запроса:
+curl -X POST http://localhost:8000/api/v1/suppliers/upload_price \\
+  -H "X-API-Key: ${supplier.api_key}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"xml_content": "<hotline>...</hotline>"}'`}
+              </Typography>
+            </Paper>
+            <Alert severity="info" sx={{ mt: 2 }}>
+              <Typography variant="body2">
+                Измените только имя файла <code>your_price_file.xml</code> на ваш файл. 
+                API ключ уже подставлен автоматически.
+              </Typography>
+            </Alert>
+          </CardContent>
+        </Card>
       </Box>
     </AdminPageWrapper>
   );

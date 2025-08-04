@@ -17,7 +17,6 @@ import {
   Tabs,
   Tab,
   TextField,
-  FormControlLabel,
   Switch,
   Alert,
   LinearProgress,
@@ -25,6 +24,9 @@ import {
   IconButton,
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogActions,
+  FormControlLabel,
   Select,
   MenuItem,
   FormControl,
@@ -37,7 +39,7 @@ import {
   Upload as UploadIcon,
   Key as KeyIcon,
   Refresh as RefreshIcon,
-  Download as DownloadIcon,
+
   Visibility as VisibilityIcon,
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon,
@@ -46,12 +48,12 @@ import {
   Close as CloseIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import {
   useGetSupplierByIdQuery,
   useGetSupplierProductsQuery,
   useRegenerateSupplierApiKeyMutation,
   useGetSupplierPriceVersionsQuery,
+  useUpdateSupplierMutation,
   type SupplierProduct,
   type SupplierPriceVersion,
 } from '../../../api/suppliers.api';
@@ -83,7 +85,6 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
 const SupplierDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { t } = useTranslation(['admin', 'common']);
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
 
@@ -98,6 +99,16 @@ const SupplierDetailsPage: React.FC = () => {
   const [sortBy, setSortBy] = useState('default');
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<{ url: string; alt: string } | null>(null);
+  
+  // Состояние диалога редактирования
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    firm_id: '',
+    name: '',
+    is_active: true,
+    priority: 1,
+  });
+  const [editFormErrors, setEditFormErrors] = useState<Record<string, string>>({});
 
   const supplierId = parseInt(id || '0');
 
@@ -155,13 +166,7 @@ const SupplierDetailsPage: React.FC = () => {
     return new Date(dateString).toLocaleString('ru-RU');
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
+
 
   const getVersionStatusColor = (status: string) => {
     switch (status) {
@@ -234,6 +239,62 @@ const SupplierDetailsPage: React.FC = () => {
 
   // API мутации
   const [regenerateApiKey, { isLoading: isRegeneratingApiKey }] = useRegenerateSupplierApiKeyMutation();
+  const [updateSupplier, { isLoading: isUpdating }] = useUpdateSupplierMutation();
+
+  // Валидация формы редактирования
+  const validateEditForm = (data: typeof editFormData) => {
+    const errors: Record<string, string> = {};
+
+    if (!data.firm_id.trim()) {
+      errors.firm_id = 'Firm ID обязателен';
+    } else if (!/^[a-zA-Z0-9_-]+$/.test(data.firm_id)) {
+      errors.firm_id = 'Firm ID может содержать только буквы, цифры, дефисы и подчеркивания';
+    }
+
+    if (!data.name.trim()) {
+      errors.name = 'Название обязательно';
+    } else if (data.name.trim().length < 2) {
+      errors.name = 'Название должно содержать минимум 2 символа';
+    }
+
+    if (data.priority < 1 || data.priority > 10) {
+      errors.priority = 'Приоритет должен быть от 1 до 10';
+    }
+
+    return errors;
+  };
+
+  // Обработчик открытия диалога редактирования
+  const handleOpenEditDialog = () => {
+    if (supplier) {
+      setEditFormData({
+        firm_id: supplier.firm_id,
+        name: supplier.name,
+        is_active: supplier.is_active,
+        priority: supplier.priority || 1,
+      });
+      setEditFormErrors({});
+      setIsEditDialogOpen(true);
+    }
+  };
+
+  // Обработчик обновления поставщика
+  const handleUpdateSupplier = async () => {
+    const errors = validateEditForm(editFormData);
+    if (Object.keys(errors).length > 0) {
+      setEditFormErrors(errors);
+      return;
+    }
+
+    try {
+      await updateSupplier({ id: supplierId, data: editFormData }).unwrap();
+      setIsEditDialogOpen(false);
+      refetchSupplier();
+    } catch (error: any) {
+      console.error('Ошибка обновления поставщика:', error);
+      setEditFormErrors({ general: error?.data?.error || 'Ошибка обновления поставщика' });
+    }
+  };
 
   // Обработчик регенерации API ключа
   const handleRegenerateApiKey = async () => {
@@ -312,7 +373,7 @@ const SupplierDetailsPage: React.FC = () => {
             <Button
               variant="outlined"
               startIcon={<EditIcon />}
-              onClick={() => navigate(`/admin/suppliers/${supplier.id}/edit`)}
+              onClick={handleOpenEditDialog}
             >
               Редактировать
             </Button>
@@ -913,6 +974,74 @@ const SupplierDetailsPage: React.FC = () => {
             </>
           )}
         </DialogContent>
+      </Dialog>
+
+      {/* Диалог редактирования поставщика */}
+      <Dialog open={isEditDialogOpen} onClose={() => setIsEditDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Редактировать поставщика</DialogTitle>
+        <DialogContent>
+          {editFormErrors.general && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {editFormErrors.general}
+            </Alert>
+          )}
+          <TextField
+            margin="dense"
+            label="Firm ID"
+            fullWidth
+            variant="outlined"
+            value={editFormData.firm_id}
+            onChange={(e) => setEditFormData({ ...editFormData, firm_id: e.target.value })}
+            error={!!editFormErrors.firm_id}
+            helperText={editFormErrors.firm_id}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            label="Название"
+            fullWidth
+            variant="outlined"
+            value={editFormData.name}
+            onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+            error={!!editFormErrors.name}
+            helperText={editFormErrors.name}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            label="Приоритет"
+            type="number"
+            fullWidth
+            variant="outlined"
+            value={editFormData.priority}
+            onChange={(e) => setEditFormData({ ...editFormData, priority: parseInt(e.target.value) || 1 })}
+            error={!!editFormErrors.priority}
+            helperText={editFormErrors.priority}
+            inputProps={{ min: 1, max: 10 }}
+            sx={{ mb: 2 }}
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={editFormData.is_active}
+                onChange={(e) => setEditFormData({ ...editFormData, is_active: e.target.checked })}
+              />
+            }
+            label="Активен"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsEditDialogOpen(false)}>
+            Отмена
+          </Button>
+          <Button 
+            onClick={handleUpdateSupplier} 
+            variant="contained"
+            disabled={isUpdating}
+          >
+            Сохранить
+          </Button>
+        </DialogActions>
       </Dialog>
     </AdminPageWrapper>
   );
