@@ -47,6 +47,12 @@ const TireConversation: React.FC<TireConversationProps> = ({
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [userInput, setUserInput] = useState('');
   const [isInputMode, setIsInputMode] = useState(false);
+  
+  // Отладочная информация
+  if (process.env.NODE_ENV === 'development') {
+    console.log('TireConversation parsed_data:', searchResponse.query_info?.parsed_data);
+    console.log('TireConversation context:', (searchResponse as any).context);
+  }
 
   if (!searchResponse.conversation_mode) {
     return null;
@@ -180,6 +186,14 @@ const TireConversation: React.FC<TireConversationProps> = ({
                   label={`Модель: ${searchResponse.query_info.parsed_data.model}`}
                   size="small"
                   color="primary"
+                  variant="outlined"
+                />
+              )}
+              {(searchResponse.query_info.parsed_data.diameter || (searchResponse as any).context?.diameter) && (
+                <Chip 
+                  label={`Диаметр: R${searchResponse.query_info.parsed_data.diameter || (searchResponse as any).context?.diameter}`}
+                  size="small"
+                  color="secondary"
                   variant="outlined"
                 />
               )}
