@@ -27,6 +27,7 @@ import {
   TrendingUp as TrendingUpIcon,
   Info as InfoIcon
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import TireConfigurationCard from '../TireConfigurationCard/TireConfigurationCard';
 import Pagination from '../../ui/Pagination/Pagination';
 import { getThemeColors } from '../../../styles';
@@ -52,6 +53,7 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
   favorites = [],
   className
 }) => {
+  const { t } = useTranslation(['tireSearch', 'common']);
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -123,15 +125,15 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
       sx={{ borderRadius: 2 }}
       action={
         <Button color="inherit" size="small" onClick={() => window.location.reload()}>
-          Повторить
+          {t('errors.tryAgain')}
         </Button>
       }
     >
       <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-        Ошибка при поиске шин
+        {t('errors.searchFailed')}
       </Typography>
       <Typography variant="body2">
-        {typeof error === 'string' ? error : 'Произошла неизвестная ошибка'}
+        {typeof error === 'string' ? error : t('errors.networkError')}
       </Typography>
     </Alert>
   );
@@ -152,15 +154,15 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
     >
       <SearchIcon sx={{ fontSize: 64, color: 'grey.400', mb: 2 }} />
       <Typography variant="h5" sx={{ fontWeight: 600, mb: 1, color: 'grey.600' }}>
-        Результаты не найдены
+        {t('emptyState.title')}
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Попробуйте изменить поисковый запрос или использовать другие ключевые слова
+        {t('emptyState.description')}
       </Typography>
       
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center', mb: 3 }}>
         <Typography variant="body2" color="text.secondary">
-          Примеры запросов:
+          {t('emptyState.examplesLabel')}
         </Typography>
         {['BMW 3 Series', 'Mercedes C-Class', 'Тигуан R18', 'Audi A4 2020'].map((example) => (
           <Chip
@@ -169,7 +171,6 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
             size="small"
             variant="outlined"
             onClick={() => {
-              console.log('Поиск примера:', example);
               onSearchExample?.(example);
             }}
             sx={{ cursor: 'pointer' }}
@@ -181,11 +182,10 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
         variant="outlined"
         startIcon={<TrendingUpIcon />}
         onClick={() => {
-          // Здесь можно добавить логику для показа популярных запросов
-          console.log('Показать популярные запросы');
+          // TODO: Добавить логику для показа популярных запросов
         }}
       >
-        Популярные запросы
+        {t('emptyState.showPopularButton')}
       </Button>
     </Paper>
   );

@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDebounce } from 'use-debounce';
 import {
   useSearchTiresMutation,
@@ -78,6 +79,9 @@ export const useTireSearch = (options: UseTireSearchOptions = {}): UseTireSearch
     maxHistoryItems = 20,
     enableSuggestions = true
   } = options;
+
+  // Получаем текущую локаль
+  const { i18n } = useTranslation();
 
   // Состояние поиска
   const [searchState, setSearchState] = useState<TireSearchState>({
@@ -173,7 +177,8 @@ export const useTireSearch = (options: UseTireSearchOptions = {}): UseTireSearch
         use_llm: true,
         brand: filters.brand?.[0],
         diameter: filters.diameter?.[0],
-        year: filters.year_from
+        year: filters.year_from,
+        locale: i18n.language
       };
 
       const result = await searchTires(searchQuery);

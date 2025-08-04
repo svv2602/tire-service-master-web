@@ -64,7 +64,7 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
   showFavorites = true,
   compact = false
 }) => {
-  const { t } = useTranslation(['client', 'common']);
+  const { t } = useTranslation(['tireSearch', 'common']);
   const theme = useTheme();
   const colors = getThemeColors(theme);
   
@@ -89,15 +89,21 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
     try {
       const savedHistory = localStorage.getItem(HISTORY_STORAGE_KEY);
       if (savedHistory) {
-        const parsedHistory = JSON.parse(savedHistory).map((item: any, index: number) => ({
-          ...item,
-          id: item.id || `history-${Date.now()}-${index}`,
-          timestamp: new Date(item.timestamp)
-        }));
+        const parsedHistory = JSON.parse(savedHistory).map((item: any, index: number) => {
+          const timestamp = new Date(item.timestamp);
+          // Если дата невалидна, используем текущую дату
+          const validTimestamp = isNaN(timestamp.getTime()) ? new Date() : timestamp;
+          
+          return {
+            ...item,
+            id: item.id || `history-${Date.now()}-${index}`,
+            timestamp: validTimestamp
+          };
+        });
         setHistory(parsedHistory);
       }
     } catch (error) {
-      console.error('Ошибка загрузки истории поиска:', error);
+      // Тихая ошибка - история поиска не критична
     }
   };
 
@@ -105,15 +111,21 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
     try {
       const savedFavorites = localStorage.getItem(FAVORITES_STORAGE_KEY);
       if (savedFavorites) {
-        const parsedFavorites = JSON.parse(savedFavorites).map((item: any, index: number) => ({
-          ...item,
-          id: item.id || `favorite-${Date.now()}-${index}`,
-          timestamp: new Date(item.timestamp)
-        }));
+        const parsedFavorites = JSON.parse(savedFavorites).map((item: any, index: number) => {
+          const timestamp = new Date(item.timestamp);
+          // Если дата невалидна, используем текущую дату
+          const validTimestamp = isNaN(timestamp.getTime()) ? new Date() : timestamp;
+          
+          return {
+            ...item,
+            id: item.id || `favorite-${Date.now()}-${index}`,
+            timestamp: validTimestamp
+          };
+        });
         setFavorites(parsedFavorites);
       }
     } catch (error) {
-      console.error('Ошибка загрузки избранных поисков:', error);
+      // Тихая ошибка - избранные поиски не критичны
     }
   };
 
@@ -123,7 +135,7 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
       localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(newHistory));
       setHistory(newHistory);
     } catch (error) {
-      console.error('Ошибка сохранения истории поиска:', error);
+      // Тихая ошибка - сохранение истории не критично
     }
   };
 
@@ -132,7 +144,7 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
       localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(newFavorites));
       setFavorites(newFavorites);
     } catch (error) {
-      console.error('Ошибка сохранения избранных поисков:', error);
+      // Тихая ошибка - сохранение избранных не критично
     }
   };
 
@@ -227,18 +239,23 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
 
   // Форматирование времени
   const formatTime = (timestamp: Date) => {
+    // Проверяем валидность даты
+    if (!timestamp || isNaN(timestamp.getTime())) {
+      return t('history.timeAgo.justNow');
+    }
+
     const now = new Date();
     const diffMs = now.getTime() - timestamp.getTime();
     const diffMins = Math.floor(diffMs / (1000 * 60));
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffMins < 1) return 'только что';
-    if (diffMins < 60) return `${diffMins} мин назад`;
-    if (diffHours < 24) return `${diffHours} ч назад`;
-    if (diffDays < 7) return `${diffDays} дн назад`;
+    if (diffMins < 1) return t('history.timeAgo.justNow');
+    if (diffMins < 60) return t('history.timeAgo.minutesAgo', { count: diffMins });
+    if (diffHours < 24) return t('history.timeAgo.hoursAgo', { count: diffHours });
+    if (diffDays < 7) return t('history.timeAgo.daysAgo', { count: diffDays });
     
-    return timestamp.toLocaleDateString('ru');
+    return timestamp.toLocaleDateString();
   };
 
   // Создание описания фильтров
@@ -477,7 +494,7 @@ const SearchHistory: React.FC<SearchHistoryProps> = ({
                   onClick={() => setShowAll(true)}
                   startIcon={<ExpandMoreIcon />}
                 >
-                  Показать еще {history.length - maxItems} запросов
+                  {t('history.showMore', { count: history.length - maxItems })}
                 </Button>
               </Box>
             )}

@@ -54,7 +54,7 @@ const PopularSearches: React.FC<PopularSearchesProps> = ({
   compact = false,
   autoRefresh = false
 }) => {
-  const { t } = useTranslation(['client', 'common']);
+  const { t } = useTranslation(['tireSearch', 'common']);
   const theme = useTheme();
   const colors = getThemeColors(theme);
   
@@ -65,11 +65,11 @@ const PopularSearches: React.FC<PopularSearchesProps> = ({
   // RTK Query для получения популярных запросов
   const { data: apiPopularQueries, isLoading: loading, error: apiError, refetch } = useGetPopularQueriesQuery();
 
-  // Статические популярные поиски (fallback)
-  const staticPopularSearches: PopularSearchItem[] = [
+  // Статические популярные поиски (fallback) - генерируются динамически для локализации
+  const getStaticPopularSearches = (): PopularSearchItem[] => [
     {
       id: '1',
-      query: 'шины на БМВ 3 серия',
+      query: t('help.exampleBrand'),
       searchCount: 1250,
       trend: 'up',
       category: 'brand',
@@ -78,7 +78,7 @@ const PopularSearches: React.FC<PopularSearchesProps> = ({
     },
     {
       id: '2',
-      query: 'резина R17',
+      query: t('help.exampleSize'),
       searchCount: 980,
       trend: 'stable',
       category: 'size',
@@ -87,7 +87,7 @@ const PopularSearches: React.FC<PopularSearchesProps> = ({
     },
     {
       id: '3',
-      query: 'Тигуан 2019 года',
+      query: t('help.exampleModel'),
       searchCount: 875,
       trend: 'up',
       category: 'model',
@@ -96,7 +96,7 @@ const PopularSearches: React.FC<PopularSearchesProps> = ({
     },
     {
       id: '4',
-      query: 'Mercedes C-класс',
+      query: t('help.exampleCombined'),
       searchCount: 720,
       trend: 'down',
       category: 'brand',
@@ -105,16 +105,16 @@ const PopularSearches: React.FC<PopularSearchesProps> = ({
     },
     {
       id: '5',
-      query: 'зимняя резина R18',
+      query: 'R18',
       searchCount: 650,
       trend: 'up',
-      category: 'general',
+      category: 'size',
       lastSearched: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 часов назад
       resultsCount: 34
     },
     {
       id: '6',
-      query: 'Toyota Camry шины',
+      query: 'Toyota Camry',
       searchCount: 580,
       trend: 'stable',
       category: 'model',
@@ -132,7 +132,7 @@ const PopularSearches: React.FC<PopularSearchesProps> = ({
     },
     {
       id: '8',
-      query: 'Audi Q5 резина',
+      query: 'Audi Q5',
       searchCount: 480,
       trend: 'stable',
       category: 'model',
@@ -141,10 +141,10 @@ const PopularSearches: React.FC<PopularSearchesProps> = ({
     },
     {
       id: '9',
-      query: 'летние шины R19',
+      query: 'R19',
       searchCount: 420,
       trend: 'down',
-      category: 'general',
+      category: 'size',
       lastSearched: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 часов назад
       resultsCount: 41
     },
@@ -159,7 +159,7 @@ const PopularSearches: React.FC<PopularSearchesProps> = ({
     },
     {
       id: '11',
-      query: 'Hyundai Tucson шины',
+      query: 'Hyundai Tucson',
       searchCount: 350,
       trend: 'stable',
       category: 'model',
@@ -192,10 +192,10 @@ const PopularSearches: React.FC<PopularSearchesProps> = ({
       }));
     }
     // Fallback на статические данные
-    return staticPopularSearches;
+    return getStaticPopularSearches();
   }, [apiPopularQueries]);
 
-  const error = apiError ? 'Ошибка загрузки популярных запросов' : null;
+  const error = apiError ? t('errors.searchFailed') : null;
 
   // Получение иконки тренда
   const getTrendIcon = (trend: string) => {
@@ -394,7 +394,7 @@ const PopularSearches: React.FC<PopularSearchesProps> = ({
                       onClick={() => setShowAll(true)}
                       startIcon={<ExpandMoreIcon />}
                     >
-                      Показать еще {popularSearches.length - maxItems} запросов
+                      {t('popular.showMore', { count: popularSearches.length - maxItems })}
                     </Button>
                   ) : (
                     <Button
@@ -414,7 +414,7 @@ const PopularSearches: React.FC<PopularSearchesProps> = ({
               <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <FireIcon sx={{ fontSize: 12 }} />
-                  Топ-{Math.min(3, popularSearches.length)} самых популярных запросов выделены цветом
+                  {t('popular.topPopular', { count: Math.min(3, popularSearches.length) })}
                 </Typography>
               </Box>
             )}

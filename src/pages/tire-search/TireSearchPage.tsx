@@ -421,15 +421,13 @@ const TireSearchPage: React.FC = () => {
               error={supplierError || undefined}
               showAllOffers={true}
               onProductClick={(product) => {
-                console.log('Клик по товару поставщика:', product);
-                // Можно добавить логику открытия товара в новой вкладке
+                // Открытие товара в новой вкладке
                 if (product.product_url) {
                   window.open(product.product_url, '_blank', 'noopener,noreferrer');
                 }
               }}
               onSupplierClick={(supplierId) => {
-                console.log('Клик по поставщику:', supplierId);
-                // Можно добавить логику перехода к странице поставщика
+                // TODO: Добавить логику перехода к странице поставщика
               }}
             />
           </Box>
@@ -440,13 +438,13 @@ const TireSearchPage: React.FC = () => {
           <Box sx={{ mt: 4 }}>
             <Alert severity="info" sx={{ borderRadius: 2 }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-                Советы для улучшения поиска:
+                {t('help.tips')}
               </Typography>
               <ul style={{ margin: 0, paddingLeft: 20 }}>
-                <li>Используйте полное название бренда (BMW вместо БМВ)</li>
-                <li>Добавьте модель автомобиля (3 Series, C-Class)</li>
-                <li>Укажите год выпуска для более точных результатов</li>
-                <li>Попробуйте синонимы (Тигуан = Tiguan)</li>
+                <li>{t('help.tip1')}</li>
+                <li>{t('help.tip2')}</li>
+                <li>{t('help.tip3')}</li>
+                <li>{t('help.tip4')}</li>
               </ul>
             </Alert>
           </Box>

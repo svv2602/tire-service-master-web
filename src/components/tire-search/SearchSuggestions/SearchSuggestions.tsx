@@ -25,6 +25,7 @@ import {
   Star as StarIcon,
   Speed as SpeedIcon
 } from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
 import { getThemeColors } from '../../../styles';
 import { useDebounce } from 'use-debounce';
 
@@ -62,6 +63,7 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
   includeHistory = true,
   includePopular = true
 }) => {
+  const { t } = useTranslation(['tireSearch', 'common']);
   const theme = useTheme();
   const colors = getThemeColors(theme);
   
@@ -76,35 +78,28 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
   // API базовый URL
   const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
 
-  // Статические предложения (fallback)
-  const staticSuggestions: SuggestionItem[] = [
+  // Статические предложения (fallback) - генерируются динамически для локализации
+  const getStaticSuggestions = (): SuggestionItem[] => [
     // Бренды
-    { id: 'brand-1', text: 'BMW', type: 'brand', category: 'Премиум бренды', searchCount: 1250 },
-    { id: 'brand-2', text: 'Mercedes-Benz', type: 'brand', category: 'Премиум бренды', searchCount: 980 },
-    { id: 'brand-3', text: 'Audi', type: 'brand', category: 'Премиум бренды', searchCount: 875 },
-    { id: 'brand-4', text: 'Toyota', type: 'brand', category: 'Массовые бренды', searchCount: 1450 },
-    { id: 'brand-5', text: 'Volkswagen', type: 'brand', category: 'Массовые бренды', searchCount: 1320 },
+    { id: 'brand-1', text: 'BMW', type: 'brand', category: t('popular.categories.brand'), searchCount: 1250 },
+    { id: 'brand-2', text: 'Mercedes-Benz', type: 'brand', category: t('popular.categories.brand'), searchCount: 980 },
+    { id: 'brand-3', text: 'Audi', type: 'brand', category: t('popular.categories.brand'), searchCount: 875 },
+    { id: 'brand-4', text: 'Toyota', type: 'brand', category: t('suggestions.categories.brands'), searchCount: 1450 },
+    { id: 'brand-5', text: 'Volkswagen', type: 'brand', category: t('suggestions.categories.brands'), searchCount: 1320 },
     
     // Модели
-    { id: 'model-1', text: 'BMW 3 Series', type: 'model', category: 'Популярные модели', searchCount: 890 },
-    { id: 'model-2', text: 'Volkswagen Tiguan', type: 'model', category: 'Популярные модели', searchCount: 1100 },
-    { id: 'model-3', text: 'Toyota Camry', type: 'model', category: 'Популярные модели', searchCount: 750 },
-    { id: 'model-4', text: 'Mercedes C-Class', type: 'model', category: 'Популярные модели', searchCount: 620 },
-    { id: 'model-5', text: 'Audi Q5', type: 'model', category: 'Популярные модели', searchCount: 580 },
+    { id: 'model-1', text: 'BMW 3 Series', type: 'model', category: t('popular.categories.model'), searchCount: 890 },
+    { id: 'model-2', text: 'Volkswagen Tiguan', type: 'model', category: t('popular.categories.model'), searchCount: 1100 },
+    { id: 'model-3', text: 'Toyota Camry', type: 'model', category: t('popular.categories.model'), searchCount: 750 },
+    { id: 'model-4', text: 'Mercedes C-Class', type: 'model', category: t('popular.categories.model'), searchCount: 620 },
+    { id: 'model-5', text: 'Audi Q5', type: 'model', category: t('popular.categories.model'), searchCount: 580 },
     
     // Размеры
-    { id: 'size-1', text: '225/50R17', type: 'size', category: 'Популярные размеры', searchCount: 2100 },
-    { id: 'size-2', text: '245/45R18', type: 'size', category: 'Популярные размеры', searchCount: 1800 },
-    { id: 'size-3', text: '255/40R19', type: 'size', category: 'Популярные размеры', searchCount: 1500 },
-    { id: 'size-4', text: 'R17', type: 'size', category: 'Диаметры', searchCount: 3200 },
-    { id: 'size-5', text: 'R18', type: 'size', category: 'Диаметры', searchCount: 2800 },
-    
-    // Общие запросы
-    { id: 'query-1', text: 'зимняя резина', type: 'query', category: 'Сезонные', searchCount: 1900 },
-    { id: 'query-2', text: 'летние шины', type: 'query', category: 'Сезонные', searchCount: 2200 },
-    { id: 'query-3', text: 'всесезонная резина', type: 'query', category: 'Сезонные', searchCount: 1400 },
-    { id: 'query-4', text: 'низкопрофильная резина', type: 'query', category: 'Специальные', searchCount: 800 },
-    { id: 'query-5', text: 'шины для кроссовера', type: 'query', category: 'По типу авто', searchCount: 1600 }
+    { id: 'size-1', text: '225/50R17', type: 'size', category: t('popular.categories.size'), searchCount: 2100 },
+    { id: 'size-2', text: '245/45R18', type: 'size', category: t('popular.categories.size'), searchCount: 1800 },
+    { id: 'size-3', text: '255/40R19', type: 'size', category: t('popular.categories.size'), searchCount: 1500 },
+    { id: 'size-4', text: 'R17', type: 'size', category: t('popular.categories.diameter'), searchCount: 3200 },
+    { id: 'size-5', text: 'R18', type: 'size', category: t('popular.categories.diameter'), searchCount: 2800 }
   ];
 
   // Загрузка предложений с API
@@ -157,7 +152,7 @@ const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
   const filterStaticSuggestions = (searchQuery: string): SuggestionItem[] => {
     const query = searchQuery.toLowerCase().trim();
     
-    let filtered = staticSuggestions.filter(item => 
+    let filtered = getStaticSuggestions().filter(item => 
       item.text.toLowerCase().includes(query) ||
       (item.category && item.category.toLowerCase().includes(query))
     );

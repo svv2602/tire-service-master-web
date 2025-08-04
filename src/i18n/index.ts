@@ -151,10 +151,12 @@ const resources = {
   uk: {
     translation: ukTranslationModules.reduce((acc, curr) => deepMerge(acc, curr), {}),
     components: componentsUkTranslations,
+    tireSearch: tireSearchUkTranslations,
   },
   ru: {
     translation: ruTranslationModules.reduce((acc, curr) => deepMerge(acc, curr), {}),
     components: componentsRuTranslations,
+    tireSearch: tireSearchRuTranslations,
   },
 };
 

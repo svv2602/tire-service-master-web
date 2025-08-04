@@ -13,6 +13,7 @@ import {
   Alert,
   useTheme
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import {
   Chat as ChatIcon,
   Send as SendIcon,
@@ -40,6 +41,7 @@ const TireConversation: React.FC<TireConversationProps> = ({
   onQuestionAnswer,
   onNewSearch
 }) => {
+  const { t } = useTranslation(['tireSearch', 'common']);
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
@@ -132,7 +134,7 @@ const TireConversation: React.FC<TireConversationProps> = ({
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <ChatIcon sx={{ color: colors.primary, mr: 1 }} />
             <Typography variant="h6" sx={{ color: colors.textPrimary }}>
-              Помощник по подбору шин
+              {t('conversation.title')}
             </Typography>
             <AutoAwesomeIcon sx={{ color: colors.warning, ml: 1, fontSize: 20 }} />
           </Box>
@@ -150,7 +152,7 @@ const TireConversation: React.FC<TireConversationProps> = ({
               }
             }}
           >
-            Новый чат
+            {t('conversation.newChat')}
           </Button>
         </Box>
 
@@ -162,7 +164,7 @@ const TireConversation: React.FC<TireConversationProps> = ({
             sx={{ mb: 2 }}
           >
             <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-              Уже распознано:
+              {t('conversation.alreadyRecognized')}
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {searchResponse.query_info.parsed_data.brand && (
@@ -222,7 +224,7 @@ const TireConversation: React.FC<TireConversationProps> = ({
               fontStyle: 'italic',
               display: 'block'
             }}>
-              👆 Кликните по предложению ниже или введите свой вариант
+              {t('conversation.clickSuggestion')}
             </Typography>
           </Box>
         )}
@@ -231,7 +233,7 @@ const TireConversation: React.FC<TireConversationProps> = ({
         {searchResponse.suggestions && searchResponse.suggestions.length > 0 && (
           <Box sx={{ mb: 3 }}>
             <Typography variant="subtitle2" sx={{ mb: 1, color: colors.textSecondary }}>
-              💡 Выберите подходящий вариант или кликните по любому предложению:
+              {t('conversation.chooseSuggestion')}
             </Typography>
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
               {searchResponse.suggestions.map((suggestion, index) => (
@@ -272,7 +274,7 @@ const TireConversation: React.FC<TireConversationProps> = ({
                   }
                 }}
               >
-                {isInputMode ? '↑ Скрыть поле ввода' : '✏️ Ввести свой вариант'}
+                {isInputMode ? t('conversation.hideInput') : t('conversation.showInput')}
               </Button>
             </Box>
           </Box>
@@ -286,7 +288,7 @@ const TireConversation: React.FC<TireConversationProps> = ({
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Введите марку и модель автомобиля (например: BMW X5 2020)"
+              placeholder={t('conversation.inputPlaceholder')}
               variant="outlined"
               size="medium"
               InputProps={{

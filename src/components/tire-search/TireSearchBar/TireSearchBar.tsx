@@ -17,6 +17,7 @@ import {
   ClickAwayListener,
   useTheme
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import {
   Search as SearchIcon,
   Clear as ClearIcon,
@@ -49,6 +50,7 @@ const TireSearchBar: React.FC<TireSearchBarProps> = ({
   onSuggestionSelect,
   className
 }) => {
+  const { t } = useTranslation(['tireSearch', 'common']);
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const [state, setState] = useState<TireSearchBarState>({
@@ -401,7 +403,7 @@ const TireSearchBar: React.FC<TireSearchBarProps> = ({
         {state.focused && value.length === 0 && (
           <Box sx={{ mt: 1, px: 2 }}>
             <Typography variant="caption" color="text.secondary">
-              💡 Попробуйте: "BMW 3 Series 2020", "Тигуан резина R18", "Mercedes шины"
+              {t('searchBar.hint')}
             </Typography>
           </Box>
         )}

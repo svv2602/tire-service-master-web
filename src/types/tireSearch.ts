@@ -10,6 +10,7 @@ export interface TireSearchQuery {
   limit?: number;
   offset?: number;
   use_llm?: boolean;
+  locale?: string;
 }
 
 export interface TireSearchResult {
