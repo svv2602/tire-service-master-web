@@ -10,6 +10,7 @@ import {
   Logout as LogoutIcon,
   Login as LoginIcon,
   PersonAdd as RegisterIcon,
+  Receipt as OrdersIcon,
 } from '@mui/icons-material';
 import { NavigateFunction } from 'react-router-dom';
 
@@ -59,6 +60,11 @@ export function getProfileActions({
       label: t('userMenu.myBookings'),
       icon: BookOnlineIcon,
       onClick: () => navigate('/client/bookings'),
+    },
+    {
+      label: 'Мои заказы',
+      icon: OrdersIcon,
+      onClick: () => navigate('/client/orders'),
     },
     {
       label: t('userMenu.myReviews'),

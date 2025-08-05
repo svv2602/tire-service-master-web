@@ -23,8 +23,7 @@ import {
   Logout as LogoutIcon,
   Calculate as CalculateIcon,
   Search as SearchIcon,
-  LocalOffer as LocalOfferIcon,
-  Receipt as ReceiptIcon
+  LocalOffer as LocalOfferIcon
 } from '@mui/icons-material';
 import { Button, ListItemIcon, ListItemText, MenuItem, Divider } from '@mui/material';
 import ClientFooter from './ClientFooter';
@@ -113,17 +112,6 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
       >
         Предложения шин
       </Button>
-      {isAuthenticated && (
-        <Button
-          color="inherit"
-          component={Link}
-          to="/client/orders"
-          sx={{ color: colors.textSecondary }}
-          startIcon={<ReceiptIcon />}
-        >
-          Мои заказы
-        </Button>
-      )}
     </Box>
   );
 
