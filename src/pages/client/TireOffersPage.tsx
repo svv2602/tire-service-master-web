@@ -35,13 +35,15 @@ import {
   LocalOffer as LocalOfferIcon,
   Store as StoreIcon,
   Category as CategoryIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  ShoppingCart as ShoppingCartIcon
 } from '@mui/icons-material';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Pagination from '../../components/ui/Pagination/Pagination';
 import { useGetAllSupplierProductsQuery, SupplierProduct } from '../../api/suppliers.api';
 import ClientLayout from '../../components/client/ClientLayout';
+import OrderModal from '../../components/client/OrderModal';
 
 const TireOffersPage: React.FC = () => {
   const { t } = useTranslation(['client', 'common']);
@@ -64,6 +66,10 @@ const TireOffersPage: React.FC = () => {
   // Состояние модального окна для изображений
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<{ url: string; alt: string } | null>(null);
+  
+  // Состояние модального окна для заказа
+  const [orderModalOpen, setOrderModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<SupplierProduct | null>(null);
   
   // Извлекаем параметры из URL
   const tireSize = searchParams.get('size') || '';
@@ -223,6 +229,17 @@ const TireOffersPage: React.FC = () => {
   const handleCloseImageModal = () => {
     setImageModalOpen(false);
     setSelectedImage(null);
+  };
+
+  // Обработчики модального окна для заказа
+  const handleOrderClick = (product: SupplierProduct) => {
+    setSelectedProduct(product);
+    setOrderModalOpen(true);
+  };
+
+  const handleCloseOrderModal = () => {
+    setOrderModalOpen(false);
+    setSelectedProduct(null);
   };
 
   // Рендер заголовка страницы
@@ -502,6 +519,19 @@ const TireOffersPage: React.FC = () => {
                 
                 <TableCell align="center">
                   <Stack direction="row" spacing={1} justifyContent="center">
+                    <Tooltip title="Заказать товар">
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => handleOrderClick(product)}
+                        startIcon={<ShoppingCartIcon />}
+                        disabled={!product.in_stock}
+                        sx={{ minWidth: 100 }}
+                      >
+                        Заказать
+                      </Button>
+                    </Tooltip>
+                    
                     {product.product_url && (
                       <Tooltip title="Открыть на сайте поставщика">
                         <IconButton
@@ -631,6 +661,13 @@ const TireOffersPage: React.FC = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Модальное окно заказа */}
+      <OrderModal
+        open={orderModalOpen}
+        onClose={handleCloseOrderModal}
+        product={selectedProduct}
+      />
     </ClientLayout>
   );
 };
