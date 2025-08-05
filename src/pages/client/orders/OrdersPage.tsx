@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -76,33 +76,36 @@ function TabPanel(props: TabPanelProps) {
 const OrdersPage: React.FC = () => {
   const { t } = useTranslation(['client', 'common']);
   const navigate = useNavigate();
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, accessToken, user } = useAppSelector((state) => state.auth);
 
   const [currentTab, setCurrentTab] = useState(0);
   const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [selectedOrderForCancel, setSelectedOrderForCancel] = useState<TireOrder | null>(null);
 
-  // Статусы для фильтрации
-  const statusFilters = [
+  // Статусы для фильтрации (мемоизируем для стабильности ссылок)
+  const statusFilters = useMemo(() => [
     '', // Все заказы
     'submitted,confirmed,processing', // Активные
     'completed', // Завершенные
     'cancelled', // Отмененные
     'archived' // Архивированные
-  ];
+  ], []);
+
+  // Мемоизируем параметры запроса для предотвращения бесконечных запросов
+  const queryParams = useMemo(() => ({
+    page: 1,
+    per_page: 50,
+    status: statusFilters[currentTab]
+  }), [currentTab]);
 
   const {
     data: ordersResponse,
     isLoading,
     isError,
     error
-  } = useGetTireOrdersQuery({
-    page: 1,
-    per_page: 50,
-    status: statusFilters[currentTab]
-  }, {
-    skip: !isAuthenticated
+  } = useGetTireOrdersQuery(queryParams, {
+    skip: !isAuthenticated // Включаем обратно после диагностики
   });
 
   const [cancelOrder, { isLoading: isCancellingOrder }] = useCancelTireOrderMutation();
@@ -232,6 +235,7 @@ const OrdersPage: React.FC = () => {
           <Typography variant="h4" component="h1" gutterBottom>
             Мои заказы
           </Typography>
+
 
           {/* Вкладки для фильтрации */}
           <Paper sx={{ mb: 3 }}>
@@ -366,34 +370,46 @@ const OrdersPage: React.FC = () => {
                                   </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                  {order.items.map((item) => (
-                                    <TableRow key={item.id}>
-                                      <TableCell>
-                                        <Box>
-                                          <Typography variant="body2" fontWeight="bold">
-                                            {item.supplier_tire_product.brand} {item.supplier_tire_product.model}
+                                  {order.items?.length > 0 ? (
+                                    order.items.map((item) => (
+                                      <TableRow key={item.id}>
+                                        <TableCell>
+                                          <Box>
+                                            <Typography variant="body2" fontWeight="bold">
+                                              {item.supplier_tire_product.brand} {item.supplier_tire_product.model}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                              {item.supplier_tire_product.name}
+                                            </Typography>
+                                          </Box>
+                                        </TableCell>
+                                        <TableCell>
+                                          <Chip 
+                                            label={item.supplier_tire_product.size} 
+                                            size="small" 
+                                            color="primary" 
+                                          />
+                                        </TableCell>
+                                        <TableCell>{item.quantity} шт.</TableCell>
+                                        <TableCell>{formatPrice(item.price_at_order)}</TableCell>
+                                        <TableCell>
+                                          <Typography fontWeight="bold">
+                                            {formatPrice(item.total_price)}
                                           </Typography>
-                                          <Typography variant="caption" color="text.secondary">
-                                            {item.supplier_tire_product.name}
+                                        </TableCell>
+                                      </TableRow>
+                                    ))
+                                  ) : (
+                                    <TableRow>
+                                      <TableCell colSpan={5} align="center">
+                                        <Box sx={{ py: 2 }}>
+                                          <Typography variant="body2" color="text.secondary">
+                                            В заказе нет товаров
                                           </Typography>
                                         </Box>
                                       </TableCell>
-                                      <TableCell>
-                                        <Chip 
-                                          label={item.supplier_tire_product.size} 
-                                          size="small" 
-                                          color="primary" 
-                                        />
-                                      </TableCell>
-                                      <TableCell>{item.quantity} шт.</TableCell>
-                                      <TableCell>{formatPrice(item.price_at_order)}</TableCell>
-                                      <TableCell>
-                                        <Typography fontWeight="bold">
-                                          {formatPrice(item.total_price)}
-                                        </Typography>
-                                      </TableCell>
                                     </TableRow>
-                                  ))}
+                                  )}
                                 </TableBody>
                               </Table>
                             </TableContainer>
