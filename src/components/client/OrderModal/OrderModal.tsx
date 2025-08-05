@@ -8,10 +8,8 @@ import {
   TextField,
   Typography,
   Box,
-  Divider,
   Alert,
   CircularProgress,
-  InputAdornment,
   IconButton,
   Chip,
   Stack
@@ -19,10 +17,9 @@ import {
 import {
   Add as AddIcon,
   Remove as RemoveIcon,
-  ShoppingCart as CartIcon,
-  LocalOffer as OfferIcon
+  ShoppingCart as CartIcon
 } from '@mui/icons-material';
-import { useTranslation } from 'react-i18next';
+
 import { useAddToUnifiedCartMutation } from '../../../api/unifiedTireCart.api';
 import { useAppSelector } from '../../../store';
 import { SupplierProduct } from '../../../api/suppliers.api';
@@ -34,37 +31,19 @@ interface OrderModalProps {
   product: SupplierProduct | null;
 }
 
-interface ContactInfo {
-  name: string;
-  phone: string;
-}
+
 
 const OrderModal: React.FC<OrderModalProps> = ({ open, onClose, product }) => {
-  const { t } = useTranslation(['client', 'common']);
-  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
   
   const [quantity, setQuantity] = useState(1);
   const [comment, setComment] = useState('');
-  const [contactInfo, setContactInfo] = useState<ContactInfo>({
-    name: '',
-    phone: ''
-  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showGuestDialog, setShowGuestDialog] = useState(false);
   
   const [addToCart, { isLoading: isAddingToCart }] = useAddToUnifiedCartMutation();
 
-  // Автозаполнение контактных данных для авторизованных пользователей
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      setContactInfo({
-        name: user.first_name || '',
-        phone: user.phone || ''
-      });
-    } else {
-      setContactInfo({ name: '', phone: '' });
-    }
-  }, [isAuthenticated, user]);
+
 
   // Сброс формы при открытии модального окна
   useEffect(() => {
@@ -83,16 +62,6 @@ const OrderModal: React.FC<OrderModalProps> = ({ open, onClose, product }) => {
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-
-    if (!contactInfo.name.trim()) {
-      newErrors.name = 'Имя обязательно для заполнения';
-    }
-
-    if (!contactInfo.phone.trim()) {
-      newErrors.phone = 'Телефон обязателен для заполнения';
-    } else if (!/^\+?[0-9]{10,15}$/.test(contactInfo.phone.replace(/[\s\-\(\)]/g, ''))) {
-      newErrors.phone = 'Некорректный формат телефона';
-    }
 
     if (quantity < 1) {
       newErrors.quantity = 'Количество должно быть не менее 1';
@@ -188,25 +157,52 @@ const OrderModal: React.FC<OrderModalProps> = ({ open, onClose, product }) => {
 
       <DialogContent>
         {/* Информация о товаре */}
-        <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-          <Typography variant="h6" gutterBottom>
-            {product.brand} {product.model}
-          </Typography>
-          <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-            <Chip label={product.size} size="small" color="primary" />
-            <Chip 
-              label={product.season === 'winter' ? 'Зимние' : 
-                    product.season === 'summer' ? 'Летние' : 'Всесезонные'} 
-              size="small" 
-              color="secondary" 
+        <Box sx={{ 
+          mb: 3, 
+          p: 2, 
+          border: 1, 
+          borderColor: 'divider', 
+          borderRadius: 1,
+          display: 'flex',
+          gap: 2
+        }}>
+          {/* Фото товара */}
+          {product.image_url && (
+            <Box
+              component="img"
+              src={product.image_url}
+              alt={`${product.brand} ${product.model}`}
+              sx={{
+                width: 80,
+                height: 80,
+                objectFit: 'cover',
+                borderRadius: 1,
+                flexShrink: 0
+              }}
             />
-          </Stack>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            {product.name}
-          </Typography>
-          <Typography variant="h6" color="primary">
-            {formatPrice(parseFloat(product.price_uah || '0'))} за шт.
-          </Typography>
+          )}
+          
+          {/* Информация о товаре */}
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="h6" gutterBottom>
+              {product.brand} {product.model}
+            </Typography>
+            <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+              <Chip label={product.size} size="small" color="primary" />
+              <Chip 
+                label={product.season === 'winter' ? 'Зимние' : 
+                      product.season === 'summer' ? 'Летние' : 'Всесезонные'} 
+                size="small" 
+                color="secondary" 
+              />
+            </Stack>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              {product.name}
+            </Typography>
+            <Typography variant="h6" color="primary">
+              {formatPrice(parseFloat(product.price_uah || '0'))} за шт.
+            </Typography>
+          </Box>
         </Box>
 
         {/* Выбор количества */}
@@ -260,40 +256,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ open, onClose, product }) => {
           placeholder="Дополнительные пожелания к заказу..."
         />
 
-        <Divider sx={{ my: 2 }} />
 
-        {/* Контактная информация */}
-        <Typography variant="subtitle1" gutterBottom>
-          Контактная информация
-        </Typography>
-        
-        {isAuthenticated && (
-          <Alert severity="info" sx={{ mb: 2 }}>
-            Данные заполнены автоматически из вашего профиля
-          </Alert>
-        )}
-
-        <TextField
-          label="Имя *"
-          value={contactInfo.name}
-          onChange={(e) => setContactInfo({ ...contactInfo, name: e.target.value })}
-          fullWidth
-          sx={{ mb: 2 }}
-          error={!!errors.name}
-          helperText={errors.name}
-          placeholder="Ваше имя"
-        />
-
-        <TextField
-          label="Телефон *"
-          value={contactInfo.phone}
-          onChange={(e) => setContactInfo({ ...contactInfo, phone: e.target.value })}
-          fullWidth
-          sx={{ mb: 2 }}
-          error={!!errors.phone}
-          helperText={errors.phone || 'Формат: +380671234567'}
-          placeholder="+380671234567"
-        />
 
         {/* Ошибки отправки */}
         {errors.submit && (
