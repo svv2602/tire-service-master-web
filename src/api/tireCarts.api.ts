@@ -79,6 +79,9 @@ export const tireCartsApi = baseApi.injectEndpoints({
     // Получить все корзины пользователя
     getTireCarts: builder.query<TireCart[], void>({
       query: () => 'tire_carts',
+      transformResponse: (response: { carts: TireCart[]; total_carts: number; total_items: number }) => {
+        return response.carts || [];
+      },
       providesTags: ['TireCart'],
     }),
 

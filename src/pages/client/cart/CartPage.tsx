@@ -186,7 +186,10 @@ const CartPage: React.FC = () => {
     );
   }
 
-  if (isError) {
+  // Показываем ошибку только если это не 404 (пустая корзина)
+  const isSerialError = isError && error && 'status' in error && error.status !== 404;
+  
+  if (isSerialError) {
     return (
       <ClientLayout>
         <Container maxWidth="lg">

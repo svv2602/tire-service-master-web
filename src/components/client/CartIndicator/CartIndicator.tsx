@@ -20,7 +20,8 @@ const CartIndicator: React.FC = () => {
   const { 
     data: carts = [], 
     isLoading,
-    isError 
+    isError,
+    error
   } = useGetTireCartsQuery(undefined, {
     skip: !isAuthenticated
   });
@@ -37,8 +38,11 @@ const CartIndicator: React.FC = () => {
     return null;
   }
 
-  // Не показываем индикатор во время загрузки или при ошибке
-  if (isLoading || isError) {
+  // Проверяем, является ли ошибка серьезной (не 404 - пустая корзина)
+  const isSerialError = isError && error && 'status' in error && error.status !== 404;
+
+  // Не показываем индикатор во время загрузки или при серьезной ошибке
+  if (isLoading || isSerialError) {
     return (
       <Tooltip title="Корзина">
         <IconButton 
