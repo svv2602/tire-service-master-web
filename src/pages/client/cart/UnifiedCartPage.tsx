@@ -59,6 +59,7 @@ import {
   SupplierGroup
 } from '../../../api/unifiedTireCart.api';
 import { useAppSelector } from '../../../store';
+import PhoneField from '../../../components/ui/PhoneField';
 
 const UnifiedCartPage: React.FC = () => {
   const { t } = useTranslation();
@@ -76,6 +77,7 @@ const UnifiedCartPage: React.FC = () => {
   });
   const [supplierComments, setSupplierComments] = useState<Record<string, string>>({});
   const [expandedSuppliers, setExpandedSuppliers] = useState<Record<string, boolean>>({});
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   // API хуки
   const {
@@ -185,6 +187,7 @@ const UnifiedCartPage: React.FC = () => {
 
       setOrderDialogOpen(false);
       setSelectedSupplierId(null); // Сбрасываем выбранного поставщика
+      setValidationErrors({}); // Очищаем ошибки валидации
       
       // Показываем успешное сообщение и перенаправляем
       alert(`Заказы успешно созданы! Количество заказов: ${result.orders.length}`);
@@ -214,6 +217,7 @@ const UnifiedCartPage: React.FC = () => {
 
       setOrderDialogOpen(false);
       setSelectedSupplierId(null); // Сбрасываем выбранного поставщика
+      setValidationErrors({}); // Очищаем ошибки валидации
       
       // Показываем успешное сообщение и перенаправляем
       alert(`Заказ успешно создан! ID заказа: ${result.orders[0]?.id}`);
@@ -226,8 +230,69 @@ const UnifiedCartPage: React.FC = () => {
     }
   };
 
+  // Функция валидации полей
+  const validateField = (field: string, value: string): string => {
+    if (!value || !value.trim()) {
+      if (field === 'name') {
+        return 'Имя обязательно для заполнения';
+      }
+      if (field === 'phone') {
+        return 'Телефон обязателен для заполнения';
+      }
+      return '';
+    }
+
+    switch (field) {
+      case 'name':
+        if (value.trim().length < 2) {
+          return 'Имя должно содержать минимум 2 символа';
+        }
+        return '';
+        
+      case 'phone':
+        // Проверяем, что все символы маски заполнены и номер начинается с +380
+        const phoneDigits = value.replace(/[^\d+]/g, '');
+        if (!phoneDigits.startsWith('+380')) {
+          return 'Номер должен начинаться с +380';
+        }
+        if (phoneDigits.length !== 13) { // +380 + 9 цифр
+          return 'Неполный номер телефона';
+        }
+        return '';
+        
+      default:
+        return '';
+    }
+  };
+
+  // Обработчик изменения полей с валидацией
+  const handleContactInfoChange = (field: string, value: string) => {
+    setContactInfo(prev => ({ ...prev, [field]: value }));
+    
+    // Валидация поля
+    const error = validateField(field, value);
+    setValidationErrors(prev => ({
+      ...prev,
+      [field]: error,
+    }));
+  };
+
   // Универсальный обработчик создания заказов
   const handleCreateOrders = () => {
+    // Валидация всех полей
+    const nameError = validateField('name', contactInfo.name);
+    const phoneError = validateField('phone', contactInfo.phone);
+    
+    setValidationErrors({
+      name: nameError,
+      phone: phoneError,
+    });
+
+    // Если есть ошибки валидации, не отправляем форму
+    if (nameError || phoneError) {
+      return;
+    }
+
     if (selectedSupplierId) {
       // Создаем заказ для одного поставщика
       handleCreateSingleSupplierOrder();
@@ -585,33 +650,34 @@ const UnifiedCartPage: React.FC = () => {
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
                     <FormControl fullWidth>
-                      <InputLabel>{t('cart.order.dialog.name')}</InputLabel>
+                      <InputLabel error={!!validationErrors.name}>{t('cart.order.dialog.name')}</InputLabel>
                       <OutlinedInput
                         value={contactInfo.name}
-                        onChange={(e) => setContactInfo(prev => ({ ...prev, name: e.target.value }))}
+                        onChange={(e) => handleContactInfoChange('name', e.target.value)}
                         startAdornment={
                           <InputAdornment position="start">
-                            <PersonIcon />
+                            <PersonIcon color={validationErrors.name ? 'error' : 'action'} />
                           </InputAdornment>
                         }
                         label={t('cart.order.dialog.name')}
+                        error={!!validationErrors.name}
                       />
+                      {validationErrors.name && (
+                        <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                          {validationErrors.name}
+                        </Typography>
+                      )}
                     </FormControl>
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth>
-                      <InputLabel>{t('cart.order.dialog.phone')}</InputLabel>
-                      <OutlinedInput
-                        value={contactInfo.phone}
-                        onChange={(e) => setContactInfo(prev => ({ ...prev, phone: e.target.value }))}
-                        startAdornment={
-                          <InputAdornment position="start">
-                            <PhoneIcon />
-                          </InputAdornment>
-                        }
-                        label={t('cart.order.dialog.phone')}
-                      />
-                    </FormControl>
+                    <PhoneField
+                      label={t('cart.order.dialog.phone')}
+                      value={contactInfo.phone}
+                      onChange={(value) => handleContactInfoChange('phone', value)}
+                      required
+                      error={!!validationErrors.phone}
+                      helperText={validationErrors.phone}
+                    />
                   </Grid>
                 </Grid>
               </Box>
@@ -683,6 +749,7 @@ const UnifiedCartPage: React.FC = () => {
             <Button onClick={() => {
               setOrderDialogOpen(false);
               setSelectedSupplierId(null); // Сбрасываем выбранного поставщика при отмене
+              setValidationErrors({}); // Очищаем ошибки валидации
             }}>
               {t('cart.order.dialog.cancel')}
             </Button>

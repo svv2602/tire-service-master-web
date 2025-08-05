@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -76,17 +76,27 @@ function TabPanel(props: TabPanelProps) {
 const OrdersPage: React.FC = () => {
   const { t } = useTranslation(['client', 'common']);
   const navigate = useNavigate();
-  const { isAuthenticated, accessToken, user } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, isInitialized, loading, user } = useAppSelector((state) => state.auth);
 
   const [currentTab, setCurrentTab] = useState(0);
   const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [selectedOrderForCancel, setSelectedOrderForCancel] = useState<TireOrder | null>(null);
 
+  // Перенаправление неавторизованных пользователей
+  useEffect(() => {
+    if (isInitialized && !loading && !isAuthenticated) {
+      navigate('/login', { 
+        replace: true,
+        state: { returnPath: '/client/orders' }
+      });
+    }
+  }, [isInitialized, loading, isAuthenticated, navigate]);
+
   // Статусы для фильтрации (мемоизируем для стабильности ссылок)
   const statusFilters = useMemo(() => [
     '', // Все заказы
-    'submitted,confirmed,processing', // Активные
+    'draft,submitted,confirmed,processing', // Активные (включая новые заказы)
     'completed', // Завершенные
     'cancelled', // Отмененные
     'archived' // Архивированные
@@ -97,7 +107,7 @@ const OrdersPage: React.FC = () => {
     page: 1,
     per_page: 50,
     status: statusFilters[currentTab]
-  }), [currentTab]);
+  }), [currentTab, statusFilters]);
 
   const {
     data: ordersResponse,
@@ -105,13 +115,51 @@ const OrdersPage: React.FC = () => {
     isError,
     error
   } = useGetTireOrdersQuery(queryParams, {
-    skip: !isAuthenticated // Включаем обратно после диагностики
+    skip: !isAuthenticated || !isInitialized // Ждем инициализации авторизации
   });
+
+  // Отладка API ответа
+  React.useEffect(() => {
+    if (ordersResponse) {
+      console.log('🔍 OrdersPage API Response:', {
+        totalOrders: ordersResponse.total,
+        returnedOrders: ordersResponse.orders?.length || 0,
+        queryParams,
+        rawResponse: ordersResponse
+      });
+    }
+  }, [ordersResponse, queryParams]);
 
   const [cancelOrder, { isLoading: isCancellingOrder }] = useCancelTireOrderMutation();
   const [archiveOrder, { isLoading: isArchivingOrder }] = useArchiveTireOrderMutation();
 
   const orders = ordersResponse?.orders || [];
+
+  // Отладочная информация для диагностики статусов
+  React.useEffect(() => {
+    console.log('🔍 OrdersPage Query Params:', {
+      currentTab,
+      statusFilter: statusFilters[currentTab],
+      queryParams,
+      isAuthenticated,
+      isInitialized,
+      isLoading,
+      isError
+    });
+    
+    if (orders.length > 0) {
+      console.log('🔍 OrdersPage Orders FOUND:', {
+        ordersCount: orders.length,
+        orderStatuses: orders.map(order => ({
+          id: order.id,
+          status: order.status,
+          status_display: order.status_display
+        }))
+      });
+    } else if (!isLoading) {
+      console.log('🔍 OrdersPage: No orders found for current tab (not loading)');
+    }
+  }, [orders, currentTab, statusFilters, queryParams, isAuthenticated, isInitialized, isLoading, isError]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);
@@ -192,19 +240,8 @@ const OrdersPage: React.FC = () => {
     });
   };
 
-  if (!isAuthenticated) {
-    return (
-      <ClientLayout>
-        <Container maxWidth="lg">
-          <Alert severity="warning" sx={{ mt: 3 }}>
-            Для просмотра заказов необходимо войти в систему
-          </Alert>
-        </Container>
-      </ClientLayout>
-    );
-  }
-
-  if (isLoading) {
+  // Показываем загрузку во время инициализации или загрузки данных
+  if (!isInitialized || loading || isLoading) {
     return (
       <ClientLayout>
         <Container maxWidth="lg">
@@ -214,6 +251,11 @@ const OrdersPage: React.FC = () => {
         </Container>
       </ClientLayout>
     );
+  }
+
+  // Если инициализация завершена, но пользователь не авторизован, перенаправляем
+  if (isInitialized && !isAuthenticated) {
+    return null; // Компонент не рендерится, так как useEffect перенаправит на /login
   }
 
   if (isError) {

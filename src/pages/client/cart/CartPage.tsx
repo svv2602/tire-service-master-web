@@ -47,6 +47,7 @@ import {
   TireCart
 } from '../../../api/tireCarts.api';
 import { useAppSelector } from '../../../store';
+import PhoneField from '../../../components/ui/PhoneField';
 
 const CartPage: React.FC = () => {
   const { t } = useTranslation(['client', 'common']);
@@ -60,6 +61,7 @@ const CartPage: React.FC = () => {
     comment: ''
   });
   const [selectedCartForOrder, setSelectedCartForOrder] = useState<TireCart | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   const {
     data: carts = [],
@@ -86,6 +88,53 @@ const CartPage: React.FC = () => {
       }));
     }
   }, [isAuthenticated, user]);
+
+  // Функция валидации полей
+  const validateField = (field: string, value: string): string => {
+    if (!value || !value.trim()) {
+      if (field === 'client_name') {
+        return 'Имя обязательно для заполнения';
+      }
+      if (field === 'client_phone') {
+        return 'Телефон обязателен для заполнения';
+      }
+      return '';
+    }
+
+    switch (field) {
+      case 'client_name':
+        if (value.trim().length < 2) {
+          return 'Имя должно содержать минимум 2 символа';
+        }
+        return '';
+        
+      case 'client_phone':
+        // Проверяем, что все символы маски заполнены и номер начинается с +380
+        const phoneDigits = value.replace(/[^\d+]/g, '');
+        if (!phoneDigits.startsWith('+380')) {
+          return 'Номер должен начинаться с +380';
+        }
+        if (phoneDigits.length !== 13) { // +380 + 9 цифр
+          return 'Неполный номер телефона';
+        }
+        return '';
+        
+      default:
+        return '';
+    }
+  };
+
+  // Обработчик изменения полей с валидацией
+  const handleFieldChange = (field: string, value: string) => {
+    setOrderData(prev => ({ ...prev, [field]: value }));
+    
+    // Валидация поля
+    const error = validateField(field, value);
+    setValidationErrors(prev => ({
+      ...prev,
+      [field]: error,
+    }));
+  };
 
   const handleQuantityChange = async (cartId: number, itemId: number, newQuantity: number) => {
     if (newQuantity < 1) return;
@@ -131,7 +180,21 @@ const CartPage: React.FC = () => {
   };
 
   const handleCreateOrder = async () => {
-    if (!selectedCartForOrder || !orderData.client_name.trim() || !orderData.client_phone.trim()) {
+    if (!selectedCartForOrder) {
+      return;
+    }
+
+    // Валидация всех полей
+    const nameError = validateField('client_name', orderData.client_name);
+    const phoneError = validateField('client_phone', orderData.client_phone);
+    
+    setValidationErrors({
+      client_name: nameError,
+      client_phone: phoneError,
+    });
+
+    // Если есть ошибки валидации, не отправляем форму
+    if (nameError || phoneError) {
       return;
     }
 
@@ -145,6 +208,7 @@ const CartPage: React.FC = () => {
       setOrderDialogOpen(false);
       setSelectedCartForOrder(null);
       setOrderData({ client_name: '', client_phone: '', comment: '' });
+      setValidationErrors({});
 
       // Перенаправляем на страницу заказов
       navigate('/client/orders');
@@ -400,20 +464,22 @@ const CartPage: React.FC = () => {
                 <TextField
                   label="Имя *"
                   value={orderData.client_name}
-                  onChange={(e) => setOrderData({ ...orderData, client_name: e.target.value })}
+                  onChange={(e) => handleFieldChange('client_name', e.target.value)}
                   fullWidth
                   sx={{ mb: 2 }}
                   required
+                  error={!!validationErrors.client_name}
+                  helperText={validationErrors.client_name}
                 />
 
-                <TextField
+                <PhoneField
                   label="Телефон *"
                   value={orderData.client_phone}
-                  onChange={(e) => setOrderData({ ...orderData, client_phone: e.target.value })}
-                  fullWidth
+                  onChange={(value) => handleFieldChange('client_phone', value)}
                   sx={{ mb: 2 }}
                   required
-                  placeholder="+380671234567"
+                  error={!!validationErrors.client_phone}
+                  helperText={validationErrors.client_phone}
                 />
 
                 <TextField

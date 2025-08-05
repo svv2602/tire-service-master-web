@@ -37,7 +37,6 @@ const OrderModal: React.FC<OrderModalProps> = ({ open, onClose, product }) => {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   
   const [quantity, setQuantity] = useState(1);
-  const [comment, setComment] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showGuestDialog, setShowGuestDialog] = useState(false);
   
@@ -49,7 +48,6 @@ const OrderModal: React.FC<OrderModalProps> = ({ open, onClose, product }) => {
   useEffect(() => {
     if (open) {
       setQuantity(1);
-      setComment('');
       setErrors({});
     }
   }, [open]);
@@ -173,8 +171,8 @@ const OrderModal: React.FC<OrderModalProps> = ({ open, onClose, product }) => {
               src={product.image_url}
               alt={`${product.brand} ${product.model}`}
               sx={{
-                width: 80,
-                height: 80,
+                width: 120,
+                height: 120,
                 objectFit: 'cover',
                 borderRadius: 1,
                 flexShrink: 0
@@ -206,11 +204,11 @@ const OrderModal: React.FC<OrderModalProps> = ({ open, onClose, product }) => {
         </Box>
 
         {/* Выбор количества */}
-        <Box sx={{ mb: 3 }}>
+        <Box sx={{ mb: 3, textAlign: 'center' }}>
           <Typography variant="subtitle1" gutterBottom>
             Количество
           </Typography>
-          <Box display="flex" alignItems="center" gap={1}>
+          <Box display="flex" alignItems="center" justifyContent="center" gap={1} sx={{ mb: 2 }}>
             <IconButton 
               onClick={() => handleQuantityChange(quantity - 1)}
               disabled={quantity <= 1}
@@ -238,23 +236,13 @@ const OrderModal: React.FC<OrderModalProps> = ({ open, onClose, product }) => {
             >
               <AddIcon />
             </IconButton>
-            <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>
-              Итого: <strong>{formatPrice(totalPrice)}</strong>
-            </Typography>
           </Box>
+          <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold' }}>
+            Итого: {formatPrice(totalPrice)}
+          </Typography>
         </Box>
 
-        {/* Комментарий */}
-        <TextField
-          label="Комментарий (необязательно)"
-          multiline
-          rows={2}
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          fullWidth
-          sx={{ mb: 3 }}
-          placeholder="Дополнительные пожелания к заказу..."
-        />
+
 
 
 
