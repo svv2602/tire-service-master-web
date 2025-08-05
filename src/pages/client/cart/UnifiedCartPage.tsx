@@ -69,6 +69,7 @@ const UnifiedCartPage: React.FC = () => {
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [isCreatingOrders, setIsCreatingOrders] = useState(false);
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null); // Для заказа одного поставщика
   const [contactInfo, setContactInfo] = useState({
     name: user?.first_name || '',
     phone: user?.phone || ''
@@ -168,8 +169,8 @@ const UnifiedCartPage: React.FC = () => {
     }
   };
 
-  // Обработчик создания заказов
-  const handleCreateOrders = async () => {
+  // Обработчик создания заказов (для всех поставщиков)
+  const handleCreateAllOrders = async () => {
     if (!contactInfo.name.trim() || !contactInfo.phone.trim()) {
       return;
     }
@@ -183,6 +184,7 @@ const UnifiedCartPage: React.FC = () => {
       }).unwrap();
 
       setOrderDialogOpen(false);
+      setSelectedSupplierId(null); // Сбрасываем выбранного поставщика
       
       // Показываем успешное сообщение и перенаправляем
       alert(`Заказы успешно созданы! Количество заказов: ${result.orders.length}`);
@@ -195,6 +197,46 @@ const UnifiedCartPage: React.FC = () => {
     }
   };
 
+  // Обработчик создания заказа для одного поставщика
+  const handleCreateSingleSupplierOrder = async () => {
+    if (!contactInfo.name.trim() || !contactInfo.phone.trim() || !selectedSupplierId) {
+      return;
+    }
+
+    setIsCreatingOrders(true);
+    try {
+      const result = await createSupplierOrder({
+        supplier_id: parseInt(selectedSupplierId),
+        client_name: contactInfo.name,
+        client_phone: contactInfo.phone,
+        comment: supplierComments[selectedSupplierId] || ''
+      }).unwrap();
+
+      setOrderDialogOpen(false);
+      setSelectedSupplierId(null); // Сбрасываем выбранного поставщика
+      
+      // Показываем успешное сообщение и перенаправляем
+      alert(`Заказ успешно создан! ID заказа: ${result.orders[0]?.id}`);
+      navigate('/client/orders');
+      
+    } catch (error) {
+      console.error('Ошибка создания заказа поставщика:', error);
+    } finally {
+      setIsCreatingOrders(false);
+    }
+  };
+
+  // Универсальный обработчик создания заказов
+  const handleCreateOrders = () => {
+    if (selectedSupplierId) {
+      // Создаем заказ для одного поставщика
+      handleCreateSingleSupplierOrder();
+    } else {
+      // Создаем заказы для всех поставщиков
+      handleCreateAllOrders();
+    }
+  };
+
   // Переключение раскрытия поставщика
   const toggleSupplierExpanded = (supplierId: string) => {
     setExpandedSuppliers(prev => ({
@@ -204,37 +246,23 @@ const UnifiedCartPage: React.FC = () => {
   };
 
   // Обработчик создания заказа для конкретного поставщика
-  const handleCreateSupplierOrder = async (supplierId: string) => {
+  const handleCreateSupplierOrder = (supplierId: string) => {
     const supplier = cart?.suppliers?.find(s => s.id.toString() === supplierId);
     if (!supplier) return;
 
-    // Проверяем контактные данные
-    if (!contactInfo.name.trim() || !contactInfo.phone.trim()) {
-      // Если нет контактных данных, открываем модальное окно
-      setSupplierComments({ [supplierId]: '' });
-      setOrderDialogOpen(true);
-      return;
-    }
-
-    // Создаем заказ напрямую если есть контактные данные
-    try {
-      setIsCreatingOrders(true);
-      const result = await createSupplierOrder({
-        supplier_id: parseInt(supplierId),
-        client_name: contactInfo.name,
-        client_phone: contactInfo.phone,
-        comment: supplierComments[supplierId] || ''
-      }).unwrap();
-
-      console.log('Заказ для поставщика создан:', result);
-      
-      // Показать сообщение об успехе или перенаправить
-      navigate('/client/orders');
-    } catch (error) {
-      console.error('Ошибка создания заказа поставщика:', error);
-    } finally {
-      setIsCreatingOrders(false);
-    }
+    // Сохраняем ID выбранного поставщика
+    setSelectedSupplierId(supplierId);
+    
+    // Устанавливаем комментарий для этого поставщика (если его еще нет)
+    setSupplierComments(prev => ({
+      ...prev,
+      [supplierId]: prev[supplierId] || ''
+    }));
+    
+    // Всегда открываем модальное окно для подтверждения и ввода данных
+    setOrderDialogOpen(true);
+    
+    console.log('Открытие модального окна для заказа поставщика:', supplier.name);
   };
 
   // Рендер товара
@@ -497,7 +525,10 @@ const UnifiedCartPage: React.FC = () => {
                   size="large"
                   fullWidth
                   startIcon={<ReceiptIcon />}
-                  onClick={() => setOrderDialogOpen(true)}
+                  onClick={() => {
+                    setSelectedSupplierId(null); // Сбрасываем выбранного поставщика для заказа всех
+                    setOrderDialogOpen(true);
+                  }}
                 >
                   Оформить заказы
                 </Button>
@@ -527,14 +558,20 @@ const UnifiedCartPage: React.FC = () => {
         {/* Диалог оформления заказа */}
         <Dialog 
           open={orderDialogOpen} 
-          onClose={() => setOrderDialogOpen(false)}
+          onClose={() => {
+            setOrderDialogOpen(false);
+            setSelectedSupplierId(null); // Сбрасываем выбранного поставщика при закрытии
+          }}
           maxWidth="md"
           fullWidth
         >
           <DialogTitle>
             <Typography variant="h6">
               <ReceiptIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-              {t('cart.order.dialog.title')}
+              {selectedSupplierId 
+                ? `${t('cart.order.dialog.title')} - ${cart?.suppliers?.find(s => s.id.toString() === selectedSupplierId)?.name}` 
+                : t('cart.order.dialog.title')
+              }
             </Typography>
           </DialogTitle>
           
@@ -585,7 +622,10 @@ const UnifiedCartPage: React.FC = () => {
                   {t('cart.order.dialog.comments')}
                 </Typography>
                 <Stack spacing={2}>
-                  {cart.suppliers.map((group) => (
+                  {(selectedSupplierId 
+                    ? cart.suppliers.filter(s => s.id.toString() === selectedSupplierId)
+                    : cart.suppliers
+                  ).map((group) => (
                     <Box key={group.id}>
                       <Typography variant="subtitle2" gutterBottom>
                         {group.name}
@@ -616,10 +656,15 @@ const UnifiedCartPage: React.FC = () => {
               {/* Сводка заказов */}
               <Box>
                 <Typography variant="h6" gutterBottom>
-                  {t('cart.order.dialog.summary', { count: suppliersCount })}
+                  {t('cart.order.dialog.summary', { 
+                    count: selectedSupplierId ? 1 : suppliersCount 
+                  })}
                 </Typography>
                 <Stack spacing={1}>
-                  {cart.suppliers.map((group) => (
+                  {(selectedSupplierId 
+                    ? cart.suppliers.filter(s => s.id.toString() === selectedSupplierId)
+                    : cart.suppliers
+                  ).map((group) => (
                     <Box key={group.id} sx={{ p: 2, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
                       <Typography variant="subtitle2">
                         {group.name}
@@ -635,7 +680,10 @@ const UnifiedCartPage: React.FC = () => {
           </DialogContent>
           
           <DialogActions>
-            <Button onClick={() => setOrderDialogOpen(false)}>
+            <Button onClick={() => {
+              setOrderDialogOpen(false);
+              setSelectedSupplierId(null); // Сбрасываем выбранного поставщика при отмене
+            }}>
               {t('cart.order.dialog.cancel')}
             </Button>
             <Button
