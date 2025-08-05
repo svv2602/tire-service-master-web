@@ -137,6 +137,60 @@ export const extractSearchParams = (query: string, parsedData?: any) => {
 };
 
 /**
+ * Проверяет, является ли результат поиска "только размером шин" без автомобиля
+ * @param results - результаты поиска
+ * @returns true если найден только размер шин без информации об автомобиле
+ */
+export const isTireSizeOnlyResult = (results: TireSearchResult[]): boolean => {
+  if (results.length === 0) return false;
+  
+  // Проверяем, что все результаты не содержат информацию об автомобиле
+  const hasCarInfo = results.some(result => {
+    // Если есть конкретная информация о бренде и модели автомобиля
+    // (не общие названия типа "Universal" или пустые строки)
+    const hasBrandInfo = result.brand_name && 
+      result.brand_name.trim() !== '' && 
+      !result.brand_name.toLowerCase().includes('universal') &&
+      !result.brand_name.toLowerCase().includes('общий') &&
+      !result.brand_name.toLowerCase().includes('размер');
+      
+    const hasModelInfo = result.model_name && 
+      result.model_name.trim() !== '' &&
+      !result.model_name.toLowerCase().includes('universal') &&
+      !result.model_name.toLowerCase().includes('общий') &&
+      !result.model_name.toLowerCase().includes('размер');
+    
+    return hasBrandInfo && hasModelInfo;
+  });
+  
+  return !hasCarInfo;
+};
+
+/**
+ * Извлекает единственный размер шины из результатов поиска
+ * @param results - результаты поиска
+ * @returns размер шины если найден единственный уникальный размер, иначе null
+ */
+export const extractSingleTireSize = (results: TireSearchResult[]): TireSize | null => {
+  if (results.length === 0) return null;
+  
+  // Собираем все уникальные размеры
+  const uniqueSizes = new Map<string, TireSize>();
+  
+  results.forEach(result => {
+    result.tire_sizes.forEach(size => {
+      const key = `${size.width}/${size.height}R${size.diameter}`;
+      if (!uniqueSizes.has(key)) {
+        uniqueSizes.set(key, size);
+      }
+    });
+  });
+  
+  // Возвращаем размер только если он единственный
+  return uniqueSizes.size === 1 ? Array.from(uniqueSizes.values())[0] : null;
+};
+
+/**
  * Создает URL для перехода к клиентской странице предложений шин
  * @param tireSize - размер шины
  * @param searchParams - параметры поиска

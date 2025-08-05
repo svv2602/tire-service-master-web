@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест автоматического перенаправления при поиске шин</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .test-case {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .test-input {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 5px 0;
+        }
+        .expected-result {
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        .no-redirect {
+            background: #fff3e0;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        .function-test {
+            background: #f3e5f5;
+            border: 1px solid #ce93d8;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        code {
+            background: #f1f3f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.redirect { background: #c8e6c9; color: #2e7d32; }
+        .status.no-redirect { background: #ffecb3; color: #f57c00; }
+        .button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Тест автоматического перенаправления при поиске шин</h1>
+    
+    <div class="test-section">
+        <h2>📋 Описание функциональности</h2>
+        <p><strong>Цель:</strong> При поиске запроса, который содержит только размер шин (без автомобиля), автоматически перенаправлять пользователя на страницу <code>/client/tire-offers</code> с соответствующими фильтрами.</p>
+        
+        <h3>Условия для автоматического перенаправления:</h3>
+        <ul>
+            <li>✅ В результатах поиска НЕТ информации об автомобиле (brand_name, model_name)</li>
+            <li>✅ Найден ЕДИНСТВЕННЫЙ уникальный размер шин</li>
+            <li>✅ Могут присутствовать дополнительные параметры (сезонность, бренд шин)</li>
+            <li>✅ НЕ активен режим разговора (conversation_mode)</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Тестовые случаи для автоматического перенаправления</h2>
+        
+        <div class="test-case">
+            <h3>1. Простой размер шины</h3>
+            <div class="test-input">Запрос: "225/50R17"</div>
+            <div class="expected-result">
+                <span class="status redirect">ПЕРЕНАПРАВЛЕНИЕ</span><br>
+                URL: <code>/client/tire-offers?size=225%2F50R17</code>
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>2. Размер с сезонностью</h3>
+            <div class="test-input">Запрос: "225/50R17 зимние"</div>
+            <div class="expected-result">
+                <span class="status redirect">ПЕРЕНАПРАВЛЕНИЕ</span><br>
+                URL: <code>/client/tire-offers?size=225%2F50R17&seasonality=зимние</code>
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>3. Размер с брендом шин</h3>
+            <div class="test-input">Запрос: "225/50R17 Michelin"</div>
+            <div class="expected-result">
+                <span class="status redirect">ПЕРЕНАПРАВЛЕНИЕ</span><br>
+                URL: <code>/client/tire-offers?size=225%2F50R17&brand=Michelin</code>
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>4. Размер с сезонностью и брендом</h3>
+            <div class="test-input">Запрос: "225/50R17 зимние Nokian"</div>
+            <div class="expected-result">
+                <span class="status redirect">ПЕРЕНАПРАВЛЕНИЕ</span><br>
+                URL: <code>/client/tire-offers?size=225%2F50R17&seasonality=зимние&brand=Nokian</code>
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>5. Альтернативный формат размера</h3>
+            <div class="test-input">Запрос: "R18 235/55"</div>
+            <div class="expected-result">
+                <span class="status redirect">ПЕРЕНАПРАВЛЕНИЕ</span><br>
+                URL: <code>/client/tire-offers?size=235%2F55R18</code>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🚫 Тестовые случаи БЕЗ автоматического перенаправления</h2>
+        
+        <div class="test-case">
+            <h3>1. Запрос с автомобилем</h3>
+            <div class="test-input">Запрос: "BMW 3 Series шины"</div>
+            <div class="no-redirect">
+                <span class="status no-redirect">НЕТ ПЕРЕНАПРАВЛЕНИЯ</span><br>
+                Причина: Содержит информацию об автомобиле
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>2. Несколько размеров</h3>
+            <div class="test-input">Запрос: "225/50R17 или 235/55R18"</div>
+            <div class="no-redirect">
+                <span class="status no-redirect">НЕТ ПЕРЕНАПРАВЛЕНИЯ</span><br>
+                Причина: Найдено несколько размеров шин
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>3. Общий поиск</h3>
+            <div class="test-input">Запрос: "зимние шины"</div>
+            <div class="no-redirect">
+                <span class="status no-redirect">НЕТ ПЕРЕНАПРАВЛЕНИЯ</span><br>
+                Причина: Нет конкретного размера
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>4. Режим разговора активен</h3>
+            <div class="test-input">Запрос: "225/50R17" (conversation_mode: true)</div>
+            <div class="no-redirect">
+                <span class="status no-redirect">НЕТ ПЕРЕНАПРАВЛЕНИЯ</span><br>
+                Причина: Активен режим разговора
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 Тестирование утилитарных функций</h2>
+        
+        <div class="function-test">
+            <h3>isTireSizeOnlyResult(results)</h3>
+            <p>Проверяет, содержат ли результаты только размеры шин без информации об автомобиле.</p>
+            
+            <h4>Примеры результатов:</h4>
+            <pre><code>// ✅ Только размер шин (должно вернуть true)
+const tireSizeOnlyResults = [
+  {
+    id: 1,
+    brand_name: "Universal",
+    model_name: "Размер",
+    tire_sizes: [{ width: 225, height: 50, diameter: 17, display: "225/50R17" }]
+  }
+];
+
+// ❌ С автомобилем (должно вернуть false)
+const carResults = [
+  {
+    id: 1,
+    brand_name: "BMW",
+    model_name: "3 Series",
+    tire_sizes: [{ width: 225, height: 50, diameter: 17, display: "225/50R17" }]
+  }
+];
+</code></pre>
+        </div>
+
+        <div class="function-test">
+            <h3>extractSingleTireSize(results)</h3>
+            <p>Извлекает единственный уникальный размер шины из результатов.</p>
+            
+            <h4>Примеры:</h4>
+            <pre><code>// ✅ Один размер (должно вернуть TireSize)
+const singleSizeResults = [
+  { tire_sizes: [{ width: 225, height: 50, diameter: 17, display: "225/50R17" }] }
+];
+
+// ❌ Несколько размеров (должно вернуть null)
+const multipleSizeResults = [
+  { tire_sizes: [
+    { width: 225, height: 50, diameter: 17, display: "225/50R17" },
+    { width: 235, height: 55, diameter: 18, display: "235/55R18" }
+  ]}
+];
+</code></pre>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🚀 Инструкции по тестированию</h2>
+        
+        <h3>1. Тестирование в браузере:</h3>
+        <ol>
+            <li>Перейдите на страницу <code>http://localhost:3008/client/tire-search</code></li>
+            <li>Введите один из тестовых запросов из списка выше</li>
+            <li>Проверьте, происходит ли автоматическое перенаправление</li>
+            <li>Убедитесь, что фильтры корректно применяются на странице tire-offers</li>
+        </ol>
+
+        <h3>2. Проверка консоли разработчика:</h3>
+        <p>В консоли браузера должны появляться отладочные сообщения:</p>
+        <ul>
+            <li><code>Найден единственный размер шин без автомобиля: {...}</code></li>
+            <li><code>Параметры поиска для фильтрации: {...}</code></li>
+            <li><code>Автоматический переход на: /client/tire-offers?...</code></li>
+        </ul>
+
+        <h3>3. Быстрые ссылки для тестирования:</h3>
+        <button class="button" onclick="window.open('http://localhost:3008/client/tire-search?q=225/50R17', '_blank')">
+            Тест: 225/50R17
+        </button>
+        <button class="button" onclick="window.open('http://localhost:3008/client/tire-search?q=225/50R17%20зимние', '_blank')">
+            Тест: 225/50R17 зимние
+        </button>
+        <button class="button" onclick="window.open('http://localhost:3008/client/tire-search?q=BMW%203%20Series', '_blank')">
+            Тест: BMW 3 Series (без перенаправления)
+        </button>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Ожидаемые результаты</h2>
+        
+        <h3>✅ Успешные сценарии:</h3>
+        <ul>
+            <li>Поиск размера шин без автомобиля → автоматический переход</li>
+            <li>Размер + сезонность → переход с фильтром seasonality</li>
+            <li>Размер + бренд шин → переход с фильтром brand</li>
+            <li>Комбинированные фильтры корректно передаются</li>
+        </ul>
+
+        <h3>❌ Исключения:</h3>
+        <ul>
+            <li>Поиск с автомобилем → остается на странице поиска</li>
+            <li>Несколько размеров → остается на странице поиска</li>
+            <li>Режим разговора → остается на странице поиска</li>
+            <li>Пустые результаты → остается на странице поиска</li>
+        </ul>
+    </div>
+
+    <script>
+        // Добавляем интерактивность для лучшего тестирования
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 Тест автоматического перенаправления при поиске шин загружен');
+            console.log('Используйте кнопки выше для быстрого тестирования различных сценариев');
+        });
+    </script>
+</body>
+</html>

@@ -36,7 +36,9 @@ import {
   Store as StoreIcon,
   Category as CategoryIcon,
   Close as CloseIcon,
-  ShoppingCart as ShoppingCartIcon
+  ShoppingCart as ShoppingCartIcon,
+  Clear as ClearIcon,
+  FilterList as FilterListIcon
 } from '@mui/icons-material';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -79,17 +81,25 @@ const TireOffersPage: React.FC = () => {
 
   // Автоматически извлекаем размеры из параметра size при загрузке
   useEffect(() => {
-    if (tireSize && !widthFilter && !heightFilter && !diameterFilter) {
+    const currentTireSize = searchParams.get('size') || '';
+    const currentWidth = searchParams.get('width') || '';
+    const currentHeight = searchParams.get('height') || '';
+    const currentDiameter = searchParams.get('diameter') || '';
+    
+    // Если есть параметр size, но нет отдельных параметров размеров
+    if (currentTireSize && !currentWidth && !currentHeight && !currentDiameter) {
       // Парсим размер вида "225/60R16"
-      const sizeMatch = tireSize.match(/^(\d+)\/(\d+)R(\d+)$/);
+      const sizeMatch = currentTireSize.match(/^(\d+)\/(\d+)R(\d+)$/);
       if (sizeMatch) {
         const [, width, height, diameter] = sizeMatch;
-        setWidthFilter(width);
-        setHeightFilter(height);
-        setDiameterFilter(diameter);
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set('width', width);
+        newParams.set('height', height);
+        newParams.set('diameter', diameter);
+        setSearchParams(newParams, { replace: true });
       }
     }
-  }, [tireSize, widthFilter, heightFilter, diameterFilter]);
+  }, [searchParams, setSearchParams]);
 
   // Преобразование сезонности для API с расширенной локализацией
   const convertSeasonForAPI = (season: string): string => {
@@ -191,10 +201,21 @@ const TireOffersPage: React.FC = () => {
     brand: brandFilter || undefined
   });
 
-  // Обновление поиска при изменении параметров URL
+  // Синхронизация всех фильтров с URL параметрами
   useEffect(() => {
     const newSearch = searchParams.get('search') || '';
+    const newWidth = searchParams.get('width') || '';
+    const newHeight = searchParams.get('height') || '';
+    const newDiameter = searchParams.get('diameter') || '';
+    const newSeason = searchParams.get('seasonality') || '';
+    const newBrand = searchParams.get('brand') || searchParams.get('manufacturer') || '';
+    
     setSearch(newSearch);
+    setWidthFilter(newWidth);
+    setHeightFilter(newHeight);
+    setDiameterFilter(newDiameter);
+    setSeasonFilter(newSeason);
+    setBrandFilter(newBrand);
   }, [searchParams]);
 
   // Обработчики
@@ -242,6 +263,42 @@ const TireOffersPage: React.FC = () => {
     setSelectedProduct(null);
   };
 
+  // Обработчики удаления фильтров
+  const handleRemoveFilter = (filterType: 'size' | 'brand' | 'season' | 'search') => {
+    console.log('Удаление фильтра:', filterType);
+    const newParams = new URLSearchParams(searchParams);
+    
+    switch (filterType) {
+      case 'size':
+        newParams.delete('size');
+        newParams.delete('width');
+        newParams.delete('height'); 
+        newParams.delete('diameter');
+        break;
+      case 'brand':
+        newParams.delete('brand');
+        newParams.delete('manufacturer');
+        break;
+      case 'season':
+        newParams.delete('seasonality');
+        break;
+      case 'search':
+        newParams.delete('search');
+        break;
+    }
+    
+    console.log('Новые параметры URL:', newParams.toString());
+    setSearchParams(newParams);
+    setPage(1); // Сбрасываем на первую страницу при изменении фильтров
+  };
+
+  // Функция для очистки всех фильтров
+  const handleClearAllFilters = () => {
+    console.log('Очистка всех фильтров');
+    setSearchParams(new URLSearchParams());
+    setPage(1);
+  };
+
   // Рендер заголовка страницы
   const renderHeader = () => (
     <Box sx={{ mb: 3 }}>
@@ -250,43 +307,94 @@ const TireOffersPage: React.FC = () => {
         Предложения шин
       </Typography>
       
-      {(tireSize || processedSearch.season || brand || seasonality) && (
-        <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap' }}>
-          {tireSize && (
-            <Chip 
-              label={`Размер: ${tireSize}`} 
-              color="primary" 
-              variant="filled"
-              icon={<CategoryIcon />}
-            />
-          )}
-          {brand && (
-            <Chip 
-              label={`Бренд: ${brand}`} 
-              color="secondary" 
-              variant="outlined"
-            />
-          )}
-          {(processedSearch.season || seasonality) && (
-            <Chip 
-              label={`Сезон: ${processedSearch.season === 'winter' ? 'Зимние' : 
-                              processedSearch.season === 'summer' ? 'Летние' : 
-                              processedSearch.season === 'all_season' ? 'Всесезонные' : 
-                              seasonality}`} 
-              color="info" 
-              variant={processedSearch.season ? "filled" : "outlined"}
-              icon={processedSearch.season ? <SearchIcon /> : undefined}
-            />
-          )}
-          {processedSearch.search && (
-            <Chip 
-              label={`Поиск: "${processedSearch.search}"`} 
-              color="success" 
-              variant="outlined"
-              icon={<SearchIcon />}
-            />
-          )}
-        </Stack>
+      {(tireSize || processedSearch.season || brand || seasonality || processedSearch.search) && (
+        <Box sx={{ mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <FilterListIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+              Активные фильтры:
+            </Typography>
+            <Button
+              size="small"
+              variant="text"
+              startIcon={<ClearIcon />}
+              onClick={handleClearAllFilters}
+              sx={{ 
+                fontSize: '0.75rem',
+                textTransform: 'none',
+                color: 'text.secondary',
+                '&:hover': { color: 'error.main' }
+              }}
+            >
+              Очистить все
+            </Button>
+          </Box>
+          
+          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+            {tireSize && (
+              <Chip 
+                label={`Размер: ${tireSize}`} 
+                color="primary" 
+                variant="filled"
+                icon={<CategoryIcon />}
+                onDelete={() => handleRemoveFilter('size')}
+                deleteIcon={<CloseIcon />}
+                sx={{
+                  '& .MuiChip-deleteIcon': {
+                    fontSize: 18
+                  }
+                }}
+              />
+            )}
+            {brand && (
+              <Chip 
+                label={`Бренд: ${brand}`} 
+                color="secondary" 
+                variant="outlined"
+                onDelete={() => handleRemoveFilter('brand')}
+                deleteIcon={<CloseIcon />}
+                sx={{
+                  '& .MuiChip-deleteIcon': {
+                    fontSize: 18
+                  }
+                }}
+              />
+            )}
+            {(processedSearch.season || seasonality) && (
+              <Chip 
+                label={`Сезон: ${processedSearch.season === 'winter' ? 'Зимние' : 
+                                processedSearch.season === 'summer' ? 'Летние' : 
+                                processedSearch.season === 'all_season' ? 'Всесезонные' : 
+                                seasonality}`} 
+                color="info" 
+                variant={processedSearch.season ? "filled" : "outlined"}
+                icon={processedSearch.season ? <SearchIcon /> : undefined}
+                onDelete={() => handleRemoveFilter('season')}
+                deleteIcon={<CloseIcon />}
+                sx={{
+                  '& .MuiChip-deleteIcon': {
+                    fontSize: 18
+                  }
+                }}
+              />
+            )}
+            {processedSearch.search && (
+              <Chip 
+                label={`Поиск: "${processedSearch.search}"`} 
+                color="success" 
+                variant="outlined"
+                icon={<SearchIcon />}
+                onDelete={() => handleRemoveFilter('search')}
+                deleteIcon={<CloseIcon />}
+                sx={{
+                  '& .MuiChip-deleteIcon': {
+                    fontSize: 18
+                  }
+                }}
+              />
+            )}
+          </Stack>
+        </Box>
       )}
       
       <Typography variant="body1" color="text.secondary">
