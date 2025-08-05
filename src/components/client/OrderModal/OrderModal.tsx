@@ -26,6 +26,7 @@ import { useTranslation } from 'react-i18next';
 import { useAddToUnifiedCartMutation } from '../../../api/unifiedTireCart.api';
 import { useAppSelector } from '../../../store';
 import { SupplierProduct } from '../../../api/suppliers.api';
+import { GuestCartDialog } from '../cart/GuestCartDialog';
 
 interface OrderModalProps {
   open: boolean;
@@ -49,6 +50,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ open, onClose, product }) => {
     phone: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showGuestDialog, setShowGuestDialog] = useState(false);
   
   const [addToCart, { isLoading: isAddingToCart }] = useAddToUnifiedCartMutation();
 
@@ -105,6 +107,19 @@ const OrderModal: React.FC<OrderModalProps> = ({ open, onClose, product }) => {
       return;
     }
 
+    // Если пользователь не авторизован, показываем диалог выбора
+    if (!isAuthenticated) {
+      setShowGuestDialog(true);
+      return;
+    }
+
+    // Для авторизованных пользователей - сразу добавляем в корзину
+    await addToCartDirectly();
+  };
+
+  const addToCartDirectly = async () => {
+    if (!product) return;
+
     try {
       await addToCart({
         supplier_tire_product_id: product.id,
@@ -123,12 +138,20 @@ const OrderModal: React.FC<OrderModalProps> = ({ open, onClose, product }) => {
       // Обработка специфических ошибок
       if (error.status === 422) {
         setErrors({ submit: 'Товар закончился на складе' });
-      } else if (error.status === 401) {
-        setErrors({ submit: 'Необходима авторизация для добавления в корзину' });
       } else {
         setErrors({ submit: 'Произошла ошибка при добавлении товара в корзину' });
       }
     }
+  };
+
+  const handleGuestContinue = async () => {
+    // Продолжаем как гость - добавляем товар в корзину
+    await addToCartDirectly();
+  };
+
+  const handleLoginSuccess = async () => {
+    // После успешного входа добавляем товар в корзину
+    await addToCartDirectly();
   };
 
   const formatPrice = (price: number) => {
@@ -294,6 +317,14 @@ const OrderModal: React.FC<OrderModalProps> = ({ open, onClose, product }) => {
           {isAddingToCart ? 'Добавление...' : 'Добавить в корзину'}
         </Button>
       </DialogActions>
+
+      {/* Диалог для гостевых пользователей */}
+      <GuestCartDialog
+        open={showGuestDialog}
+        onClose={() => setShowGuestDialog(false)}
+        onContinueAsGuest={handleGuestContinue}
+        onLoginSuccess={handleLoginSuccess}
+      />
     </Dialog>
   );
 };
