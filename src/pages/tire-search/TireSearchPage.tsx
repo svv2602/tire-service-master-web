@@ -27,6 +27,7 @@ import { useSupplierProductsSearch } from '../../hooks/useSupplierProductsSearch
 import { tireSearchCacheUtils } from '../../api/tireSearch.api';
 import { useAppDispatch } from '../../store';
 import { getThemeColors } from '../../styles';
+import { isTireSizeOnlyResult, extractSingleTireSize, createTireOffersUrl, extractSearchParams } from '../../utils/tireSearchUtils';
 import ClientLayout from '../../components/client/ClientLayout';
 import type { TireSearchResult, TireSuggestion } from '../../types/tireSearch';
 
@@ -53,6 +54,9 @@ const TireSearchPage: React.FC = () => {
   // Состояние для мини-чата
   const [conversationData, setConversationData] = useState<any>(null);
   const [isConversationMode, setIsConversationMode] = useState(false);
+  
+  // Состояние для автоматического перенаправления
+  const [pendingRedirect, setPendingRedirect] = useState<string | null>(null);
 
   // Хуки для поиска
   const {
@@ -88,6 +92,15 @@ const TireSearchPage: React.FC = () => {
     autoSearch: false,
     enableFilters: true
   });
+
+  // Обработка автоматического перенаправления
+  useEffect(() => {
+    if (pendingRedirect) {
+      console.log('Выполняем отложенный переход на:', pendingRedirect);
+      navigate(pendingRedirect);
+      setPendingRedirect(null);
+    }
+  }, [pendingRedirect, navigate]);
 
   // Инициализация поиска из URL параметров
   useEffect(() => {
@@ -219,12 +232,45 @@ const TireSearchPage: React.FC = () => {
         setConversationData(null);
       }
       
+      // Проверяем условие для автоматического перехода на tire-offers
+      // Используем результаты из API ответа, а не из состояния (которое может быть устаревшим)
+      if (result?.results && result.results.length > 0 && !isConversationMode) {
+        console.log('Проверка результатов для автоматического перехода:', result.results.length, 'результатов');
+        
+        // Проверяем, является ли результат "только размером шин" без автомобиля
+        if (isTireSizeOnlyResult(result.results)) {
+          // Извлекаем единственный размер шины
+          const singleTireSize = extractSingleTireSize(result.results);
+          
+          if (singleTireSize) {
+            console.log('Найден единственный размер шин без автомобиля:', singleTireSize);
+            
+            // Извлекаем параметры поиска (сезонность, бренд шин)
+            const searchParameters = extractSearchParams(query.trim(), result?.parsed_data);
+            console.log('Параметры поиска для фильтрации:', searchParameters);
+            
+            // Создаем URL для перехода с фильтрами
+            const offersUrl = createTireOffersUrl(singleTireSize, searchParameters);
+            console.log('Запланирован автоматический переход на:', offersUrl);
+            
+            // Устанавливаем отложенный переход (будет выполнен в useEffect)
+            setPendingRedirect(offersUrl);
+          } else {
+            console.log('Найдено несколько размеров шин, автоматический переход отменен');
+          }
+        } else {
+          console.log('Результаты содержат информацию об автомобиле, автоматический переход отменен');
+        }
+      } else {
+        console.log('Нет результатов для автоматического перехода или активен режим разговора');
+      }
+      
       // Автоматический поиск товаров поставщиков если есть parsed_data
       if (result?.parsed_data) {
         await handleSupplierProductsSearch(result.parsed_data);
       }
       
-      if (searchState.results.length === 0 && !isConversationMode) {
+      if ((!result?.results || result.results.length === 0) && !isConversationMode) {
         setNotification({
           open: true,
           message: 'По вашему запросу ничего не найдено. Попробуйте другие ключевые слова.',
@@ -463,22 +509,24 @@ const TireSearchPage: React.FC = () => {
                 favorites={favorites}
               />
             
-            {/* Результаты поиска товаров поставщиков - скрываем в режиме диалога */}
-            <SupplierProductsResults
-              groups={supplierGroups}
-              loading={supplierLoading}
-              error={supplierError || undefined}
-              showAllOffers={true}
-              onProductClick={(product) => {
-                // Открытие товара в новой вкладке
-                if (product.product_url) {
-                  window.open(product.product_url, '_blank', 'noopener,noreferrer');
-                }
-              }}
-              onSupplierClick={(supplierId) => {
-                // TODO: Добавить логику перехода к странице поставщика
-              }}
-            />
+            {/* Результаты поиска товаров поставщиков - скрываем в режиме диалога и если нет данных */}
+            {supplierGroups && supplierGroups.length > 0 && (
+              <SupplierProductsResults
+                groups={supplierGroups}
+                loading={supplierLoading}
+                error={supplierError || undefined}
+                showAllOffers={true}
+                onProductClick={(product) => {
+                  // Открытие товара в новой вкладке
+                  if (product.product_url) {
+                    window.open(product.product_url, '_blank', 'noopener,noreferrer');
+                  }
+                }}
+                onSupplierClick={(supplierId) => {
+                  // TODO: Добавить логику перехода к странице поставщика
+                }}
+              />
+            )}
           </Box>
         </Fade>
         )}

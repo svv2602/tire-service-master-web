@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Box,
   Typography,
@@ -6,47 +6,27 @@ import {
   Alert,
   Skeleton,
   Button,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Chip,
-  Stack,
-  Divider,
   Paper,
   LinearProgress,
   Fade,
-  Collapse,
   useTheme,
-  ToggleButton,
-  ToggleButtonGroup
+  Chip
 } from '@mui/material';
 import {
   Search as SearchIcon,
-  Sort as SortIcon,
-  ViewList as ViewListIcon,
-  ViewModule as ViewModuleIcon,
-  TrendingUp as TrendingUpIcon,
-  Info as InfoIcon,
-  Category as CategoryIcon,
-  FormatListBulleted as FormatListBulletedIcon
+  TrendingUp as TrendingUpIcon
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import TireConfigurationCard from '../TireConfigurationCard/TireConfigurationCard';
-import TireDiameterCard from '../TireDiameterCard';
-import Pagination from '../../ui/Pagination/Pagination';
+import SupplierTireDiameterCard from '../SupplierTireDiameterCard/SupplierTireDiameterCard';
+
 import { getThemeColors } from '../../../styles';
-import { groupResultsByDiameter, extractSearchParams, createTireOffersUrl } from '../../../utils/tireSearchUtils';
+import { groupResultsByDiameter, extractSearchParams } from '../../../utils/tireSearchUtils';
 import type { 
-  TireSearchResultsProps,
-  TireSearchResult,
-  TireSize,
-  TIRE_SEARCH_CONSTANTS 
+  TireSearchResultsProps
 } from '../../../types/tireSearch';
 
-type ViewMode = 'grid' | 'list' | 'diameter';
-type SortOption = 'relevance' | 'brand' | 'model' | 'year';
+
 
 const TireSearchResults: React.FC<TireSearchResultsProps> = ({
   results = [],
@@ -66,34 +46,14 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const navigate = useNavigate();
-  const [viewMode, setViewMode] = useState<ViewMode>('diameter');
-  const [sortBy, setSortBy] = useState<SortOption>('relevance');
-  const [showSearchInfo, setShowSearchInfo] = useState(false);
 
-  // Сортировка результатов
-  const sortedResults = React.useMemo(() => {
-    if (sortBy === 'relevance') {
-      return [...results].sort((a, b) => (b.match_score || 0) - (a.match_score || 0));
-    }
-    
-    return [...results].sort((a, b) => {
-      switch (sortBy) {
-        case 'brand':
-          return a.brand_name.localeCompare(b.brand_name);
-        case 'model':
-          return a.model_name.localeCompare(b.model_name);
-        case 'year':
-          return b.year_to - a.year_to; // Новые автомобили сначала
-        default:
-          return 0;
-      }
-    });
-  }, [results, sortBy]);
+
+
 
   // Группировка результатов по диаметрам
   const diameterGroups = React.useMemo(() => {
-    return groupResultsByDiameter(sortedResults);
-  }, [sortedResults]);
+    return groupResultsByDiameter(results);
+  }, [results]);
 
   // Извлечение параметров поиска из переданного query
   const searchParams = React.useMemo(() => {
@@ -103,31 +63,7 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
     return extractSearchParams(query);
   }, [query]);
 
-  // Обработка изменения страницы
-  const handlePageChange = (newPage: number) => {
-    onPageChange?.(newPage);
-    // Прокрутка к началу результатов
-    document.getElementById('search-results-top')?.scrollIntoView({ 
-      behavior: 'smooth', 
-      block: 'start' 
-    });
-  };
 
-  // Обработка клика по результату
-  const handleResultClick = (result: TireSearchResult) => {
-    onResultClick?.(result);
-  };
-
-  // Обработка переключения избранного
-  const handleFavoriteToggle = (resultId: number) => {
-    onFavoriteToggle?.(resultId);
-  };
-
-  // Обработка клика по размеру шины - переход к клиентской странице предложений
-  const handleSizeClick = (size: TireSize, searchParams: any) => {
-    const offersUrl = createTireOffersUrl(size, searchParams);
-    navigate(offersUrl);
-  };
 
   // Рендер загрузки
   const renderLoading = () => (
@@ -221,166 +157,48 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
 
   // Рендер заголовка результатов
   const renderResultsHeader = () => (
-    <Box id="search-results-top" sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-      <Box>
-        <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
-          Результаты поиска
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {viewMode === 'diameter' 
-            ? `Найдено ${diameterGroups.length} диаметров (${total} конфигураций)`
-            : `Найдено ${total} конфигураций шин`
-          }
-        </Typography>
-      </Box>
-
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-        {/* Информация о поиске */}
-        <Button
-          size="small"
-          startIcon={<InfoIcon />}
-          onClick={() => setShowSearchInfo(!showSearchInfo)}
-          sx={{ display: { xs: 'none', sm: 'flex' } }}
-        >
-          Информация
-        </Button>
-
-        {/* Сортировка */}
-        <FormControl size="small" sx={{ minWidth: 120 }}>
-          <InputLabel>Сортировка</InputLabel>
-          <Select
-            value={sortBy}
-            label="Сортировка"
-            onChange={(e) => setSortBy(e.target.value as SortOption)}
-            startAdornment={<SortIcon sx={{ mr: 1, fontSize: 20 }} />}
-          >
-            <MenuItem value="relevance">По релевантности</MenuItem>
-            <MenuItem value="brand">По бренду</MenuItem>
-            <MenuItem value="model">По модели</MenuItem>
-            <MenuItem value="year">По году</MenuItem>
-          </Select>
-        </FormControl>
-
-        {/* Переключение вида */}
-        <ToggleButtonGroup
-          value={viewMode}
-          exclusive
-          onChange={(e, newMode) => newMode && setViewMode(newMode)}
-          size="small"
-          sx={{ border: '1px solid', borderColor: 'divider' }}
-        >
-          <ToggleButton value="diameter" aria-label="по диаметрам">
-            <CategoryIcon />
-          </ToggleButton>
-          <ToggleButton value="grid" aria-label="сетка">
-            <ViewModuleIcon />
-          </ToggleButton>
-          <ToggleButton value="list" aria-label="список">
-            <ViewListIcon />
-          </ToggleButton>
-        </ToggleButtonGroup>
-      </Box>
+    <Box id="search-results-top" sx={{ mb: 3 }}>
+      <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
+        Результаты поиска
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
+        {t('supplierSizes.foundDiametersWithSizes', { count: diameterGroups.length })}
+      </Typography>
     </Box>
   );
 
-  // Рендер информации о поиске
-  const renderSearchInfo = () => (
-    <Collapse in={showSearchInfo}>
-      <Alert severity="info" sx={{ mb: 3, borderRadius: 2 }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-          Информация о поиске
-        </Typography>
-        <Stack direction="row" spacing={2} flexWrap="wrap">
-          <Typography variant="body2">
-            Страница: {page}
-          </Typography>
-          <Typography variant="body2">
-            Показано: {results.length} из {total}
-          </Typography>
-          <Typography variant="body2">
-            Сортировка: {
-              sortBy === 'relevance' ? 'По релевантности' :
-              sortBy === 'brand' ? 'По бренду' :
-              sortBy === 'model' ? 'По модели' :
-              'По году'
-            }
-          </Typography>
-        </Stack>
-      </Alert>
-    </Collapse>
-  );
 
-  // Рендер результатов
+
+  // Рендер результатов - только актуальные размеры поставщиков
   const renderResults = () => {
-    // Режим по диаметрам
-    if (viewMode === 'diameter') {
-      return (
-        <Grid container spacing={3}>
-          {diameterGroups.map((group) => (
+    return (
+      <Grid container spacing={3}>
+        {diameterGroups.map((group) => {
+          // Извлекаем размеры для данного диаметра из результатов поиска
+          const filterSizes = group.sizes.map(size => ({
+            width: size.width,
+            height: size.height
+          }));
+          
+          return (
             <Grid item xs={12} md={6} lg={4} key={group.diameter}>
               <Fade in timeout={300}>
                 <div>
-                  <TireDiameterCard
-                    diameterGroup={group}
-                    onSizeClick={handleSizeClick}
+                  <SupplierTireDiameterCard
+                    diameter={group.diameter.toString()}
                     searchParams={searchParams}
+                    filterSizes={filterSizes}
                   />
                 </div>
               </Fade>
             </Grid>
-          ))}
-        </Grid>
-      );
-    }
-
-    // Обычные режимы (grid/list)
-    const gridProps = viewMode === 'grid' 
-      ? { xs: 12, sm: 6, lg: 4 }
-      : { xs: 12 };
-
-    return (
-      <Grid container spacing={3}>
-        {sortedResults.map((result) => (
-          <Grid item {...gridProps} key={result.id}>
-            <Fade in timeout={300}>
-              <div>
-                <TireConfigurationCard
-                  configuration={result}
-                  onClick={() => handleResultClick(result)}
-                  onFavoriteToggle={() => handleFavoriteToggle(result.id)}
-                  isFavorite={favorites.includes(result.id)}
-                  compact={viewMode === 'list'}
-                  showYear={true}
-                  showTireSizes={true}
-                />
-              </div>
-            </Fade>
-          </Grid>
-        ))}
+          );
+        })}
       </Grid>
     );
   };
 
-  // Рендер пагинации
-  const renderPagination = () => {
-    const totalPages = Math.ceil(total / 20); // TIRE_SEARCH_CONSTANTS.DEFAULT_PAGE_SIZE
-    
-    if (totalPages <= 1) return null;
 
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-        <Pagination
-          count={totalPages}
-          page={page}
-          onChange={handlePageChange}
-          color="primary"
-          size="large"
-          showFirstButton
-          showLastButton
-        />
-      </Box>
-    );
-  };
 
   // Основной рендер
   return (
@@ -396,9 +214,7 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
       ) : (
         <>
           {renderResultsHeader()}
-          {renderSearchInfo()}
           {renderResults()}
-          {renderPagination()}
         </>
       )}
     </Box>
