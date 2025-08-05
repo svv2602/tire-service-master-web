@@ -9,25 +9,25 @@ import {
   ShoppingCart as ShoppingCartIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useGetTireCartsQuery } from '../../../api/tireCarts.api';
+import { useGetUnifiedTireCartQuery } from '../../../api/unifiedTireCart.api';
 import { useAppSelector } from '../../../store';
 
 const CartIndicator: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   
-  // Загружаем корзины только для авторизованных пользователей
+  // Загружаем единую корзину только для авторизованных пользователей
   const { 
-    data: carts = [], 
+    data: cartResponse,
     isLoading,
     isError,
     error
-  } = useGetTireCartsQuery(undefined, {
+  } = useGetUnifiedTireCartQuery(undefined, {
     skip: !isAuthenticated
   });
 
-  // Подсчитываем общее количество товаров во всех корзинах
-  const totalItems = carts.reduce((total, cart) => total + cart.items_count, 0);
+  // Получаем общее количество товаров из единой корзины
+  const totalItems = cartResponse?.cart?.total_items_count || 0;
 
   const handleCartClick = () => {
     navigate('/client/cart');

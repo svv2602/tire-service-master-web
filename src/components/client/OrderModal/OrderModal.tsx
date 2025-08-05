@@ -23,7 +23,7 @@ import {
   LocalOffer as OfferIcon
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import { useAddToCartMutation } from '../../../api/tireCarts.api';
+import { useAddToUnifiedCartMutation } from '../../../api/unifiedTireCart.api';
 import { useAppSelector } from '../../../store';
 import { SupplierProduct } from '../../../api/suppliers.api';
 
@@ -50,7 +50,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ open, onClose, product }) => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   
-  const [addToCart, { isLoading: isAddingToCart }] = useAddToCartMutation();
+  const [addToCart, { isLoading: isAddingToCart }] = useAddToUnifiedCartMutation();
 
   // Автозаполнение контактных данных для авторизованных пользователей
   useEffect(() => {
@@ -108,8 +108,7 @@ const OrderModal: React.FC<OrderModalProps> = ({ open, onClose, product }) => {
     try {
       await addToCart({
         supplier_tire_product_id: product.id,
-        quantity,
-        supplier_id: product.supplier?.id || 0
+        quantity
       }).unwrap();
 
       // Успешное добавление в корзину
