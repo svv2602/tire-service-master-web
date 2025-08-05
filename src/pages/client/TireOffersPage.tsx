@@ -25,7 +25,8 @@ import {
   Tooltip,
   Avatar,
   Dialog,
-  DialogContent
+  DialogContent,
+  Container
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -40,6 +41,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Pagination from '../../components/ui/Pagination/Pagination';
 import { useGetAllSupplierProductsQuery, SupplierProduct } from '../../api/suppliers.api';
+import ClientLayout from '../../components/client/ClientLayout';
 
 const TireOffersPage: React.FC = () => {
   const { t } = useTranslation(['client', 'common']);
@@ -83,17 +85,69 @@ const TireOffersPage: React.FC = () => {
     }
   }, [tireSize, widthFilter, heightFilter, diameterFilter]);
 
-  // Преобразование сезонности для API
+  // Преобразование сезонности для API с расширенной локализацией
   const convertSeasonForAPI = (season: string): string => {
     const seasonMap: { [key: string]: string } = {
+      // Русский
       'зимние': 'winter',
+      'зимняя': 'winter',
+      'зимний': 'winter',
+      'зима': 'winter',
       'летние': 'summer', 
+      'летняя': 'summer',
+      'летний': 'summer',
+      'лето': 'summer',
       'всесезонные': 'all_season',
+      'всесезонная': 'all_season',
+      'всесезонный': 'all_season',
+      'всесезон': 'all_season',
+      // Украинский
+      'зимові': 'winter',
+      'зимова': 'winter',
+      'зимовий': 'winter',
+      'літні': 'summer',
+      'літня': 'summer',
+      'літній': 'summer',
+      'літо': 'summer',
+      'всесезонні': 'all_season',
+      'всесезонна': 'all_season',
+      'всесезонний': 'all_season',
+      // Английский (как есть)
       'winter': 'winter',
       'summer': 'summer',
       'all_season': 'all_season'
     };
     return seasonMap[season.toLowerCase()] || season;
+  };
+
+  // Функция для обработки расширенного поиска
+  const processEnhancedSearch = (searchQuery: string): { search: string; season?: string } => {
+    if (!searchQuery.trim()) return { search: '' };
+
+    // Разделяем поисковый запрос на части (пробелы и слеши)
+    const searchParts = searchQuery.toLowerCase()
+      .split(/[\s\/]+/)
+      .filter(part => part.trim().length > 0);
+
+    const processedParts: string[] = [];
+    let detectedSeason: string | undefined;
+
+    // Проверяем каждую часть на сезонность
+    for (const part of searchParts) {
+      const seasonMatch = convertSeasonForAPI(part);
+      if (['winter', 'summer', 'all_season'].includes(seasonMatch)) {
+        // Найдена сезонность - сохраняем для отдельного параметра
+        detectedSeason = seasonMatch;
+      } else {
+        // Обычное слово - добавляем к поиску
+        processedParts.push(part);
+      }
+    }
+
+    return {
+      search: processedParts.join(' '), // Объединяем обратно пробелами для backend
+      season: detectedSeason
+    };
   };
 
   // Синхронизируем фильтры с URL параметрами
@@ -106,7 +160,10 @@ const TireOffersPage: React.FC = () => {
     }
   }, [seasonality, brand, manufacturer, seasonFilter, brandFilter]);
   
-  // API запрос с расширенными фильтрами
+  // Обработка расширенного поиска
+  const processedSearch = processEnhancedSearch(search);
+
+  // API запрос с улучшенной логикой поиска
   const {
     data: offersResponse,
     isLoading,
@@ -115,14 +172,15 @@ const TireOffersPage: React.FC = () => {
   } = useGetAllSupplierProductsQuery({
     page,
     per_page: 20,
-    search: search.trim(),
+    search: processedSearch.search.trim(),
     in_stock_only: inStockOnly,
     sort_by: sortBy,
-    // Добавляем дополнительные параметры фильтрации
+    // Автоматически определенная сезонность из поиска
+    season: processedSearch.season || (seasonFilter ? convertSeasonForAPI(seasonFilter) : undefined),
+    // Сохраняем поддержку URL параметров для обратной совместимости
     width: widthFilter ? parseInt(widthFilter) : undefined,
     height: heightFilter ? parseInt(heightFilter) : undefined,
     diameter: diameterFilter || undefined,
-    season: seasonFilter ? convertSeasonForAPI(seasonFilter) : undefined,
     brand: brandFilter || undefined
   });
 
@@ -174,14 +232,16 @@ const TireOffersPage: React.FC = () => {
         Предложения шин
       </Typography>
       
-      {tireSize && (
-        <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-          <Chip 
-            label={`Размер: ${tireSize}`} 
-            color="primary" 
-            variant="filled"
-            icon={<CategoryIcon />}
-          />
+      {(tireSize || processedSearch.season || brand || seasonality) && (
+        <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap' }}>
+          {tireSize && (
+            <Chip 
+              label={`Размер: ${tireSize}`} 
+              color="primary" 
+              variant="filled"
+              icon={<CategoryIcon />}
+            />
+          )}
           {brand && (
             <Chip 
               label={`Бренд: ${brand}`} 
@@ -189,11 +249,23 @@ const TireOffersPage: React.FC = () => {
               variant="outlined"
             />
           )}
-          {seasonality && (
+          {(processedSearch.season || seasonality) && (
             <Chip 
-              label={`Сезон: ${seasonality}`} 
+              label={`Сезон: ${processedSearch.season === 'winter' ? 'Зимние' : 
+                              processedSearch.season === 'summer' ? 'Летние' : 
+                              processedSearch.season === 'all_season' ? 'Всесезонные' : 
+                              seasonality}`} 
               color="info" 
+              variant={processedSearch.season ? "filled" : "outlined"}
+              icon={processedSearch.season ? <SearchIcon /> : undefined}
+            />
+          )}
+          {processedSearch.search && (
+            <Chip 
+              label={`Поиск: "${processedSearch.search}"`} 
+              color="success" 
               variant="outlined"
+              icon={<SearchIcon />}
             />
           )}
         </Stack>
@@ -211,14 +283,15 @@ const TireOffersPage: React.FC = () => {
       {/* Основная строка фильтров */}
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center" sx={{ mb: 2 }}>
         <TextField
-          placeholder="Дополнительный поиск по названию, бренду..."
+          placeholder="Поиск по названию, бренду, сезонности (зимние/зимова, летние/літні, всесезонные/всесезонні)..."
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
           size="small"
-          sx={{ flexGrow: 1, minWidth: 250 }}
+          sx={{ flexGrow: 1, minWidth: 400 }}
           InputProps={{
             startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
           }}
+          helperText="Используйте пробелы или слеши (/) для поиска по нескольким словам"
         />
         
         <FormControlLabel
@@ -245,6 +318,18 @@ const TireOffersPage: React.FC = () => {
           </Select>
         </FormControl>
         
+        <Button
+          variant="outlined"
+          onClick={() => {
+            setSearch('');
+            setPage(1);
+          }}
+          size="small"
+          disabled={!search.trim()}
+        >
+          Очистить
+        </Button>
+        
         <Tooltip title="Обновить данные">
           <IconButton onClick={handleRefresh} color="primary">
             <RefreshIcon />
@@ -252,76 +337,7 @@ const TireOffersPage: React.FC = () => {
         </Tooltip>
       </Stack>
 
-      {/* Дополнительные фильтры */}
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
-        <TextField
-          label="Ширина"
-          placeholder="225"
-          value={widthFilter}
-          onChange={(e) => setWidthFilter(e.target.value)}
-          size="small"
-          sx={{ width: 100 }}
-          type="number"
-        />
-        
-        <TextField
-          label="Высота"
-          placeholder="60"
-          value={heightFilter}
-          onChange={(e) => setHeightFilter(e.target.value)}
-          size="small"
-          sx={{ width: 100 }}
-          type="number"
-        />
-        
-        <TextField
-          label="Диаметр"
-          placeholder="16"
-          value={diameterFilter}
-          onChange={(e) => setDiameterFilter(e.target.value)}
-          size="small"
-          sx={{ width: 100 }}
-        />
-        
-        <FormControl size="small" sx={{ minWidth: 140 }}>
-          <InputLabel>Сезонность</InputLabel>
-          <Select
-            value={seasonFilter}
-            label="Сезонность"
-            onChange={(e) => setSeasonFilter(e.target.value)}
-          >
-            <MenuItem value="">Все</MenuItem>
-            <MenuItem value="зимние">Зимние</MenuItem>
-            <MenuItem value="летние">Летние</MenuItem>
-            <MenuItem value="всесезонные">Всесезонные</MenuItem>
-          </Select>
-        </FormControl>
-        
-        <TextField
-          label="Бренд"
-          placeholder="Michelin, Continental..."
-          value={brandFilter}
-          onChange={(e) => setBrandFilter(e.target.value)}
-          size="small"
-          sx={{ minWidth: 180 }}
-        />
-        
-        <Button
-          variant="outlined"
-          onClick={() => {
-            setWidthFilter('');
-            setHeightFilter('');
-            setDiameterFilter('');
-            setSeasonFilter('');
-            setBrandFilter('');
-            setSearch('');
-            setPage(1);
-          }}
-          size="small"
-        >
-          Сбросить
-        </Button>
-      </Stack>
+      {/* Дополнительные фильтры скрыты - поиск улучшен в основной строке */}
     </Paper>
   );
 
@@ -538,20 +554,22 @@ const TireOffersPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      {renderHeader()}
-      {renderFilters()}
-      
-      {isLoading && <LinearProgress sx={{ mb: 2 }} />}
-      
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          Ошибка загрузки предложений. Попробуйте обновить страницу.
-        </Alert>
-      )}
-      
-      {renderOffersTable()}
-      {renderPagination()}
+    <ClientLayout>
+      <Container maxWidth="lg" sx={{ py: 3 }}>
+        {renderHeader()}
+        {renderFilters()}
+        
+        {isLoading && <LinearProgress sx={{ mb: 2 }} />}
+        
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            Ошибка загрузки предложений. Попробуйте обновить страницу.
+          </Alert>
+        )}
+        
+        {renderOffersTable()}
+        {renderPagination()}
+      </Container>
 
       {/* Модальное окно для просмотра изображения */}
       <Dialog
@@ -612,7 +630,7 @@ const TireOffersPage: React.FC = () => {
           )}
         </DialogContent>
       </Dialog>
-    </Box>
+    </ClientLayout>
   );
 };
 

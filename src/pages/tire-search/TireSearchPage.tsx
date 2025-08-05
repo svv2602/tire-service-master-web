@@ -359,7 +359,7 @@ const TireSearchPage: React.FC = () => {
 
   return (
     <ClientLayout>
-      <Container maxWidth="xl" sx={{ py: 3 }}>
+      <Container maxWidth="lg" sx={{ py: 3 }}>
 
         {/* Заголовок страницы */}
         <Box sx={{ textAlign: 'center', mb: 4 }}>

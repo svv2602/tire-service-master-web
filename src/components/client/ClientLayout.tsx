@@ -22,7 +22,8 @@ import {
   AdminPanelSettings as AdminIcon,
   Logout as LogoutIcon,
   Calculate as CalculateIcon,
-  Search as SearchIcon
+  Search as SearchIcon,
+  LocalOffer as LocalOfferIcon
 } from '@mui/icons-material';
 import { Button, ListItemIcon, ListItemText, MenuItem, Divider } from '@mui/material';
 import ClientFooter from './ClientFooter';
@@ -100,6 +101,15 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         startIcon={<SearchIcon />}
       >
         {t('navigation.tireSearch')}
+      </Button>
+      <Button
+        color="inherit"
+        component={Link}
+        to="/client/tire-offers"
+        sx={{ color: colors.textSecondary }}
+        startIcon={<LocalOfferIcon />}
+      >
+        Предложения шин
       </Button>
     </Box>
   );
