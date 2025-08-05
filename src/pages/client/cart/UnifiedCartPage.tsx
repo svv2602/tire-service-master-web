@@ -46,12 +46,14 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import ClientLayout from '../../../components/client/ClientLayout';
+import ProductImagePreview from '../../../components/client/cart/ProductImagePreview';
 import {
   useGetUnifiedTireCartQuery,
   useUpdateUnifiedCartItemMutation,
   useRemoveUnifiedCartItemMutation,
   useClearUnifiedCartMutation,
   useCreateOrdersFromUnifiedCartMutation,
+  useCreateSupplierOrderMutation,
   UnifiedTireCart,
   UnifiedTireCartItem,
   SupplierGroup
@@ -59,7 +61,7 @@ import {
 import { useAppSelector } from '../../../store';
 
 const UnifiedCartPage: React.FC = () => {
-  const { t } = useTranslation(['client', 'common']);
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
 
@@ -80,14 +82,13 @@ const UnifiedCartPage: React.FC = () => {
     isLoading,
     isError,
     error
-  } = useGetUnifiedTireCartQuery(undefined, {
-    skip: !isAuthenticated
-  });
+  } = useGetUnifiedTireCartQuery();
 
   const [updateCartItem] = useUpdateUnifiedCartItemMutation();
   const [removeCartItem] = useRemoveUnifiedCartItemMutation();
   const [clearCart] = useClearUnifiedCartMutation();
   const [createOrders] = useCreateOrdersFromUnifiedCartMutation();
+  const [createSupplierOrder] = useCreateSupplierOrderMutation();
 
   // Проверяем, является ли ошибка серьезной (не 404 - пустая корзина)
   const isSerialError = isError && error && 'status' in error && error.status !== 404;
@@ -115,17 +116,17 @@ const UnifiedCartPage: React.FC = () => {
           <Box textAlign="center" py={8}>
             <ShoppingCartIcon sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }} />
             <Typography variant="h4" gutterBottom>
-              Корзина пуста
+              {t('cart.empty.title')}
             </Typography>
             <Typography variant="body1" color="text.secondary" paragraph>
-              Добавьте товары в корзину, чтобы оформить заказ
+              {t('cart.empty.message')}
             </Typography>
             <Button
               variant="contained"
               onClick={() => navigate('/client/tire-offers')}
               startIcon={<ShoppingCartIcon />}
             >
-              Перейти к покупкам
+              {t('cart.empty.goShopping')}
             </Button>
           </Box>
         </Container>
@@ -135,10 +136,12 @@ const UnifiedCartPage: React.FC = () => {
 
   // Обработчики изменения количества
   const handleQuantityChange = async (itemId: number, newQuantity: number) => {
+    console.log('handleQuantityChange called:', { itemId, newQuantity });
     if (newQuantity < 1) return;
     
     try {
-      await updateCartItem({ item_id: itemId, quantity: newQuantity }).unwrap();
+      const result = await updateCartItem({ item_id: itemId, quantity: newQuantity }).unwrap();
+      console.log('Количество обновлено:', result);
     } catch (error) {
       console.error('Ошибка обновления количества:', error);
     }
@@ -146,8 +149,10 @@ const UnifiedCartPage: React.FC = () => {
 
   // Обработчик удаления товара
   const handleRemoveItem = async (itemId: number) => {
+    console.log('handleRemoveItem called:', { itemId });
     try {
-      await removeCartItem({ item_id: itemId }).unwrap();
+      const result = await removeCartItem({ item_id: itemId }).unwrap();
+      console.log('Товар удален:', result);
     } catch (error) {
       console.error('Ошибка удаления товара:', error);
     }
@@ -198,6 +203,40 @@ const UnifiedCartPage: React.FC = () => {
     }));
   };
 
+  // Обработчик создания заказа для конкретного поставщика
+  const handleCreateSupplierOrder = async (supplierId: string) => {
+    const supplier = cart?.suppliers?.find(s => s.id.toString() === supplierId);
+    if (!supplier) return;
+
+    // Проверяем контактные данные
+    if (!contactInfo.name.trim() || !contactInfo.phone.trim()) {
+      // Если нет контактных данных, открываем модальное окно
+      setSupplierComments({ [supplierId]: '' });
+      setOrderDialogOpen(true);
+      return;
+    }
+
+    // Создаем заказ напрямую если есть контактные данные
+    try {
+      setIsCreatingOrders(true);
+      const result = await createSupplierOrder({
+        supplier_id: parseInt(supplierId),
+        client_name: contactInfo.name,
+        client_phone: contactInfo.phone,
+        comment: supplierComments[supplierId] || ''
+      }).unwrap();
+
+      console.log('Заказ для поставщика создан:', result);
+      
+      // Показать сообщение об успехе или перенаправить
+      navigate('/client/orders');
+    } catch (error) {
+      console.error('Ошибка создания заказа поставщика:', error);
+    } finally {
+      setIsCreatingOrders(false);
+    }
+  };
+
   // Рендер товара
   const renderCartItem = (item: UnifiedTireCartItem) => (
     <Card key={item.id} variant="outlined" sx={{ mb: 2 }}>
@@ -205,13 +244,18 @@ const UnifiedCartPage: React.FC = () => {
         <Grid container spacing={2} alignItems="center">
           {/* Изображение товара */}
           <Grid item xs={12} sm={2}>
-            <Avatar
-              src={item.product.image_url}
-              variant="rounded"
-              sx={{ width: 80, height: 80, mx: 'auto' }}
-            >
-              <ShoppingCartIcon />
-            </Avatar>
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <ProductImagePreview
+                imageUrl={item.product.image_url}
+                productName={item.product.name}
+                brand={item.product.brand}
+                model={item.product.model}
+                size={item.product.size}
+                season={item.product.season}
+                width={100}
+                height={100}
+              />
+            </Box>
           </Grid>
 
           {/* Информация о товаре */}
@@ -220,13 +264,13 @@ const UnifiedCartPage: React.FC = () => {
               {item.product.brand} {item.product.model}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Размер: {item.product.size}
+              {t('cart.items.size')}: {item.product.size}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Сезон: {item.product.season}
+              {t('cart.items.season')}: {item.product.season}
             </Typography>
             <Chip 
-              label={item.available ? 'В наличии' : 'Нет в наличии'} 
+              label={item.available ? t('cart.items.inStock') : t('cart.items.outOfStock')} 
               color={item.available ? 'success' : 'error'}
               size="small"
               sx={{ mt: 1 }}
@@ -240,37 +284,63 @@ const UnifiedCartPage: React.FC = () => {
             </Typography>
             {item.current_price !== item.price_at_add && (
               <Typography variant="body2" color="text.secondary">
-                Сейчас: {item.current_price.toFixed(0)} ₴
+                {t('cart.items.currentPrice')}: {item.current_price.toFixed(0)} ₴
               </Typography>
             )}
           </Grid>
 
           {/* Количество */}
           <Grid item xs={12} sm={2}>
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <IconButton
-                size="small"
-                onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                disabled={item.quantity <= 1}
-              >
-                <RemoveIcon />
-              </IconButton>
-              <TextField
-                size="small"
-                value={item.quantity}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value) || 1;
-                  handleQuantityChange(item.id, value);
-                }}
-                inputProps={{ min: 1, style: { textAlign: 'center', width: '60px' } }}
-              />
-              <IconButton
-                size="small"
-                onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-              >
-                <AddIcon />
-              </IconButton>
-            </Stack>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                {t('cart.items.quantity')}
+              </Typography>
+              <Stack direction="row" alignItems="center" spacing={1} sx={{ justifyContent: 'center' }}>
+                <IconButton
+                  size="small"
+                  onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                  disabled={item.quantity <= 1}
+                  sx={{
+                    bgcolor: 'primary.100',
+                    color: 'primary.main',
+                    '&:hover': { bgcolor: 'primary.200' },
+                    '&:disabled': { 
+                      bgcolor: 'grey.300',
+                      color: 'grey.500'
+                    }
+                  }}
+                >
+                  <RemoveIcon fontSize="small" />
+                </IconButton>
+                <Box
+                  sx={{
+                    minWidth: 50,
+                    textAlign: 'center',
+                    py: 1,
+                    px: 2,
+                    bgcolor: 'primary.50',
+                    border: '2px solid',
+                    borderColor: 'primary.main',
+                    borderRadius: 1,
+                  }}
+                >
+                  <Typography variant="h6" color="primary.main" sx={{ fontWeight: 'bold' }}>
+                    {item.quantity}
+                  </Typography>
+                </Box>
+                <IconButton
+                  size="small"
+                  onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                  sx={{
+                    bgcolor: 'primary.100',
+                    color: 'primary.main',
+                    '&:hover': { bgcolor: 'primary.200' }
+                  }}
+                >
+                  <AddIcon fontSize="small" />
+                </IconButton>
+              </Stack>
+            </Box>
           </Grid>
 
           {/* Действия */}
@@ -287,7 +357,7 @@ const UnifiedCartPage: React.FC = () => {
         {/* Общая стоимость товара */}
         <Box sx={{ mt: 2, textAlign: 'right' }}>
           <Typography variant="h6">
-            Итого: {item.total_price.toFixed(0)} ₴
+            {t('cart.items.total')}: {item.total_price.toFixed(0)} ₴
           </Typography>
         </Box>
       </CardContent>
@@ -313,7 +383,7 @@ const UnifiedCartPage: React.FC = () => {
                 {group.name}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {group.items_count} товар(ов) • {group.total_amount.toFixed(0)} ₴
+                {group.items_count} {t('cart.supplier.totalItems')} • {group.total_amount.toFixed(0)} ₴
               </Typography>
             </Box>
           </Box>
@@ -321,6 +391,34 @@ const UnifiedCartPage: React.FC = () => {
         <AccordionDetails>
           <Stack spacing={2}>
             {group.items.map(renderCartItem)}
+            
+            {/* Кнопка оформления заказа для поставщика */}
+            <Box sx={{ mt: 3, p: 2, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography variant="h6" color="primary.main" gutterBottom>
+                    {t('cart.supplier.totalBySupplier')}: {group.total_amount.toFixed(0)} ₴
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {group.items_count} {t('cart.supplier.totalItems')} {t('cart.supplier.from')} {group.name}
+                  </Typography>
+                </Box>
+                <Button
+                  variant="contained"
+                  size="large"
+                  startIcon={<ReceiptIcon />}
+                  onClick={() => handleCreateSupplierOrder(supplierId)}
+                  sx={{
+                    minWidth: 200,
+                    py: 1.5,
+                    bgcolor: 'success.main',
+                    '&:hover': { bgcolor: 'success.dark' }
+                  }}
+                >
+                  {t('cart.supplier.createOrder')}
+                </Button>
+              </Stack>
+            </Box>
           </Stack>
         </AccordionDetails>
       </Accordion>
@@ -344,12 +442,12 @@ const UnifiedCartPage: React.FC = () => {
       <Container maxWidth="lg" sx={{ py: 4 }}>
         {/* Заголовок */}
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" gutterBottom>
-            <ShoppingCartIcon sx={{ mr: 2, verticalAlign: 'middle' }} />
-            Корзина
-          </Typography>
+                      <Typography variant="h4" gutterBottom>
+              <ShoppingCartIcon sx={{ mr: 2, verticalAlign: 'middle' }} />
+              {t('cart.title')}
+            </Typography>
           <Typography variant="body1" color="text.secondary">
-            {cart.total_items_count} товар(ов) от {suppliersCount} поставщик(ов)
+{cart.total_items_count} {t('cart.supplier.totalItems')} {t('cart.supplier.from')} {suppliersCount} {t('cart.summary.suppliers')}
           </Typography>
         </Box>
 
@@ -436,7 +534,7 @@ const UnifiedCartPage: React.FC = () => {
           <DialogTitle>
             <Typography variant="h6">
               <ReceiptIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-              Оформление заказов
+              {t('cart.order.dialog.title')}
             </Typography>
           </DialogTitle>
           
@@ -445,12 +543,12 @@ const UnifiedCartPage: React.FC = () => {
               {/* Контактные данные */}
               <Box>
                 <Typography variant="h6" gutterBottom>
-                  Контактные данные
+                  {t('cart.order.dialog.contactInfo')}
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
                     <FormControl fullWidth>
-                      <InputLabel>Имя</InputLabel>
+                      <InputLabel>{t('cart.order.dialog.name')}</InputLabel>
                       <OutlinedInput
                         value={contactInfo.name}
                         onChange={(e) => setContactInfo(prev => ({ ...prev, name: e.target.value }))}
@@ -459,13 +557,13 @@ const UnifiedCartPage: React.FC = () => {
                             <PersonIcon />
                           </InputAdornment>
                         }
-                        label="Имя"
+                        label={t('cart.order.dialog.name')}
                       />
                     </FormControl>
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <FormControl fullWidth>
-                      <InputLabel>Телефон</InputLabel>
+                      <InputLabel>{t('cart.order.dialog.phone')}</InputLabel>
                       <OutlinedInput
                         value={contactInfo.phone}
                         onChange={(e) => setContactInfo(prev => ({ ...prev, phone: e.target.value }))}
@@ -474,7 +572,7 @@ const UnifiedCartPage: React.FC = () => {
                             <PhoneIcon />
                           </InputAdornment>
                         }
-                        label="Телефон"
+                        label={t('cart.order.dialog.phone')}
                       />
                     </FormControl>
                   </Grid>
@@ -484,7 +582,7 @@ const UnifiedCartPage: React.FC = () => {
               {/* Комментарии для поставщиков */}
               <Box>
                 <Typography variant="h6" gutterBottom>
-                  Комментарии для поставщиков
+                  {t('cart.order.dialog.comments')}
                 </Typography>
                 <Stack spacing={2}>
                   {cart.suppliers.map((group) => (
@@ -496,7 +594,7 @@ const UnifiedCartPage: React.FC = () => {
                         fullWidth
                         multiline
                         rows={2}
-                        placeholder={`Комментарий для ${group.name} (необязательно)`}
+                        placeholder={t('cart.order.dialog.commentPlaceholder', { supplierName: group.name })}
                         value={supplierComments[group.id.toString()] || ''}
                         onChange={(e) => setSupplierComments(prev => ({
                           ...prev,
@@ -518,11 +616,11 @@ const UnifiedCartPage: React.FC = () => {
               {/* Сводка заказов */}
               <Box>
                 <Typography variant="h6" gutterBottom>
-                  Будет создано заказов: {suppliersCount}
+                  {t('cart.order.dialog.summary', { count: suppliersCount })}
                 </Typography>
                 <Stack spacing={1}>
                   {cart.suppliers.map((group) => (
-                    <Box key={group.id} sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                    <Box key={group.id} sx={{ p: 2, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
                       <Typography variant="subtitle2">
                         {group.name}
                       </Typography>
@@ -538,7 +636,7 @@ const UnifiedCartPage: React.FC = () => {
           
           <DialogActions>
             <Button onClick={() => setOrderDialogOpen(false)}>
-              Отмена
+              {t('cart.order.dialog.cancel')}
             </Button>
             <Button
               variant="contained"
@@ -546,7 +644,7 @@ const UnifiedCartPage: React.FC = () => {
               disabled={!contactInfo.name.trim() || !contactInfo.phone.trim() || isCreatingOrders}
               startIcon={isCreatingOrders ? <CircularProgress size={20} /> : <ReceiptIcon />}
             >
-              {isCreatingOrders ? 'Создание...' : 'Создать заказы'}
+              {isCreatingOrders ? t('cart.order.dialog.creating') : t('cart.order.dialog.create')}
             </Button>
           </DialogActions>
         </Dialog>

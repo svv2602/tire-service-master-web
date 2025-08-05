@@ -1717,5 +1717,72 @@
       "assignToPoints": "Назначить на сервисные точки",
       "viewAuditLog": "Просмотреть журнал действий"
     }
+  },
+  "cart": {
+    "title": "Корзина",
+    "empty": {
+      "title": "Корзина пуста",
+      "message": "Добавьте товары в корзину, чтобы оформить заказ",
+      "goShopping": "Перейти к покупкам"
+    },
+    "items": {
+      "quantity": "Количество",
+      "price": "Цена",
+      "total": "Итого",
+      "remove": "Удалить",
+      "inStock": "В наличии",
+      "outOfStock": "Нет в наличии",
+      "currentPrice": "Сейчас",
+      "size": "Размер",
+      "season": "Сезон"
+    },
+    "supplier": {
+      "totalItems": "товар(ов)",
+      "totalBySupplier": "Итого по поставщику",
+      "from": "от",
+      "createOrder": "Оформить заказ"
+    },
+    "summary": {
+      "items": "Товаров",
+      "suppliers": "Поставщиков",
+      "total": "Итого",
+      "clearCart": "Очистить корзину",
+      "createAllOrders": "Оформить все заказы",
+      "continueShopping": "Продолжить покупки"
+    },
+    "order": {
+      "dialog": {
+        "title": "Оформление заказов",
+        "contactInfo": "Контактные данные",
+        "name": "Имя",
+        "phone": "Телефон",
+        "comments": "Комментарии для поставщиков",
+        "commentPlaceholder": "Комментарий для {{supplierName}} (необязательно)",
+        "summary": "Будет создано заказов: {{count}}",
+        "creating": "Создание заказов...",
+        "create": "Создать заказы",
+        "cancel": "Отмена"
+      },
+      "success": {
+        "title": "Заказы созданы!",
+        "message": "Количество заказов: {{count}}",
+        "goToOrders": "Перейти к заказам"
+      }
+    },
+    "errors": {
+      "loadingError": "Ошибка загрузки корзины. Попробуйте обновить страницу.",
+      "updateQuantityError": "Ошибка обновления количества",
+      "removeItemError": "Ошибка удаления товара",
+      "clearCartError": "Ошибка очистки корзины",
+      "createOrderError": "Ошибка создания заказов"
+    },
+    "dialogs": {
+      "clearCart": {
+        "title": "Очистить корзину",
+        "message": "Вы уверены, что хотите удалить все товары из корзины?",
+        "confirm": "Очистить",
+        "cancel": "Отменить"
+      }
+    }
   }
 }

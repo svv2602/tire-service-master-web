@@ -83,6 +83,13 @@ export interface CreateOrdersFromCartRequest {
   comments_by_supplier?: Record<string, string>;
 }
 
+export interface CreateSupplierOrderRequest {
+  supplier_id: number;
+  client_name: string;
+  client_phone: string;
+  comment?: string;
+}
+
 export interface CreatedOrder {
   id: number;
   status: string;
@@ -191,6 +198,16 @@ export const unifiedTireCartApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['UnifiedTireCart', 'TireOrder'],
     }),
+
+    // Создать заказ для конкретного поставщика
+    createSupplierOrder: builder.mutation<CreateOrdersResponse, CreateSupplierOrderRequest>({
+      query: (data) => ({
+        url: 'unified_tire_cart/create_supplier_order',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['UnifiedTireCart', 'TireOrder'],
+    }),
   }),
 });
 
@@ -202,4 +219,5 @@ export const {
   useRemoveUnifiedCartItemMutation,
   useClearUnifiedCartMutation,
   useCreateOrdersFromUnifiedCartMutation,
+  useCreateSupplierOrderMutation,
 } = unifiedTireCartApi;
