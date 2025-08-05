@@ -35,25 +35,19 @@ export interface UnifiedTireCartItem {
 }
 
 export interface SupplierGroup {
-  supplier: {
-    id: number;
-    name: string;
-    firm_id: string;
-  };
+  id: number;
+  name: string;
   items: UnifiedTireCartItem[];
   items_count: number;
   total_amount: number;
-  formatted_total: string;
 }
 
 export interface UnifiedTireCart {
   id: number;
   total_items_count: number;
   total_amount: number;
-  formatted_total: string;
-  empty: boolean;
-  suppliers_count: number;
-  items_by_supplier: Record<string, SupplierGroup>;
+  formatted_total_amount: string;
+  suppliers: SupplierGroup[];
   updated_at: string;
 }
 
@@ -70,7 +64,6 @@ export interface SupplierSummary {
 
 export interface UnifiedCartResponse {
   cart: UnifiedTireCart;
-  suppliers_summary: Record<string, SupplierSummary>;
 }
 
 // Запросы

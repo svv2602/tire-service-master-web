@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛒 Тестирование API единой корзины</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #667eea;
+        }
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+        }
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .error {
+            background: #ffeaea;
+            border: 1px solid #f44336;
+            color: #d32f2f;
+        }
+        .loading {
+            background: #fff3e0;
+            border: 1px solid #ff9800;
+            color: #f57c00;
+        }
+        .cart-summary {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .supplier-group {
+            background: #f3e5f5;
+            border: 1px solid #9c27b0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .item {
+            background: #f1f8e9;
+            border: 1px solid #8bc34a;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 5px 0;
+        }
+        .auth-section {
+            background: #ffecb3;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin: 10px 0;
+        }
+        .input-group input {
+            width: 200px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 Тестирование API единой корзины</h1>
+            <p>Тестирование новой архитектуры корзины с группировкой по поставщикам</p>
+        </div>
+
+        <!-- Секция авторизации -->
+        <div class="auth-section">
+            <h3>🔐 Авторизация</h3>
+            <div class="input-group">
+                <label>Email:</label>
+                <input type="email" id="loginEmail" value="admin@test.com" placeholder="admin@test.com">
+            </div>
+            <div class="input-group">
+                <label>Пароль:</label>
+                <input type="password" id="loginPassword" value="admin123" placeholder="admin123">
+            </div>
+            <button class="test-button" onclick="login()">Войти</button>
+            <button class="test-button" onclick="logout()">Выйти</button>
+            <div id="authResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Основные тесты API -->
+        <div class="test-section">
+            <h3>📋 Основные операции с корзиной</h3>
+            <button class="test-button" onclick="getCart()">Получить корзину</button>
+            <button class="test-button" onclick="addTestItem()">Добавить тестовый товар</button>
+            <button class="test-button" onclick="clearCart()">Очистить корзину</button>
+            <div id="cartResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Управление товарами -->
+        <div class="test-section">
+            <h3>🔧 Управление товарами</h3>
+            <div class="input-group">
+                <label>ID товара в корзине:</label>
+                <input type="number" id="itemId" placeholder="1">
+            </div>
+            <div class="input-group">
+                <label>Количество:</label>
+                <input type="number" id="quantity" value="2" min="1">
+            </div>
+            <button class="test-button" onclick="updateItem()">Обновить количество</button>
+            <button class="test-button" onclick="removeItem()">Удалить товар</button>
+            <div id="itemResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Создание заказов -->
+        <div class="test-section">
+            <h3>📦 Создание заказов</h3>
+            <div class="input-group">
+                <label>Имя клиента:</label>
+                <input type="text" id="clientName" value="Тестовый Клиент" placeholder="Иван Иванов">
+            </div>
+            <div class="input-group">
+                <label>Телефон:</label>
+                <input type="tel" id="clientPhone" value="+380671234567" placeholder="+380671234567">
+            </div>
+            <button class="test-button" onclick="createOrders()">Создать заказы</button>
+            <div id="orderResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Отображение корзины -->
+        <div id="cartDisplay" style="display: none;">
+            <h3>🛒 Текущая корзина</h3>
+            <div id="cartContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        let authToken = null;
+
+        // Функция для выполнения API запросов
+        async function apiRequest(endpoint, options = {}) {
+            const url = `${API_BASE}/${endpoint}`;
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+
+            const config = {
+                credentials: 'include',
+                headers,
+                ...options
+            };
+
+            console.log(`🚀 API Request: ${options.method || 'GET'} ${url}`, config);
+
+            try {
+                const response = await fetch(url, config);
+                const data = await response.json();
+                
+                console.log(`📥 API Response [${response.status}]:`, data);
+                
+                return { response, data };
+            } catch (error) {
+                console.error('❌ API Error:', error);
+                throw error;
+            }
+        }
+
+        // Авторизация
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const resultDiv = document.getElementById('authResult');
+            
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Выполняется авторизация...';
+
+            try {
+                const { response, data } = await apiRequest('auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (response.ok) {
+                    authToken = data.access_token;
+                    resultDiv.className = 'result';
+                    resultDiv.textContent = `✅ Авторизация успешна!\nПользователь: ${data.user.email}\nРоль: ${data.user.role}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Ошибка авторизации: ${data.error || 'Неизвестная ошибка'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Ошибка сети: ${error.message}`;
+            }
+        }
+
+        // Выход
+        async function logout() {
+            authToken = null;
+            const resultDiv = document.getElementById('authResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.textContent = '👋 Выход выполнен';
+        }
+
+        // Получить корзину
+        async function getCart() {
+            const resultDiv = document.getElementById('cartResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Загрузка корзины...';
+
+            try {
+                const { response, data } = await apiRequest('unified_tire_cart');
+
+                if (response.ok) {
+                    resultDiv.className = 'result';
+                    resultDiv.textContent = JSON.stringify(data, null, 2);
+                    displayCart(data.cart);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Ошибка: ${data.error || 'Неизвестная ошибка'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Ошибка сети: ${error.message}`;
+            }
+        }
+
+        // Добавить тестовый товар
+        async function addTestItem() {
+            const resultDiv = document.getElementById('cartResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Добавление товара...';
+
+            try {
+                // Используем первый доступный товар из seeds
+                const { response, data } = await apiRequest('unified_tire_cart/add_item', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        supplier_tire_product_id: 1, // ID первого товара из seeds
+                        quantity: 1
+                    })
+                });
+
+                if (response.ok) {
+                    resultDiv.className = 'result';
+                    resultDiv.textContent = `✅ ${data.message}\n\n${JSON.stringify(data.cart, null, 2)}`;
+                    displayCart(data.cart);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Ошибка: ${data.error || 'Неизвестная ошибка'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Ошибка сети: ${error.message}`;
+            }
+        }
+
+        // Обновить товар
+        async function updateItem() {
+            const itemId = document.getElementById('itemId').value;
+            const quantity = document.getElementById('quantity').value;
+            const resultDiv = document.getElementById('itemResult');
+            
+            if (!itemId) {
+                alert('Укажите ID товара в корзине');
+                return;
+            }
+
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Обновление товара...';
+
+            try {
+                const { response, data } = await apiRequest(`unified_tire_cart/update_item/${itemId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ quantity: parseInt(quantity) })
+                });
+
+                if (response.ok) {
+                    resultDiv.className = 'result';
+                    resultDiv.textContent = `✅ ${data.message}\n\n${JSON.stringify(data.cart, null, 2)}`;
+                    displayCart(data.cart);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Ошибка: ${data.error || 'Неизвестная ошибка'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Ошибка сети: ${error.message}`;
+            }
+        }
+
+        // Удалить товар
+        async function removeItem() {
+            const itemId = document.getElementById('itemId').value;
+            const resultDiv = document.getElementById('itemResult');
+            
+            if (!itemId) {
+                alert('Укажите ID товара в корзине');
+                return;
+            }
+
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Удаление товара...';
+
+            try {
+                const { response, data } = await apiRequest(`unified_tire_cart/remove_item/${itemId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    resultDiv.className = 'result';
+                    resultDiv.textContent = `✅ ${data.message}\n\n${JSON.stringify(data.cart, null, 2)}`;
+                    displayCart(data.cart);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Ошибка: ${data.error || 'Неизвестная ошибка'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Ошибка сети: ${error.message}`;
+            }
+        }
+
+        // Очистить корзину
+        async function clearCart() {
+            const resultDiv = document.getElementById('cartResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Очистка корзины...';
+
+            try {
+                const { response, data } = await apiRequest('unified_tire_cart/clear', {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    resultDiv.className = 'result';
+                    resultDiv.textContent = `✅ ${data.message}\n\n${JSON.stringify(data.cart, null, 2)}`;
+                    displayCart(data.cart);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Ошибка: ${data.error || 'Неизвестная ошибка'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Ошибка сети: ${error.message}`;
+            }
+        }
+
+        // Создать заказы
+        async function createOrders() {
+            const clientName = document.getElementById('clientName').value;
+            const clientPhone = document.getElementById('clientPhone').value;
+            const resultDiv = document.getElementById('orderResult');
+
+            if (!clientName || !clientPhone) {
+                alert('Укажите имя и телефон клиента');
+                return;
+            }
+
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Создание заказов...';
+
+            try {
+                const { response, data } = await apiRequest('unified_tire_cart/create_orders', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        client_name: clientName,
+                        client_phone: clientPhone,
+                        comments_by_supplier: {
+                            '1': 'Комментарий для первого поставщика',
+                            '2': 'Комментарий для второго поставщика'
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    resultDiv.className = 'result';
+                    resultDiv.textContent = `✅ ${data.message}\n\nСозданные заказы:\n${JSON.stringify(data.orders, null, 2)}`;
+                    displayCart(data.cart);
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Ошибка: ${data.error || 'Неизвестная ошибка'}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Ошибка сети: ${error.message}`;
+            }
+        }
+
+        // Отображение корзины в удобном формате
+        function displayCart(cart) {
+            const displayDiv = document.getElementById('cartDisplay');
+            const contentDiv = document.getElementById('cartContent');
+
+            if (!cart || cart.total_items_count === 0) {
+                displayDiv.style.display = 'none';
+                return;
+            }
+
+            displayDiv.style.display = 'block';
+
+            let html = `
+                <div class="cart-summary">
+                    <h4>📊 Сводка корзины</h4>
+                    <p><strong>ID корзины:</strong> ${cart.id}</p>
+                    <p><strong>Всего товаров:</strong> ${cart.total_items_count}</p>
+                    <p><strong>Поставщиков:</strong> ${cart.suppliers ? cart.suppliers.length : 0}</p>
+                    <p><strong>Общая сумма:</strong> ${cart.total_amount} ₴</p>
+                    <p><strong>Обновлено:</strong> ${cart.updated_at}</p>
+                </div>
+            `;
+
+            if (cart.suppliers && cart.suppliers.length > 0) {
+                cart.suppliers.forEach(supplier => {
+                    html += `
+                        <div class="supplier-group">
+                            <h5>🏪 ${supplier.name} (ID: ${supplier.id})</h5>
+                            <p><strong>Товаров:</strong> ${supplier.items_count} | <strong>Сумма:</strong> ${supplier.total_amount} ₴</p>
+                            <div class="items">
+                    `;
+
+                    supplier.items.forEach(item => {
+                        html += `
+                            <div class="item">
+                                <p><strong>ID товара в корзине:</strong> ${item.id}</p>
+                                <p><strong>Товар:</strong> ${item.product.brand} ${item.product.model}</p>
+                                <p><strong>Размер:</strong> ${item.product.size} | <strong>Сезон:</strong> ${item.product.season}</p>
+                                <p><strong>Количество:</strong> ${item.quantity} шт.</p>
+                                <p><strong>Цена при добавлении:</strong> ${item.price_at_add} ₴</p>
+                                <p><strong>Текущая цена:</strong> ${item.current_price} ₴</p>
+                                <p><strong>Общая стоимость:</strong> ${item.total_price} ₴</p>
+                                <p><strong>Доступность:</strong> ${item.available ? '✅ В наличии' : '❌ Нет в наличии'}</p>
+                                ${item.price_changed ? '<p><strong>⚠️ Цена изменилась!</strong></p>' : ''}
+                            </div>
+                        `;
+                    });
+
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            contentDiv.innerHTML = html;
+        }
+
+        // Автоматическая загрузка корзины при открытии страницы
+        window.addEventListener('load', () => {
+            console.log('🔄 Страница загружена, проверяем корзину...');
+        });
+    </script>
+</body>
+</html>

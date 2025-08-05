@@ -177,7 +177,7 @@ const TireCalculatorPage = lazy(() => import('./pages/tire-calculator/TireCalcul
 // Ленивая загрузка страницы поиска шин
 const TireSearchPage = lazy(() => import('./pages/tire-search/TireSearchPage'));
 const TireOffersPage = lazy(() => import('./pages/client/TireOffersPage'));
-const CartPage = lazy(() => import('./pages/client/cart'));
+const UnifiedCartPage = lazy(() => import('./pages/client/cart/UnifiedCartPage'));
 const ClientOrdersPage = lazy(() => import('./pages/client/orders'));
 
 // Ленивая загрузка админской страницы управления данными поиска шин
@@ -253,7 +253,7 @@ const App: React.FC = () => {
           <Route path="/client/search" element={<ClientSearchPage />} />
           <Route path="/client/tire-search" element={<TireSearchPage />} />
           <Route path="/client/tire-offers" element={<TireOffersPage />} />
-          <Route path="/client/cart" element={<CartPage />} />
+                          <Route path="/client/cart" element={<UnifiedCartPage />} />
           <Route path="/client/orders" element={<ClientOrdersPage />} />
           <Route path="/business-application" element={<BusinessApplicationPage />} />
           <Route path="/client/service-point/:id" element={<ClientServicePointDetailPage />} />
