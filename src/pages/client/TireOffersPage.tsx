@@ -121,8 +121,8 @@ const TireOffersPage: React.FC = () => {
   };
 
   // Функция для обработки расширенного поиска
-  const processEnhancedSearch = (searchQuery: string): { search: string; season?: string } => {
-    if (!searchQuery.trim()) return { search: '' };
+  const processEnhancedSearch = (searchQuery: string): { search: string; season?: string; searchWords: string[] } => {
+    if (!searchQuery.trim()) return { search: '', searchWords: [] };
 
     // Разделяем поисковый запрос на части (пробелы и слеши)
     const searchParts = searchQuery.toLowerCase()
@@ -138,7 +138,7 @@ const TireOffersPage: React.FC = () => {
       if (['winter', 'summer', 'all_season'].includes(seasonMatch)) {
         // Найдена сезонность - сохраняем для отдельного параметра
         detectedSeason = seasonMatch;
-      } else {
+      } else if (part.length >= 2) { // Игнорируем слишком короткие слова
         // Обычное слово - добавляем к поиску
         processedParts.push(part);
       }
@@ -146,6 +146,7 @@ const TireOffersPage: React.FC = () => {
 
     return {
       search: processedParts.join(' '), // Объединяем обратно пробелами для backend
+      searchWords: processedParts, // Отдельные слова для сложного поиска
       season: detectedSeason
     };
   };
