@@ -295,7 +295,7 @@ const CartPage: React.FC = () => {
       <Container maxWidth="lg">
         <Box sx={{ py: 3 }}>
           <Typography variant="h4" component="h1" gutterBottom>
-            Корзина ({carts.reduce((total, cart) => total + cart.items_count, 0)} товаров)
+            Корзина ({carts.reduce((total, cart) => total + cart.total_items_count, 0)} товаров)
           </Typography>
 
           {carts.map((cart) => (
@@ -307,10 +307,10 @@ const CartPage: React.FC = () => {
                     <StoreIcon color="primary" />
                     <Box>
                       <Typography variant="h6">
-                        {cart.supplier.name}
+                        {cart.suppliers?.[0]?.name || 'Поставщик не указан'}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {cart.items_count} товаров на сумму {formatPrice(cart.total_amount)}
+                        {cart.total_items_count} товаров на сумму {formatPrice(cart.total_amount)}
                       </Typography>
                     </Box>
                   </Box>
@@ -328,7 +328,7 @@ const CartPage: React.FC = () => {
                       variant="contained"
                       size="small"
                       onClick={() => handleOrderCart(cart)}
-                      disabled={cart.items.length === 0}
+                      disabled={cart.tire_cart_items.length === 0}
                       startIcon={<ReceiptIcon />}
                     >
                       Заказать
@@ -353,7 +353,7 @@ const CartPage: React.FC = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {cart.items.map((item) => (
+                      {cart.tire_cart_items.map((item) => (
                         <TableRow key={item.id}>
                           <TableCell>
                             <Box>
@@ -363,7 +363,7 @@ const CartPage: React.FC = () => {
                               <Typography variant="caption" color="text.secondary">
                                 {item.supplier_tire_product.name}
                               </Typography>
-                              {!item.available && (
+                              {!item.supplier_tire_product?.supplier && (
                                 <Chip 
                                   label="Недоступен" 
                                   size="small" 
@@ -391,7 +391,7 @@ const CartPage: React.FC = () => {
                             />
                           </TableCell>
                           <TableCell>
-                            {formatPrice(item.price_at_order)}
+                            {formatPrice(item.current_price)}
                           </TableCell>
                           <TableCell>
                             <Box display="flex" alignItems="center" gap={1}>
@@ -424,7 +424,7 @@ const CartPage: React.FC = () => {
                           </TableCell>
                           <TableCell>
                             <Typography fontWeight="bold">
-                              {formatPrice(item.total_price)}
+                              {formatPrice(item.current_price * item.quantity)}
                             </Typography>
                           </TableCell>
                           <TableCell>
@@ -453,10 +453,10 @@ const CartPage: React.FC = () => {
             {selectedCartForOrder && (
               <Box>
                 <Typography variant="h6" gutterBottom>
-                  Поставщик: {selectedCartForOrder.supplier.name}
+                  Поставщик: {selectedCartForOrder.suppliers?.[0]?.name || 'Не указан'}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" gutterBottom>
-                  {selectedCartForOrder.items_count} товаров на сумму {formatPrice(selectedCartForOrder.total_amount)}
+                  {selectedCartForOrder.total_items_count} товаров на сумму {formatPrice(selectedCartForOrder.total_amount)}
                 </Typography>
                 
                 <Divider sx={{ my: 2 }} />

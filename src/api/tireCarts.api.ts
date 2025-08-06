@@ -20,17 +20,40 @@ export interface TireOrderItem {
   available: boolean;
 }
 
-export interface TireCart {
+export interface TireCartItem {
   id: number;
-  supplier: {
+  quantity: number;
+  current_price: number;
+  supplier_tire_product: {
     id: number;
     name: string;
-    contact_info?: string;
+    brand: string;
+    model: string;
+    size: string;
+    season: string;
+    supplier: {
+      id: number;
+      name: string;
+    };
   };
-  items: TireOrderItem[];
-  items_count: number;
+}
+
+export interface TireCart {
+  id: number;
+  user?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone?: string;
+  };
+  tire_cart_items: TireCartItem[];
+  total_items_count: number;
   total_amount: number;
-  status: 'draft';
+  suppliers?: Array<{
+    id: number;
+    name: string;
+  }>;
   created_at: string;
   updated_at: string;
 }
@@ -82,6 +105,15 @@ export const tireCartsApi = baseApi.injectEndpoints({
       transformResponse: (response: { carts: TireCart[]; total_carts: number; total_items: number }) => {
         return response.carts || [];
       },
+      providesTags: ['TireCart'],
+    }),
+
+    // Получить все корзины (для админов)
+    getAllTireCarts: builder.query<{ carts: TireCart[]; pagination: { total_count: number; current_page: number; per_page: number; total_pages: number } }, { page?: number; per_page?: number; search?: string }>({
+      query: ({ page = 1, per_page = 20, search }) => ({
+        url: 'tire_carts/all',
+        params: { page, per_page, search },
+      }),
       providesTags: ['TireCart'],
     }),
 
@@ -230,6 +262,7 @@ export const tireOrdersApi = baseApi.injectEndpoints({
 // Экспорт хуков
 export const {
   useGetTireCartsQuery,
+  useGetAllTireCartsQuery,
   useGetTireCartQuery,
   useAddToCartMutation,
   useUpdateCartItemMutation,
