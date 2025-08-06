@@ -46,43 +46,20 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error) => {
-    const originalRequest = error.config;
+    // 🚫 ОТКЛЮЧЕНО: Interceptor для 401 ошибок отключен, так как RTK Query в baseApi.ts уже обрабатывает это
+    // Это предотвращает зацикливание множественных попыток refresh токена
     
-    // Если это не 401 или запрос уже повторялся, возвращаем ошибку
-    if (error.response?.status !== 401 || originalRequest._retry) {
-      return Promise.reject(error);
+    if (error.response?.status === 401) {
+      console.log('⚠️ 401 ошибка в apiClient interceptor - пропускаем, так как RTK Query обрабатывает это:', error.config?.url);
+      
+      // Для auth запросов все еще обрабатываем выход из системы
+      if (error.config?.url?.includes('/auth/login') || error.config?.url?.includes('/auth/refresh')) {
+        console.log('❌ Критическая ошибка аутентификации, выходим из системы');
+        handleLogout(require('../store/store').store.dispatch);
+      }
     }
     
-    // Не пытаемся обновить токен при ошибке логина
-    if (originalRequest.url?.includes('/auth/login')) {
-      return Promise.reject(error);
-    }
-    
-    // Если это запрос на обновление токена, выходим из системы
-    if (originalRequest.url === '/auth/refresh') {
-      handleLogout(require('../store/store').store.dispatch);
-      return Promise.reject(error);
-    }
-    
-    try {
-      originalRequest._retry = true;
-      
-      // Используем refreshTokens из authService (refresh токен передается через cookies)
-      const { access_token } = await refreshTokens(apiClient);
-      
-      // Обновляем access токен в Redux state и повторяем запрос
-      const store = require('../store/store').store;
-      store.dispatch({ type: 'auth/updateAccessToken', payload: access_token });
-      
-      // Добавляем новый токен в заголовок повторного запроса
-      originalRequest.headers['Authorization'] = `Bearer ${access_token}`;
-      
-      // Повторяем оригинальный запрос
-      return apiClient(originalRequest);
-    } catch (refreshError) {
-      handleLogout(require('../store/store').store.dispatch);
-      return Promise.reject(refreshError);
-    }
+    return Promise.reject(error);
   }
 );
 

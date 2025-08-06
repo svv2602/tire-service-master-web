@@ -58,58 +58,15 @@ export const responseErrorInterceptor = async (error: any) => {
 
   const originalRequest = error.config;
 
+  // 🚫 ОТКЛЮЧЕНО: Interceptor для 401 ошибок отключен, так как RTK Query в baseApi.ts уже обрабатывает это
+  // Это предотвращает зацикливание множественных попыток refresh токена
   if (error.response?.status === 401) {
-    console.log('Обнаружена ошибка авторизации (401):', error.config?.url);
+    console.log('⚠️ 401 ошибка в Axios interceptor - пропускаем, так как RTK Query обрабатывает это:', error.config?.url);
     
+    // Для auth запросов все еще обрабатываем выход из системы
     const isAuthRequest = originalRequest.url.includes('/auth/');
-    
-    if (!isAuthRequest && !originalRequest._retry) {
-      if (isRefreshing) {
-        try {
-          return new Promise(resolve => {
-            subscribeTokenRefresh((token: string) => {
-              originalRequest.headers.Authorization = `Bearer ${token}`;
-              resolve(axios(originalRequest));
-            });
-          });
-        } catch (err) {
-          return Promise.reject(err);
-        }
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        // Попытка обновить токен через API (refresh токен в HttpOnly куки)
-        const response = await axios.post('/api/v1/auth/refresh', {}, {
-          withCredentials: true // Важно для отправки HttpOnly куки
-        });
-
-        const { tokens: { access: newToken } } = response.data;
-        
-        // Обновляем токен в Redux состоянии
-        const store = require('../store/store').store;
-        store.dispatch({ type: 'auth/updateAccessToken', payload: newToken });
-        
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        
-        onTokenRefreshed(newToken);
-        isRefreshing = false;
-        
-        return axios(originalRequest);
-      } catch (refreshError) {
-        console.log('Ошибка обновления токена, выполняем выход');
-        // Выходим из системы через Redux
-        const store = require('../store/store').store;
-        store.dispatch({ type: 'auth/logout' });
-        isRefreshing = false;
-        handleUnauthorized();
-        return Promise.reject(refreshError);
-      }
-    }
-
     if (isAuthRequest) {
+      console.log('❌ Ошибка аутентификации в auth запросе, выходим из системы');
       handleUnauthorized();
     }
   }

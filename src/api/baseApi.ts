@@ -63,10 +63,14 @@ const baseQueryWithReauth = async (args: any, api: any, extraOptions: any) => {
   if (result.error && result.error.status === 401) {
     console.log('🔄 Получена 401 ошибка, пытаемся обновить токен...');
     
-    // Защита от зацикливания
+    // Защита от зацикливания - увеличиваем интервал до 15 секунд
     const now = Date.now();
-    if (isRefreshing || (now - lastRefreshTime < 5000)) {
-      console.warn('⚠️ Refresh токена уже выполняется или был недавно, пропускаем');
+    if (isRefreshing || (now - lastRefreshTime < 15000)) {
+      console.warn('⚠️ Refresh токена уже выполняется или был недавно, пропускаем', {
+        isRefreshing,
+        timeSinceLastRefresh: now - lastRefreshTime,
+        timestamp: new Date().toISOString()
+      });
       return result;
     }
 
