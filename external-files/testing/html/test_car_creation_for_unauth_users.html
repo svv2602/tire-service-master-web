@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест: Создание автомобиля для неавторизованных пользователей</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+        }
+        .test-case {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .test-case h3 {
+            color: #495057;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+        }
+        .test-case h3::before {
+            content: "🧪";
+            margin-right: 10px;
+        }
+        .steps {
+            background: white;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .step-number {
+            background: #3498db;
+            color: white;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        .expected {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .expected h4 {
+            color: #155724;
+            margin-top: 0;
+        }
+        .code {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .highlight {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .icon {
+            margin-right: 8px;
+        }
+        .success { color: #28a745; }
+        .warning { color: #ffc107; }
+        .info { color: #17a2b8; }
+        .error { color: #dc3545; }
+        
+        .api-endpoint {
+            background: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .data-example {
+            background: #f1f3f4;
+            border-left: 4px solid #4285f4;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 Тест: Создание автомобиля для неавторизованных пользователей</h1>
+        
+        <div class="highlight">
+            <strong>📋 Задача:</strong> Проверить, что при создании бронирования неавторизованным пользователем с выбором "создать личный кабинет", автомобиль создается в таблице client_cars, если в форме бронирования указана информация об автомобиле.
+        </div>
+
+        <h2>🔧 Внесенные изменения</h2>
+        <div class="test-case">
+            <h3>Улучшенная логика создания автомобиля</h3>
+            <div class="data-example">
+                <strong>Файл:</strong> <code>CreateAccountAndBookingDialog.tsx</code><br>
+                <strong>Изменения:</strong>
+                <ul>
+                    <li>✅ Условие создания автомобиля изменено с <code>if (bookingData.license_plate)</code> на <code>if (hasCarInfo)</code></li>
+                    <li>✅ Добавлена проверка любой информации об автомобиле: <code>license_plate || car_brand || car_model</code></li>
+                    <li>✅ Добавлен поиск модели автомобиля по названию (не только дефолтная model_id: 1)</li>
+                    <li>✅ Улучшено логирование для отладки процесса создания автомобиля</li>
+                    <li>✅ Добавлена заглушка "Не указан" для номера автомобиля, если он не указан</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>📝 Тестовые сценарии</h2>
+        
+        <div class="test-case">
+            <h3>Сценарий 1: Создание бронирования с полной информацией об автомобиле</h3>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div>
+                        <strong>Перейти на:</strong> <code>http://localhost:3008/client/booking</code><br>
+                        <em>Убедиться, что пользователь не авторизован</em>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div>
+                        <strong>Заполнить форму бронирования:</strong><br>
+                        • Выбрать город и сервисную точку<br>
+                        • Выбрать дату и время<br>
+                        • Заполнить данные клиента<br>
+                        • <strong>Указать данные автомобиля:</strong>
+                        <div class="code">
+                        Тип автомобиля: Легковой<br>
+                        Марка: Toyota<br>
+                        Модель: Camry<br>
+                        Номер: AA1234BB
+                        </div>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div>
+                        <strong>Выбрать опцию:</strong> "Создать бронирование с личным кабинетом"
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div>
+                        <strong>Нажать "Подтвердить бронирование"</strong><br>
+                        Должен открыться диалог создания аккаунта и бронирования
+                    </div>
+                </div>
+            </div>
+            
+            <div class="expected">
+                <h4>🎯 Ожидаемый результат:</h4>
+                <ul>
+                    <li>✅ Создается новый пользователь</li>
+                    <li>✅ Создается клиентский профиль</li>
+                    <li>✅ <strong>Создается автомобиль в таблице client_cars</strong> с данными:
+                        <div class="code">
+                        brand_id: ID найденного бренда Toyota<br>
+                        model_id: ID найденной модели Camry<br>
+                        license_plate: "AA1234BB"<br>
+                        car_type_id: ID выбранного типа<br>
+                        is_primary: true
+                        </div>
+                    </li>
+                    <li>✅ Создается бронирование, привязанное к клиенту</li>
+                    <li>✅ Пользователь автоматически авторизуется</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>Сценарий 2: Создание бронирования с частичной информацией об автомобиле</h3>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div>
+                        <strong>Заполнить форму с частичными данными:</strong>
+                        <div class="code">
+                        Тип автомобиля: Легковой<br>
+                        Марка: BMW<br>
+                        Модель: <em>(не указана)</em><br>
+                        Номер: <em>(не указан)</em>
+                        </div>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div>Выбрать "Создать бронирование с личным кабинетом"</div>
+                </div>
+            </div>
+            
+            <div class="expected">
+                <h4>🎯 Ожидаемый результат:</h4>
+                <ul>
+                    <li>✅ Автомобиль все равно создается, потому что указана марка</li>
+                    <li>✅ Используется найденный brand_id для BMW</li>
+                    <li>✅ Используется дефолтная model_id: 1</li>
+                    <li>✅ license_plate: "Не указан"</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>Сценарий 3: Создание бронирования без информации об автомобиле</h3>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div>
+                        <strong>Заполнить форму без данных автомобиля:</strong>
+                        <div class="code">
+                        Тип автомобиля: Легковой<br>
+                        Марка: <em>(не указана)</em><br>
+                        Модель: <em>(не указана)</em><br>
+                        Номер: <em>(не указан)</em>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="expected">
+                <h4>🎯 Ожидаемый результат:</h4>
+                <ul>
+                    <li>✅ Автомобиль НЕ создается</li>
+                    <li>✅ В консоли: "ℹ️ Информация об автомобиле не указана, пропускаем создание автомобиля"</li>
+                    <li>✅ Бронирование создается без привязки к автомобилю</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>🔍 Проверка в базе данных</h2>
+        <div class="test-case">
+            <h3>SQL запросы для проверки</h3>
+            <div class="api-endpoint">
+                <strong>Проверить созданного клиента:</strong><br>
+                <code>SELECT * FROM clients WHERE user_id = (SELECT id FROM users ORDER BY id DESC LIMIT 1);</code>
+            </div>
+            <div class="api-endpoint">
+                <strong>Проверить созданный автомобиль:</strong><br>
+                <code>SELECT cc.*, cb.name as brand_name, cm.name as model_name 
+FROM client_cars cc 
+LEFT JOIN car_brands cb ON cc.brand_id = cb.id 
+LEFT JOIN car_models cm ON cc.model_id = cm.id 
+WHERE cc.client_id = (SELECT id FROM clients ORDER BY id DESC LIMIT 1);</code>
+            </div>
+            <div class="api-endpoint">
+                <strong>Проверить созданное бронирование:</strong><br>
+                <code>SELECT * FROM bookings WHERE client_id = (SELECT id FROM clients ORDER BY id DESC LIMIT 1) ORDER BY id DESC LIMIT 1;</code>
+            </div>
+        </div>
+
+        <h2>🐛 Отладка</h2>
+        <div class="test-case">
+            <h3>Логирование в консоли браузера</h3>
+            <div class="data-example">
+                <strong>Открыть DevTools (F12) → Console</strong><br>
+                Следить за сообщениями:
+                <ul>
+                    <li><code class="success">🚗 Создание автомобиля клиента...</code></li>
+                    <li><code class="info">📋 Данные автомобиля из бронирования:</code></li>
+                    <li><code class="success">🔍 Найден бренд:</code> / <code class="warning">⚠️ Бренд не найден:</code></li>
+                    <li><code class="success">🔍 Найдена модель:</code> / <code class="warning">⚠️ Модель не найдена:</code></li>
+                    <li><code class="success">✅ Автомобиль успешно создан:</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>Проверка Network вкладки</h3>
+            <div class="data-example">
+                <strong>API вызовы, которые должны произойти:</strong>
+                <ol>
+                    <li><code>POST /api/v1/auth/register</code> - создание пользователя</li>
+                    <li><code>POST /api/v1/auth/me/cars</code> - создание автомобиля</li>
+                    <li><code>POST /api/v1/client_bookings</code> - создание бронирования</li>
+                </ol>
+            </div>
+        </div>
+
+        <h2>✅ Критерии успешного теста</h2>
+        <div class="expected">
+            <h4>Тест считается успешным, если:</h4>
+            <ol>
+                <li>При указании любой информации об автомобиле (марка, модель или номер) автомобиль создается в БД</li>
+                <li>Бренд и модель ищутся по названию, а не используются только дефолтные значения</li>
+                <li>Автомобиль правильно привязывается к созданному клиенту</li>
+                <li>Процесс создания не прерывается ошибками</li>
+                <li>В консоли видны подробные логи процесса создания автомобиля</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Добавляем интерактивность для копирования SQL запросов
+        document.querySelectorAll('.api-endpoint code').forEach(code => {
+            code.style.cursor = 'pointer';
+            code.title = 'Нажмите, чтобы скопировать';
+            code.addEventListener('click', function() {
+                navigator.clipboard.writeText(this.textContent);
+                const originalBg = this.style.backgroundColor;
+                this.style.backgroundColor = '#d4edda';
+                setTimeout(() => {
+                    this.style.backgroundColor = originalBg;
+                }, 500);
+            });
+        });
+
+        console.log('🧪 Тестовая страница загружена');
+        console.log('📋 Готов к тестированию создания автомобиля для неавторизованных пользователей');
+    </script>
+</body>
+</html>

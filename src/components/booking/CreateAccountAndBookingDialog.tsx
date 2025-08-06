@@ -62,6 +62,22 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
   // Получаем список брендов для поиска
   const { data: carBrandsData } = useGetCarBrandsQuery({});
   
+  // Получаем модели для найденного бренда (если бренд указан)
+  const foundBrandId = React.useMemo(() => {
+    if (bookingData.car_brand && carBrandsData?.data) {
+      const foundBrand = carBrandsData.data.find(brand => 
+        brand.name.toLowerCase() === bookingData.car_brand.toLowerCase()
+      );
+      return foundBrand?.id;
+    }
+    return null;
+  }, [bookingData.car_brand, carBrandsData]);
+  
+  const { data: carModelsData } = useGetCarModelsByBrandIdQuery(
+    { brandId: foundBrandId?.toString() || '', params: {} },
+    { skip: !foundBrandId }
+  );
+  
   // Проверяем существование пользователя при открытии диалога
   const { data: userExistsData, isLoading: isCheckingUser } = useCheckUserExistsQuery(
     { 
@@ -155,9 +171,17 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
 
   const handleCreateClientCar = async () => {
     try {
-      // Создаем автомобиль только если указаны минимально необходимые данные
-      if (bookingData.license_plate) {
+      // Создаем автомобиль если указана любая информация об автомобиле
+      const hasCarInfo = bookingData.license_plate || bookingData.car_brand || bookingData.car_model;
+      
+      if (hasCarInfo) {
         console.log('🚗 Создание автомобиля клиента...');
+        console.log('📋 Данные автомобиля из бронирования:', {
+          license_plate: bookingData.license_plate,
+          car_brand: bookingData.car_brand,
+          car_model: bookingData.car_model,
+          car_type_id: bookingData.car_type_id
+        });
         
         // Ищем бренд по названию
         let brandId = 1; // Дефолтный бренд
@@ -173,12 +197,26 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
           }
         }
         
+        // Ищем модель по названию (если указана и найден бренд)
+        let modelId = 1; // Дефолтная модель
+        if (bookingData.car_model && carModelsData?.car_models) {
+          const foundModel = carModelsData.car_models.find((model: any) => 
+            model.name.toLowerCase() === bookingData.car_model.toLowerCase()
+          );
+          if (foundModel) {
+            console.log('🔍 Найдена модель:', foundModel);
+            modelId = foundModel.id;
+          } else {
+            console.log('⚠️ Модель не найдена:', bookingData.car_model);
+          }
+        }
+        
         // Подготавливаем данные для создания автомобиля
         const carData: ClientCarFormData = {
           brand_id: brandId,
-          model_id: 1, // Дефолтная модель (первая в базе)
+          model_id: modelId,
           year: new Date().getFullYear(), // Текущий год по умолчанию
-          license_plate: bookingData.license_plate,
+          license_plate: bookingData.license_plate || 'Не указан', // Если номера нет, ставим заглушку
           car_type_id: bookingData.car_type_id || 1, // Дефолтный тип автомобиля
           is_primary: true, // Первый автомобиль делаем основным
         };
@@ -189,7 +227,7 @@ const CreateAccountAndBookingDialog: React.FC<CreateAccountAndBookingDialogProps
         const carResult = await createMyClientCar(carData).unwrap();
         console.log('✅ Автомобиль успешно создан:', carResult);
       } else {
-        console.log('ℹ️ Номер автомобиля не указан, пропускаем создание автомобиля');
+        console.log('ℹ️ Информация об автомобиле не указана, пропускаем создание автомобиля');
       }
     } catch (err: any) {
       console.error('⚠️ Ошибка создания автомобиля (не критичная):', err);
