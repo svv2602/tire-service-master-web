@@ -35,6 +35,7 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
   total = 0,
   page = 1,
   query = '',
+  carInfo,
   onPageChange,
   onResultClick,
   onFavoriteToggle,
@@ -188,6 +189,7 @@ const TireSearchResults: React.FC<TireSearchResultsProps> = ({
                     diameter={group.diameter.toString()}
                     searchParams={searchParams}
                     filterSizes={filterSizes}
+                    carInfo={carInfo}
                   />
                 </div>
               </Fade>

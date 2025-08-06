@@ -61,6 +61,11 @@ export interface TireSearchResponse {
   message?: string;
   success?: boolean;
   context?: Record<string, any>;
+  car_info?: {
+    brand?: string;
+    model?: string;
+    year?: number;
+  }; // Информация об автомобиле из API ответа
 }
 
 export interface ParsedSearchData {
@@ -158,6 +163,11 @@ export interface TireSearchState {
   favorites: number[];
   page: number;
   has_more: boolean;
+  carInfo?: {
+    brand?: string;
+    model?: string;
+    year?: number;
+  }; // Информация об автомобиле из последнего поиска
 }
 
 // Вспомогательные типы для UI компонентов
@@ -189,6 +199,11 @@ export interface TireSearchResultsProps {
   total?: number;
   page?: number;
   query?: string; // Добавляем исходный поисковый запрос
+  carInfo?: {
+    brand?: string;
+    model?: string;
+    year?: number;
+  }; // Информация об автомобиле из результатов поиска
   onPageChange?: (page: number) => void;
   onResultClick?: (result: TireSearchResult) => void;
   onFavoriteToggle?: (resultId: number) => void;

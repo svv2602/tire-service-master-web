@@ -65,7 +65,8 @@ export const tireSearchApi = baseApi.injectEndpoints({
             follow_up_questions: response.follow_up_questions || [],
             message: response.message || '',
             success: response.success !== false,
-            context: response.context || {}
+            context: response.context || {},
+            car_info: response.car_info || undefined
           };
         }
 
@@ -117,7 +118,8 @@ export const tireSearchApi = baseApi.injectEndpoints({
           conversation_mode: response.conversation_mode || response.success === false,
           follow_up_questions: response.follow_up_questions || [],
           message: response.message || '',
-          success: response.success !== false
+          success: response.success !== false,
+          car_info: response.car_info || undefined
         };
       },
       transformErrorResponse: (response: any) => {

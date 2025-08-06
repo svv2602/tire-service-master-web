@@ -502,6 +502,7 @@ const TireSearchPage: React.FC = () => {
                 total={searchState.total}
                 page={searchState.page}
                 query={searchState.query}
+                carInfo={searchState.carInfo}
                 onPageChange={handlePageChange}
                 onResultClick={handleResultClick}
                 onFavoriteToggle={handleFavoriteToggle}

@@ -23,6 +23,11 @@ export interface SupplierTireDiameterCardProps {
     manufacturer?: string;
   };
   filterSizes?: SizeFilter[]; // Фильтр по конкретным размерам из результатов поиска
+  carInfo?: {
+    brand?: string;
+    model?: string;
+    year?: number;
+  }; // Информация об автомобиле для отображения в заголовке
   className?: string;
 }
 
@@ -30,6 +35,7 @@ const SupplierTireDiameterCard: React.FC<SupplierTireDiameterCardProps> = ({
   diameter,
   searchParams = {},
   filterSizes,
+  carInfo,
   className
 }) => {
   const navigate = useNavigate();
@@ -37,6 +43,23 @@ const SupplierTireDiameterCard: React.FC<SupplierTireDiameterCardProps> = ({
   
   // Нормализуем диаметр
   const normalizedDiameter = diameter.replace(/[^0-9]/g, '');
+  
+  // Формируем заголовок с информацией об автомобиле
+  const getCardTitle = () => {
+    const diameterText = `Диаметр R${normalizedDiameter}`;
+    
+    if (!carInfo || (!carInfo.brand && !carInfo.model && !carInfo.year)) {
+      return diameterText;
+    }
+    
+    const carParts = [];
+    if (carInfo.brand) carParts.push(carInfo.brand);
+    if (carInfo.model) carParts.push(carInfo.model);
+    if (carInfo.year) carParts.push(`${carInfo.year} г.`);
+    
+    const carText = carParts.join(' ');
+    return carText ? `${diameterText} • ${carText}` : diameterText;
+  };
   
   // Запрос размеров из прайсов поставщиков с фильтрацией
   const {
@@ -97,7 +120,7 @@ const SupplierTireDiameterCard: React.FC<SupplierTireDiameterCardProps> = ({
       <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ textAlign: 'center', mb: 3 }}>
           <Typography variant="h4" component="h3" sx={{ fontWeight: 700, color: 'primary.main', mb: 1 }}>
-            Диаметр R{normalizedDiameter}
+{getCardTitle()}
           </Typography>
         </Box>
         
@@ -116,7 +139,7 @@ const SupplierTireDiameterCard: React.FC<SupplierTireDiameterCardProps> = ({
       <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ textAlign: 'center', mb: 3 }}>
           <Typography variant="h4" component="h3" sx={{ fontWeight: 700, color: 'primary.main', mb: 1 }}>
-            Диаметр R{normalizedDiameter}
+{getCardTitle()}
           </Typography>
         </Box>
         
@@ -148,7 +171,7 @@ const SupplierTireDiameterCard: React.FC<SupplierTireDiameterCardProps> = ({
           {/* Заголовок карточки - только диаметр */}
           <Box sx={{ textAlign: 'center', mb: 3 }}>
             <Typography variant="h4" component="h3" sx={{ fontWeight: 700, color: 'primary.main', mb: 1 }}>
-              Диаметр R{normalizedDiameter}
+  {getCardTitle()}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {t('supplierSizes.available', { count: sizesData?.total_sizes || 0 })}

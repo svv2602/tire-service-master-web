@@ -95,7 +95,8 @@ export const useTireSearch = (options: UseTireSearchOptions = {}): UseTireSearch
     history: [],
     favorites: [],
     page: 1,
-    has_more: false
+    has_more: false,
+    carInfo: undefined
   });
 
   // Дебаунс для запроса
@@ -199,7 +200,8 @@ export const useTireSearch = (options: UseTireSearchOptions = {}): UseTireSearch
         page: 1,
         has_more: response.has_more,
         loading: false,
-        error: null
+        error: null,
+        carInfo: response.car_info
       }));
 
       // Сохраняем запрос в историю
