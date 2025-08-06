@@ -41,6 +41,7 @@ import {
   Storage as SystemIcon,
   Timeline as TimelineIcon,
   Launch as LaunchIcon,
+  PlayArrow as TestIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -116,6 +117,34 @@ const SettingsDiagnosticsPage: React.FC = () => {
     }
     // Для остальных компонентов используем поле status
     return (data as any).status || 'unknown';
+  };
+
+  // Функция для получения URL настройки компонента
+  const getConfigurationUrl = (componentKey: string) => {
+    const urlMap: Record<string, string> = {
+      'system_settings': '/admin/system-settings',
+      'email_settings': '/admin/notifications/email',
+      'push_settings': '/admin/notifications/push-settings',
+      'telegram_settings': '/admin/notifications/telegram',
+      'google_oauth_settings': '/admin/notifications/google-oauth',
+      'notification_channels': '/admin/notifications/channels',
+    };
+    return urlMap[componentKey] || '/admin/settings';
+  };
+
+  // Функция для проверки поддержки тестирования компонентом
+  const supportsConnectionTest = (componentKey: string) => {
+    return ['email_settings', 'telegram_settings', 'push_settings'].includes(componentKey);
+  };
+
+  // Функция для получения URL тестирования компонента
+  const getTestUrl = (componentKey: string) => {
+    const testUrlMap: Record<string, string> = {
+      'email_settings': '/admin/notifications/email#test',
+      'telegram_settings': '/admin/notifications/telegram#test',
+      'push_settings': '/admin/notifications/push-settings#test',
+    };
+    return testUrlMap[componentKey];
   };
 
   const getStatusIcon = (status: string, ready?: boolean) => {
@@ -371,6 +400,43 @@ const SettingsDiagnosticsPage: React.FC = () => {
                     ) as any}
                     variant="outlined"
                   />
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<SettingsIcon />}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Предотвращаем открытие/закрытие аккордеона
+                      navigate(getConfigurationUrl(component.key));
+                    }}
+                    sx={{ 
+                      fontSize: '0.75rem',
+                      minWidth: 'auto',
+                      px: 1.5,
+                      py: 0.5
+                    }}
+                  >
+                    Настроить
+                  </Button>
+                  {supportsConnectionTest(component.key) && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="info"
+                      startIcon={<TestIcon />}
+                      onClick={(e) => {
+                        e.stopPropagation(); // Предотвращаем открытие/закрытие аккордеона
+                        navigate(getTestUrl(component.key) || getConfigurationUrl(component.key));
+                      }}
+                      sx={{ 
+                        fontSize: '0.75rem',
+                        minWidth: 'auto',
+                        px: 1.5,
+                        py: 0.5
+                      }}
+                    >
+                      Тест
+                    </Button>
+                  )}
                 </Box>
               </Box>
             </AccordionSummary>
