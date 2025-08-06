@@ -142,15 +142,8 @@ const MainLayout: React.FC = () => {
   useEffect(() => {
     const token = localStorage.getItem('tvoya_shina_token');
     
-    console.log('MainLayout: Checking auth state:', { 
-      hasToken: !!token, 
-      hasUserData: !!user,
-      isAuthenticated 
-    });
-    
     // Если токен существует, но данных пользователя нет, загружаем их
     if (token && !user) {
-      console.log('Token exists but user data is missing. Loading user data...');
       dispatch(getCurrentUser())
         .unwrap()
         .then(userData => {
@@ -630,14 +623,12 @@ const MainLayout: React.FC = () => {
   // Фильтрация пунктов меню в зависимости от роли пользователя
   const getFilteredMenuSections = (t: any) => {
     if (!user) {
-      console.log('Пользователь не аутентифицирован, не отображаем пункты меню');
       return [];
     }
 
     // Получаем роль пользователя и приводим к enum
     const userRoleString = (user as User).role;
     const userRole = userRoleString as UserRole;
-    console.log('Роль пользователя:', userRole);
     
     // Получаем все секции меню
     const allSections = getMenuSections(t);

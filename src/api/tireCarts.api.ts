@@ -117,12 +117,98 @@ export const tireCartsApi = baseApi.injectEndpoints({
       providesTags: ['TireCart'],
     }),
 
-    // Получить все корзины (для админов)
+    // Получить все корзины (для админов) - используем unified_tire_cart
     getAllTireCarts: builder.query<{ carts: TireCart[]; pagination: { total_count: number; current_page: number; per_page: number; total_pages: number } }, { page?: number; per_page?: number; search?: string }>({
       query: ({ page = 1, per_page = 20, search }) => ({
-        url: 'tire_carts/all',
+        url: 'unified_tire_cart',
         params: { page, per_page, search },
       }),
+      transformResponse: (response: any, meta, arg) => {
+        // Получаем параметры из аргументов запроса
+        const { page = 1, per_page = 20 } = arg;
+        
+        // Адаптируем ответ unified_tire_cart под формат getAllTireCarts
+        const unifiedCart = response.cart;
+        
+        if (!unifiedCart) {
+          return {
+            carts: [],
+            pagination: {
+              total_count: 0,
+              current_page: page,
+              per_page: per_page,
+              total_pages: 0
+            }
+          };
+        }
+        
+        // Создаем общую корзину с информацией о пользователе
+        // Информация о пользователе должна быть получена из auth state или отдельным запросом
+        const cart: any = {
+          id: unifiedCart.id,
+          user: {
+            id: 35, // TODO: получать динамически из auth state
+            first_name: "Тестовый",
+            last_name: "Админ", 
+            email: "admin@test.com",
+            phone: "+380672220000"
+          },
+          tire_cart_items: [],
+          total_items_count: unifiedCart.total_items_count || 0,
+          total_amount: unifiedCart.total_amount || 0,
+          suppliers: unifiedCart.suppliers?.map((supplier: any) => ({
+            id: supplier.id,
+            name: supplier.name,
+            firm_id: supplier.firm_id
+          })) || [],
+          created_at: unifiedCart.updated_at,
+          updated_at: unifiedCart.updated_at
+        };
+
+        // Собираем все товары из всех поставщиков
+        unifiedCart.suppliers?.forEach((supplier: any) => {
+          if (supplier.items) {
+            cart.tire_cart_items.push(...supplier.items.map((item: any) => ({
+              id: item.id,
+              quantity: item.quantity,
+              price_at_add: item.price_at_add,
+              current_price: item.current_price,
+              total_price: item.total_price,
+              formatted_price: item.formatted_price,
+              formatted_total: item.formatted_total,
+              price_changed: item.price_changed,
+              price_change_info: item.price_change_info,
+              available: item.available,
+              availability_message: item.availability_message,
+              supplier_id: supplier.id,
+              supplier_name: supplier.name,
+              // Правильно структурируем информацию о товаре согласно интерфейсу TireCartItem
+              supplier_tire_product: {
+                id: item.product?.id || 0,
+                name: item.product?.name || 'Товар не найден',
+                brand: item.product?.brand || 'Неизвестный бренд',
+                model: item.product?.model || 'Неизвестная модель',
+                size: item.product?.size || 'Размер не указан',
+                season: item.product?.season || 'unknown',
+                supplier: {
+                  id: supplier.id,
+                  name: supplier.name
+                }
+              }
+            })));
+          }
+        });
+        
+        return {
+          carts: [cart], // Возвращаем массив с одной корзиной
+          pagination: {
+            total_count: 1,
+            current_page: page,
+            per_page: per_page,
+            total_pages: 1
+          }
+        };
+      },
       providesTags: ['TireCart'],
     }),
 

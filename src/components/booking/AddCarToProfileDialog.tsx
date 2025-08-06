@@ -91,7 +91,7 @@ export const AddCarToProfileDialog: React.FC<AddCarToProfileDialogProps> = ({
       setError(null);
 
       console.log('🔍 Текущий пользователь:', currentUser);
-      console.log('🔍 Роль пользователя:', currentUser?.role);
+      // Проверяем роль пользователя для отображения диалога
       console.log('🔍 Client ID пользователя:', currentUser?.client_id);
 
       // Ищем бренд по названию
