@@ -237,15 +237,9 @@ export const TelegramIntegrationPage: React.FC = () => {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 4000);
       
-      // Автоматически устанавливаем webhook если URL указан
-      if (settings.webhookUrl && settings.webhookUrl.trim()) {
-        try {
-          await setWebhook({ webhook_url: settings.webhookUrl }).unwrap();
-          console.log('✅ Webhook автоматически установлен');
-        } catch (webhookError) {
-          console.warn('⚠️ Не удалось автоматически установить webhook:', webhookError);
-        }
-      }
+      // 🔧 ИСПРАВЛЕНИЕ: Убираем автоматическую установку webhook для предотвращения rate limiting
+      // Пользователь может установить webhook вручную через отдельную кнопку
+      console.log('✅ Настройки Telegram сохранены. Webhook можно установить отдельно при необходимости.');
     } catch (error: any) {
       console.error('Ошибка сохранения настроек:', error);
       
