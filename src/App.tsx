@@ -88,6 +88,7 @@ const MyOrdersPage = lazy(() => import('./pages/partners/MyOrdersPage'));
 
 // Ленивая загрузка страниц настроек
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage'));
+const SettingsDiagnosticsPage = lazy(() => import('./pages/settings/SettingsDiagnosticsPage'));
 const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'));
 
 // Ленивая загрузка страниц пользователей
@@ -380,6 +381,7 @@ const App: React.FC = () => {
                         
                         {/* Настройки */}
                         <Route path="settings" element={<SettingsPage />} />
+                        <Route path="settings/diagnostics" element={<SettingsDiagnosticsPage />} />
                         <Route path="profile" element={<ProfilePage />} />
                         
                         {/* Уведомления */}

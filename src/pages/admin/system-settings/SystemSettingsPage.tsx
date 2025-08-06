@@ -56,7 +56,7 @@ import TireDataManagement from '../../../components/admin/TireDataManagement';
 // Типы данных
 interface SystemSetting {
   key: string;
-  value: string;
+  value: string | boolean | number; // Поддерживаем разные типы значений
   description: string;
   category: string;
   type?: 'string' | 'integer' | 'boolean' | 'password' | 'url' | 'select';
@@ -163,7 +163,7 @@ const SystemSettingsPage: React.FC = () => {
   };
 
   // Сохранение настройки
-  const saveSetting = async (key: string, value: string) => {
+  const saveSetting = async (key: string, value: string | boolean | number) => {
     console.log('💾 Saving setting:', { key, value });
     setSaving(key);
     try {
@@ -220,7 +220,7 @@ const SystemSettingsPage: React.FC = () => {
   };
 
   // Тестирование подключения
-  const testConnection = async (key: string, value: string) => {
+  const testConnection = async (key: string, value: string | boolean | number) => {
     setTesting(key);
     try {
       const response = await fetch(`${API_BASE_URL}/admin/system_settings/test_connection`, {
@@ -278,7 +278,7 @@ const SystemSettingsPage: React.FC = () => {
   };
 
   // Получение текущего значения (с учетом ожидающих изменений)
-  const getCurrentValue = (key: string, originalValue: string) => {
+  const getCurrentValue = (key: string, originalValue: string | boolean | number) => {
     return pendingChanges[key] !== undefined ? pendingChanges[key] : originalValue;
   };
 
@@ -313,10 +313,12 @@ const SystemSettingsPage: React.FC = () => {
 
     switch (setting.type) {
       case 'boolean':
+        // Обработка boolean значений - API может возвращать как boolean, так и строку
+        const isBooleanChecked = currentValue === true || currentValue === 'true' || currentValue === '1';
         return (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Switch
-              checked={currentValue === 'true'}
+              checked={isBooleanChecked}
               onChange={(e) => {
                 const newValue = e.target.checked ? 'true' : 'false';
                 handleValueChange(setting.key, newValue);
@@ -325,8 +327,8 @@ const SystemSettingsPage: React.FC = () => {
               }}
               disabled={isSaving}
             />
-            <Typography variant="body2" color={currentValue === 'true' ? 'success.main' : 'text.secondary'}>
-              {currentValue === 'true' ? 'Включено' : 'Отключено'}
+            <Typography variant="body2" color={isBooleanChecked ? 'success.main' : 'text.secondary'}>
+              {isBooleanChecked ? 'Включено' : 'Отключено'}
             </Typography>
             {isSaving && (
               <CircularProgress size={16} />
@@ -338,7 +340,7 @@ const SystemSettingsPage: React.FC = () => {
         return (
           <FormControl fullWidth size="small">
             <Select
-              value={currentValue}
+              value={String(currentValue)}
               onChange={(e) => handleValueChange(setting.key, e.target.value)}
               disabled={isSaving}
             >
@@ -355,7 +357,7 @@ const SystemSettingsPage: React.FC = () => {
             fullWidth
             size="small"
             type={showPasswords[setting.key] ? 'text' : 'password'}
-            value={currentValue}
+            value={String(currentValue)}
             onChange={(e) => handleValueChange(setting.key, e.target.value)}
             disabled={isSaving}
             InputProps={{
@@ -382,7 +384,7 @@ const SystemSettingsPage: React.FC = () => {
             fullWidth
             size="small"
             type="number"
-            value={currentValue}
+            value={String(currentValue)}
             onChange={(e) => handleValueChange(setting.key, e.target.value)}
             disabled={isSaving}
             inputProps={{
@@ -397,11 +399,11 @@ const SystemSettingsPage: React.FC = () => {
           <TextField
             fullWidth
             size="small"
-            value={currentValue}
+            value={String(currentValue)}
             onChange={(e) => handleValueChange(setting.key, e.target.value)}
             disabled={isSaving}
-            multiline={setting.type === 'url' && currentValue.length > 50}
-            rows={setting.type === 'url' && currentValue.length > 50 ? 2 : 1}
+            multiline={setting.type === 'url' && String(currentValue).length > 50}
+            rows={setting.type === 'url' && String(currentValue).length > 50 ? 2 : 1}
           />
         );
     }

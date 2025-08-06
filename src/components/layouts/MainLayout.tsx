@@ -74,6 +74,7 @@ import {
   Block as BlockIcon,
   ShoppingCart as ShoppingCartIcon,
   Assignment,
+  Analytics as DiagnosticsIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -559,6 +560,13 @@ const MainLayout: React.FC = () => {
             path: '/admin/system-settings',
             roles: [UserRole.ADMIN],
             description: 'Управление переменными окружения и системными настройками',
+          },
+          {
+            text: t('navigation.settingsDiagnostics'),
+            icon: <DiagnosticsIcon />,
+            path: '/admin/settings/diagnostics',
+            roles: [UserRole.ADMIN],
+            description: t('navigation.descriptions.settingsDiagnostics'),
           },
           {
             text: t('navigation.pushNotifications'),
