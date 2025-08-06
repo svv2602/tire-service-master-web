@@ -132,7 +132,15 @@ const UserOrdersPage: React.FC = () => {
   const [archiveOrder] = useArchiveTireOrderMutation();
 
   const orders = ordersResponse?.orders || [];
-  const totalCount = ordersResponse?.total || 0;
+  const totalCount = ordersResponse?.pagination?.total_count || 0;
+
+  // Отладочная информация
+  React.useEffect(() => {
+    if (orders.length > 0) {
+      console.log('First order supplier:', orders[0].supplier);
+      console.log('First order full data:', orders[0]);
+    }
+  }, [orders]);
 
   // Обработчики действий
   const handleConfirmOrder = async (id: number) => {
@@ -246,7 +254,7 @@ const UserOrdersPage: React.FC = () => {
     // Просмотр
     actions.push({
       label: 'Просмотр',
-      icon: ViewIcon,
+      icon: <ViewIcon />,
       onClick: () => {
         setSelectedOrder(order);
         setIsViewDialogOpen(true);
@@ -258,7 +266,7 @@ const UserOrdersPage: React.FC = () => {
       case 'submitted':
         actions.push({
           label: 'Подтвердить',
-          icon: ConfirmIcon,
+          icon: <ConfirmIcon />,
           onClick: () => handleConfirmOrder(order.id),
           color: 'primary',
         });
@@ -266,7 +274,7 @@ const UserOrdersPage: React.FC = () => {
       case 'confirmed':
         actions.push({
           label: 'В обработку',
-          icon: ProcessingIcon,
+          icon: <ProcessingIcon />,
           onClick: () => handleStartProcessing(order.id),
           color: 'warning',
         });
@@ -274,7 +282,7 @@ const UserOrdersPage: React.FC = () => {
       case 'processing':
         actions.push({
           label: 'Завершить',
-          icon: CompleteIcon,
+          icon: <CompleteIcon />,
           onClick: () => handleCompleteOrder(order.id),
           color: 'success',
         });
@@ -285,7 +293,7 @@ const UserOrdersPage: React.FC = () => {
     if (['submitted', 'confirmed', 'processing'].includes(order.status)) {
       actions.push({
         label: 'Отменить',
-        icon: CancelIcon,
+        icon: <CancelIcon />,
         onClick: () => handleCancelOrder(order.id),
         color: 'error',
       });
@@ -295,7 +303,7 @@ const UserOrdersPage: React.FC = () => {
     if (order.status !== 'draft') {
       actions.push({
         label: 'Архивировать',
-        icon: ArchiveIcon,
+        icon: <ArchiveIcon />,
         onClick: () => handleArchiveOrder(order.id),
       });
     }
@@ -308,13 +316,12 @@ const UserOrdersPage: React.FC = () => {
     {
       id: 'id',
       label: 'ID',
-      sortable: true,
-      render: (order: TireOrder) => `#${order.id}`,
+      format: (value: any, order: TireOrder) => `#${order.id}`,
     },
     {
       id: 'client_info',
       label: 'Клиент',
-      render: (order: TireOrder) => (
+      format: (value: any, order: TireOrder) => (
         <Box>
           <Typography variant="body2" fontWeight="medium">
             {order.client_name}
@@ -328,17 +335,22 @@ const UserOrdersPage: React.FC = () => {
     {
       id: 'supplier',
       label: 'Поставщик',
-      render: (order: TireOrder) => order.supplier?.name || 'Не указан',
+      format: (value: any, order: TireOrder) => {
+        if (!order.supplier || !order.supplier.name) {
+          return 'Не указан';
+        }
+        return String(order.supplier.name);
+      },
     },
     {
       id: 'total_amount',
       label: 'Сумма',
-      render: (order: TireOrder) => `${order.total_amount || 0} ₴`,
+      format: (value: any, order: TireOrder) => `${order.total_amount || 0} ₴`,
     },
     {
       id: 'status',
       label: 'Статус',
-      render: (order: TireOrder) => {
+      format: (value: any, order: TireOrder) => {
         const statusInfo = getStatusInfo(order.status);
         return (
           <Chip
@@ -352,13 +364,13 @@ const UserOrdersPage: React.FC = () => {
     {
       id: 'created_at',
       label: 'Создан',
-      render: (order: TireOrder) => 
+      format: (value: any, order: TireOrder) => 
         new Date(order.created_at).toLocaleDateString('ru-RU'),
     },
     {
       id: 'actions',
       label: 'Действия',
-      render: (order: TireOrder) => (
+      format: (value: any, order: TireOrder) => (
         <ActionsMenu actions={getOrderActions(order)} item={order} />
       ),
     },
@@ -482,7 +494,9 @@ const UserOrdersPage: React.FC = () => {
               </Typography>
               <Typography>Статус: {getStatusInfo(selectedOrder.status).label}</Typography>
               <Typography>Сумма: {selectedOrder.total_amount || 0} ₴</Typography>
-              <Typography>Поставщик: {selectedOrder.supplier?.name || 'Не указан'}</Typography>
+              <Typography>
+                Поставщик: {selectedOrder.supplier?.name ? String(selectedOrder.supplier.name) : 'Не указан'}
+              </Typography>
               
               {selectedOrder.comment && (
                 <>

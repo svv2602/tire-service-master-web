@@ -74,9 +74,8 @@ function VirtualizedList<T>({
             itemCount={items.length}
             itemSize={itemHeight}
             overscanCount={overscanCount}
-          >
-            {Row}
-          </List>
+            children={Row}
+          />
         )}
       </AutoSizer>
     </Box>

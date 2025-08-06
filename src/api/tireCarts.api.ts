@@ -65,16 +65,25 @@ export interface TireOrder {
   supplier: {
     id: number;
     name: string;
-    contact_info?: string;
+    firm_id?: string;
+  };
+  user?: {
+    id: number;
+    full_name: string;
+    email: string;
+    phone?: string;
   };
   items: TireOrderItem[];
   items_count: number;
   total_amount: number;
+  formatted_total: string;
   client_name: string;
   client_phone: string;
   comment?: string;
   created_at: string;
   updated_at: string;
+  can_be_cancelled?: boolean;
+  can_be_archived?: boolean;
 }
 
 // Запросы для добавления товара в корзину
@@ -188,10 +197,10 @@ export const tireOrdersApi = baseApi.injectEndpoints({
     }),
 
     // Получить все заказы (для админов)
-    getAllTireOrders: builder.query<{ orders: TireOrder[]; total: number }, { page?: number; per_page?: number; status?: string }>({
-      query: ({ page = 1, per_page = 20, status }) => ({
+    getAllTireOrders: builder.query<{ orders: TireOrder[]; pagination: { total_count: number; current_page: number; per_page: number; total_pages: number } }, { page?: number; per_page?: number; status?: string; search?: string }>({
+      query: ({ page = 1, per_page = 20, status, search }) => ({
         url: 'tire_orders/all',
-        params: { page, per_page, status },
+        params: { page, per_page, status, search },
       }),
       providesTags: ['TireOrder'],
     }),

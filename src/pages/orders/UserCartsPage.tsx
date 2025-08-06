@@ -172,7 +172,7 @@ const UserCartsPage: React.FC = () => {
     // Просмотр
     actions.push({
       label: 'Просмотр',
-      icon: ViewIcon,
+      icon: <ViewIcon />,
       onClick: () => {
         setSelectedCart(cart);
         setIsViewDialogOpen(true);
@@ -183,7 +183,7 @@ const UserCartsPage: React.FC = () => {
     if (cart.total_items_count > 0) {
       actions.push({
         label: 'Очистить',
-        icon: ClearIcon,
+        icon: <ClearIcon />,
         onClick: () => handleClearCart(cart.id),
         color: 'warning',
         requireConfirmation: true,
@@ -197,7 +197,7 @@ const UserCartsPage: React.FC = () => {
     // Удалить корзину
     actions.push({
       label: 'Удалить',
-      icon: DeleteIcon,
+      icon: <DeleteIcon />,
       onClick: () => handleDeleteCart(cart.id),
       color: 'error',
       requireConfirmation: true,
@@ -215,13 +215,12 @@ const UserCartsPage: React.FC = () => {
     {
       id: 'id',
       label: 'ID',
-      sortable: true,
-      render: (cart: TireCart) => `#${cart.id}`,
+      format: (value: any, cart: TireCart) => `#${cart.id}`,
     },
     {
       id: 'user_info',
       label: 'Пользователь',
-      render: (cart: TireCart) => (
+      format: (value: any, cart: TireCart) => (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <PersonIcon color="action" />
           <Box>
@@ -238,7 +237,7 @@ const UserCartsPage: React.FC = () => {
     {
       id: 'items_count',
       label: 'Товаров',
-      render: (cart: TireCart) => (
+      format: (value: any, cart: TireCart) => (
         <Chip
           label={`${cart.total_items_count} шт.`}
           color={cart.total_items_count > 0 ? 'primary' : 'default'}
@@ -249,7 +248,7 @@ const UserCartsPage: React.FC = () => {
     {
       id: 'total_amount',
       label: 'Сумма',
-      render: (cart: TireCart) => (
+      format: (value: any, cart: TireCart) => (
         <Typography fontWeight="medium">
           {cart.total_amount || 0} ₴
         </Typography>
@@ -258,18 +257,18 @@ const UserCartsPage: React.FC = () => {
     {
       id: 'suppliers_count',
       label: 'Поставщиков',
-      render: (cart: TireCart) => cart.suppliers?.length || 0,
+      format: (value: any, cart: TireCart) => cart.suppliers?.length || 0,
     },
     {
       id: 'updated_at',
       label: 'Обновлена',
-      render: (cart: TireCart) => 
+      format: (value: any, cart: TireCart) => 
         new Date(cart.updated_at).toLocaleDateString('ru-RU'),
     },
     {
       id: 'actions',
       label: 'Действия',
-      render: (cart: TireCart) => (
+      format: (value: any, cart: TireCart) => (
         <ActionsMenu actions={getCartActions(cart)} item={cart} />
       ),
     },
