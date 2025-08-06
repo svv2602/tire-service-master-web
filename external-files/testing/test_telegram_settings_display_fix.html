@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест исправлений отображения настроек Telegram</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+            background-color: #f8f9fa;
+        }
+        .success { border-left-color: #4CAF50; }
+        .error { border-left-color: #f44336; }
+        .warning { border-left-color: #ff9800; }
+        button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover { background-color: #1976D2; }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .result.success { background-color: #d4edda; color: #155724; }
+        .result.error { background-color: #f8d7da; color: #721c24; }
+        .result.warning { background-color: #fff3cd; color: #856404; }
+        .code {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            border: 1px solid #dee2e6;
+        }
+        .field-test {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .field-name {
+            font-weight: bold;
+            min-width: 150px;
+        }
+        .field-value {
+            flex: 1;
+            font-family: monospace;
+            background-color: white;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        .field-status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            color: white;
+            font-size: 12px;
+        }
+        .field-status.ok { background-color: #28a745; }
+        .field-status.error { background-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Тест исправлений отображения настроек Telegram</h1>
+        
+        <div class="test-section">
+            <h3>📋 Описание исправлений</h3>
+            <p><strong>Проблемы:</strong></p>
+            <ul>
+                <li>❌ Токен бота не отображался (был замаскирован как "8128980955:...")</li>
+                <li>❌ Admin Chat ID не сохранялся и не отображался</li>
+                <li>❌ Не было возможности увидеть введенный токен</li>
+            </ul>
+            
+            <p><strong>Исправления:</strong></p>
+            <ul>
+                <li>✅ Добавлен параметр show_full_token для админов</li>
+                <li>✅ Добавлена кнопка показа/скрытия токена</li>
+                <li>✅ Исправлена логика сохранения только измененных полей</li>
+                <li>✅ Улучшена обработка Admin Chat ID</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Тестирование API</h3>
+            <button onclick="testApiWithoutFullToken()">📡 Тест API без full_token</button>
+            <button onclick="testApiWithFullToken()">🔓 Тест API с full_token</button>
+            <button onclick="testSaveSettings()">💾 Тест сохранения настроек</button>
+            <button onclick="clearResults()">🧹 Очистить результаты</button>
+            
+            <div id="apiResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Проверка полей</h3>
+            <div id="fieldsCheck">
+                <div class="field-test">
+                    <div class="field-name">Bot Token:</div>
+                    <div class="field-value" id="botTokenValue">Загрузка...</div>
+                    <div class="field-status" id="botTokenStatus">⏳</div>
+                </div>
+                <div class="field-test">
+                    <div class="field-name">Admin Chat ID:</div>
+                    <div class="field-value" id="adminChatIdValue">Загрузка...</div>
+                    <div class="field-status" id="adminChatIdStatus">⏳</div>
+                </div>
+                <div class="field-test">
+                    <div class="field-name">Bot Username:</div>
+                    <div class="field-value" id="botUsernameValue">Загрузка...</div>
+                    <div class="field-status" id="botUsernameStatus">⏳</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section warning">
+            <h3>⚠️ Инструкции по тестированию</h3>
+            <ol>
+                <li>Убедитесь, что вы авторизованы как администратор</li>
+                <li>Откройте страницу <code>/admin/notifications/telegram</code></li>
+                <li>Проверьте, что поле "Bot Token" показывает полный токен (не замаскированный)</li>
+                <li>Проверьте кнопку показа/скрытия токена (глаз)</li>
+                <li>Введите Admin Chat ID и сохраните настройки</li>
+                <li>Перезагрузите страницу и убедитесь, что Chat ID отображается</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 Ожидаемое поведение</h3>
+            
+            <h4>✅ Токен бота:</h4>
+            <div class="code">
+// ДО исправления:
+bot_token: "8128980955:..."
+
+// ПОСЛЕ исправления:
+bot_token: "8128980955:AAFO43qP_B_nG61gYktAJv3EESR7d8kxsEs"
+            </div>
+
+            <h4>✅ Admin Chat ID:</h4>
+            <div class="code">
+// Должен сохраняться и отображаться:
+admin_chat_id: "123456789"
+            </div>
+
+            <h4>✅ UI улучшения:</h4>
+            <ul>
+                <li>Кнопка показа/скрытия токена (глаз)</li>
+                <li>Сохранение только измененных полей</li>
+                <li>Корректное отображение всех сохраненных значений</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        
+        function log(message, type = 'info') {
+            const resultsDiv = document.getElementById('apiResults');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `result ${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            resultsDiv.appendChild(logEntry);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        async function makeRequest(url, options = {}) {
+            const defaultOptions = {
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            };
+            
+            try {
+                const response = await fetch(url, { ...defaultOptions, ...options });
+                const data = await response.json();
+                return { response, data, error: null };
+            } catch (error) {
+                return { response: null, data: null, error };
+            }
+        }
+
+        async function testApiWithoutFullToken() {
+            log('🔒 Тестируем API без параметра show_full_token...', 'info');
+            
+            const { response, data, error } = await makeRequest(`${API_BASE}/telegram_settings`);
+            
+            if (error) {
+                log(`❌ Ошибка сети: ${error.message}`, 'error');
+                return;
+            }
+            
+            if (response.ok && data.telegram_settings) {
+                const settings = data.telegram_settings;
+                log(`📊 Токен (замаскированный): ${settings.bot_token || 'null'}`, 'info');
+                log(`📊 Admin Chat ID: ${settings.admin_chat_id || 'null'}`, 'info');
+                
+                if (settings.bot_token && settings.bot_token.includes('...')) {
+                    log('✅ Токен корректно замаскирован для безопасности', 'success');
+                } else {
+                    log('⚠️ Токен не замаскирован или отсутствует', 'warning');
+                }
+            } else {
+                log(`❌ Ошибка API: ${response.status}`, 'error');
+            }
+        }
+
+        async function testApiWithFullToken() {
+            log('🔓 Тестируем API с параметром show_full_token=true...', 'info');
+            
+            const { response, data, error } = await makeRequest(`${API_BASE}/telegram_settings?show_full_token=true`);
+            
+            if (error) {
+                log(`❌ Ошибка сети: ${error.message}`, 'error');
+                return;
+            }
+            
+            if (response.ok && data.telegram_settings) {
+                const settings = data.telegram_settings;
+                log(`📊 Токен (полный): ${settings.bot_token || 'null'}`, 'info');
+                log(`📊 Admin Chat ID: ${settings.admin_chat_id || 'null'}`, 'info');
+                
+                updateFieldDisplay('botTokenValue', settings.bot_token);
+                updateFieldDisplay('adminChatIdValue', settings.admin_chat_id);
+                updateFieldDisplay('botUsernameValue', settings.bot_username);
+                
+                updateFieldStatus('botTokenStatus', settings.bot_token && !settings.bot_token.includes('...'));
+                updateFieldStatus('adminChatIdStatus', !!settings.admin_chat_id);
+                updateFieldStatus('botUsernameStatus', !!settings.bot_username);
+                
+                if (settings.bot_token && !settings.bot_token.includes('...')) {
+                    log('✅ Полный токен получен успешно', 'success');
+                } else {
+                    log('❌ Полный токен не получен', 'error');
+                }
+            } else {
+                log(`❌ Ошибка API: ${response.status}`, 'error');
+            }
+        }
+
+        async function testSaveSettings() {
+            log('💾 Тестируем сохранение настроек...', 'info');
+            
+            const testData = {
+                admin_chat_id: '123456789',
+                test_mode: true
+            };
+            
+            const { response, data, error } = await makeRequest(`${API_BASE}/telegram_settings`, {
+                method: 'PATCH',
+                body: JSON.stringify({ telegram_settings: testData })
+            });
+            
+            if (error) {
+                log(`❌ Ошибка сети: ${error.message}`, 'error');
+                return;
+            }
+            
+            if (response.ok) {
+                log('✅ Настройки сохранены успешно', 'success');
+                log(`📊 Ответ: ${data.message}`, 'info');
+                
+                // Проверяем, что данные сохранились
+                setTimeout(() => testApiWithFullToken(), 1000);
+            } else {
+                log(`❌ Ошибка сохранения: ${response.status}`, 'error');
+                if (data.errors) {
+                    log(`📋 Ошибки: ${data.errors.join(', ')}`, 'error');
+                }
+            }
+        }
+
+        function updateFieldDisplay(elementId, value) {
+            const element = document.getElementById(elementId);
+            element.textContent = value || 'НЕ УСТАНОВЛЕНО';
+        }
+
+        function updateFieldStatus(elementId, isOk) {
+            const element = document.getElementById(elementId);
+            element.textContent = isOk ? 'OK' : 'ERROR';
+            element.className = `field-status ${isOk ? 'ok' : 'error'}`;
+        }
+
+        function clearResults() {
+            document.getElementById('apiResults').innerHTML = '';
+            
+            // Сброс статусов полей
+            ['botTokenValue', 'adminChatIdValue', 'botUsernameValue'].forEach(id => {
+                document.getElementById(id).textContent = 'Загрузка...';
+            });
+            
+            ['botTokenStatus', 'adminChatIdStatus', 'botUsernameStatus'].forEach(id => {
+                const element = document.getElementById(id);
+                element.textContent = '⏳';
+                element.className = 'field-status';
+            });
+        }
+
+        // Автоматическая проверка при загрузке
+        window.onload = () => {
+            log('🚀 Страница загружена. Тестируем исправления отображения настроек Telegram...', 'info');
+            setTimeout(() => testApiWithFullToken(), 1000);
+        };
+    </script>
+</body>
+</html>

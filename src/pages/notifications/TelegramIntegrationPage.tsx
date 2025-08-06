@@ -26,6 +26,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  InputAdornment,
 } from '@mui/material';
 import {
   Telegram as TelegramIcon,
@@ -38,6 +39,8 @@ import {
   Delete as DeleteIcon,
   Group as GroupIcon,
   Person as PersonIcon,
+  Visibility as VisibilityIcon,
+  VisibilityOff as VisibilityOffIcon,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { getTablePageStyles } from '../../styles/components';
@@ -73,7 +76,7 @@ export const TelegramIntegrationPage: React.FC = () => {
   const tablePageStyles = getTablePageStyles(theme);
   
   // API хуки
-  const { data: settingsData, isLoading: settingsLoading, error: settingsError } = useGetTelegramSettingsQuery();
+  const { data: settingsData, isLoading: settingsLoading, error: settingsError } = useGetTelegramSettingsQuery({ showFullToken: true });
   const { data: subscriptionsData, isLoading: subscriptionsLoading } = useGetTelegramSubscriptionsQuery({});
   const [updateSettings, { isLoading: updating }] = useUpdateTelegramSettingsMutation();
   const [testConnection, { isLoading: testLoading }] = useTestTelegramConnectionMutation();
@@ -101,13 +104,15 @@ export const TelegramIntegrationPage: React.FC = () => {
   const [qrCodeDialog, setQrCodeDialog] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [generatingWebhook, setGeneratingWebhook] = useState(false);
+  const [showBotTokenPassword, setShowBotTokenPassword] = useState(false);
+  const [originalSettings, setOriginalSettings] = useState<TelegramSettings | null>(null);
   const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
   // Обновление локального состояния при загрузке данных
   useEffect(() => {
     if (settingsData?.telegram_settings) {
       const apiSettings = settingsData.telegram_settings;
-      setSettings({
+      const newSettings = {
         enabled: apiSettings.enabled,
         botToken: apiSettings.bot_token || '',
         botUsername: apiSettings.bot_username || 'tire_service_ua_bot',
@@ -115,7 +120,15 @@ export const TelegramIntegrationPage: React.FC = () => {
         adminChatId: apiSettings.admin_chat_id || '',
         testMode: apiSettings.test_mode,
         autoSubscription: apiSettings.auto_subscription,
-      });
+      };
+      
+      setSettings(newSettings);
+      setOriginalSettings(newSettings);
+      
+      // Если токен не замаскирован (полный токен), показываем его
+      if (apiSettings.bot_token && !apiSettings.bot_token.includes('...')) {
+        setShowBotTokenPassword(false); // Показываем как обычный текст
+      }
     }
   }, [settingsData]);
 
@@ -225,21 +238,39 @@ export const TelegramIntegrationPage: React.FC = () => {
     }
     
     try {
-      await updateSettings({
-        bot_token: settings.botToken,
-        webhook_url: settings.webhookUrl,
-        admin_chat_id: settings.adminChatId,
-        enabled: settings.enabled,
-        test_mode: settings.testMode,
-        auto_subscription: settings.autoSubscription,
-      }).unwrap();
+      // 🔧 ИСПРАВЛЕНИЕ: Отправляем только измененные поля
+      const updateData: any = {};
+      
+      if (!originalSettings || settings.botToken !== originalSettings.botToken) {
+        updateData.bot_token = settings.botToken;
+      }
+      if (!originalSettings || settings.webhookUrl !== originalSettings.webhookUrl) {
+        updateData.webhook_url = settings.webhookUrl;
+      }
+      if (!originalSettings || settings.adminChatId !== originalSettings.adminChatId) {
+        updateData.admin_chat_id = settings.adminChatId;
+      }
+      if (!originalSettings || settings.enabled !== originalSettings.enabled) {
+        updateData.enabled = settings.enabled;
+      }
+      if (!originalSettings || settings.testMode !== originalSettings.testMode) {
+        updateData.test_mode = settings.testMode;
+      }
+      if (!originalSettings || settings.autoSubscription !== originalSettings.autoSubscription) {
+        updateData.auto_subscription = settings.autoSubscription;
+      }
+      
+      console.log('🔄 Сохраняемые изменения:', updateData);
+      
+      await updateSettings(updateData).unwrap();
       
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 4000);
       
-      // 🔧 ИСПРАВЛЕНИЕ: Убираем автоматическую установку webhook для предотвращения rate limiting
-      // Пользователь может установить webhook вручную через отдельную кнопку
-      console.log('✅ Настройки Telegram сохранены. Webhook можно установить отдельно при необходимости.');
+      // Обновляем оригинальные настройки после успешного сохранения
+      setOriginalSettings({ ...settings });
+      
+      console.log('✅ Настройки Telegram сохранены успешно.');
     } catch (error: any) {
       console.error('Ошибка сохранения настроек:', error);
       
@@ -559,11 +590,25 @@ export const TelegramIntegrationPage: React.FC = () => {
                 label="Bot Token"
                 value={settings.botToken}
                 onChange={(e) => handleSettingChange('botToken', e.target.value)}
-                type="password"
+                type={showBotTokenPassword ? "text" : "password"}
                 sx={{ mb: 2 }}
                 size="small"
                 placeholder="1234567890:ABCDEFghijklmnopQRSTUVwxyz"
                 helperText="Формат: числа:буквы_цифры_дефисы (получите у @BotFather)"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowBotTokenPassword(!showBotTokenPassword)}
+                        edge="end"
+                        size="small"
+                        title={showBotTokenPassword ? "Скрыть токен" : "Показать токен"}
+                      >
+                        {showBotTokenPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
               />
               
               <TextField

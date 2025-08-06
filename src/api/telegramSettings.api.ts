@@ -129,8 +129,11 @@ export const telegramSettingsApi = baseApi.injectEndpoints({
     getTelegramSettings: builder.query<{
       telegram_settings: TelegramSettings;
       statistics: TelegramStatistics;
-    }, void>({
-      query: () => 'telegram_settings',
+    }, { showFullToken?: boolean }>({
+      query: (params = {}) => ({
+        url: 'telegram_settings',
+        params: params.showFullToken ? { show_full_token: 'true' } : {}
+      }),
       providesTags: ['TelegramSettings'],
     }),
 
