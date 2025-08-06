@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест отображения Admin Chat ID в Telegram настройках</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .field-test {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .field-test label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .field-test input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .test-button {
+            background: #1976d2;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #cce7ff; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Тест отображения Admin Chat ID в Telegram настройках</h1>
+    
+    <div class="test-container">
+        <h2>📋 Проблема</h2>
+        <p>Пользователь сообщает: <strong>"ID чата администратора - не отображаются, а то непонятно что в это поле было введено"</strong></p>
+        <p>В базе данных: <code>admin_chat_id: ""</code> (пустая строка)</p>
+    </div>
+
+    <div class="test-container">
+        <h2>🧪 Тест API ответа</h2>
+        <button class="test-button" onclick="testTelegramSettingsAPI()">Тестировать API /telegram_settings</button>
+        <div id="api-result"></div>
+    </div>
+
+    <div class="test-container">
+        <h2>📝 Симуляция поля Admin Chat ID</h2>
+        
+        <div class="field-test">
+            <label>Текущее состояние (пустая строка):</label>
+            <input type="text" id="empty-field" value="" placeholder="123456789">
+            <p><small>Поле с пустым значением - должно показывать placeholder</small></p>
+        </div>
+
+        <div class="field-test">
+            <label>С реальным значением:</label>
+            <input type="text" id="filled-field" value="123456789" placeholder="123456789">
+            <p><small>Поле с заполненным значением</small></p>
+        </div>
+
+        <div class="field-test">
+            <label>С отрицательным Chat ID:</label>
+            <input type="text" id="negative-field" value="-100123456789" placeholder="123456789">
+            <p><small>Поле с отрицательным Chat ID (для групп)</small></p>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>🔧 Возможные решения</h2>
+        <div class="result info">
+            <h3>1. Проверить API ответ</h3>
+            <p>Убедиться, что API возвращает admin_chat_id в ответе</p>
+        </div>
+        
+        <div class="result info">
+            <h3>2. Проверить инициализацию на фронтенде</h3>
+            <p>Убедиться, что пустая строка корректно устанавливается в поле</p>
+        </div>
+        
+        <div class="result info">
+            <h3>3. Добавить отладочную информацию</h3>
+            <p>Добавить console.log для отслеживания значений</p>
+        </div>
+    </div>
+
+    <script>
+        async function testTelegramSettingsAPI() {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.innerHTML = '<p>⏳ Тестируем API...</p>';
+            
+            try {
+                // Сначала авторизуемся
+                const loginResponse = await fetch('http://localhost:8000/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        auth: {
+                            email: 'admin@test.com',
+                            password: 'admin123'
+                        }
+                    })
+                });
+                
+                if (!loginResponse.ok) {
+                    throw new Error(`Ошибка авторизации: ${loginResponse.status}`);
+                }
+                
+                const loginData = await loginResponse.json();
+                console.log('✅ Авторизация успешна:', loginData);
+                
+                // Теперь получаем настройки Telegram
+                const settingsResponse = await fetch('http://localhost:8000/api/v1/telegram_settings?show_full_token=true', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${loginData.access_token}`
+                    },
+                    credentials: 'include'
+                });
+                
+                if (!settingsResponse.ok) {
+                    throw new Error(`Ошибка получения настроек: ${settingsResponse.status}`);
+                }
+                
+                const settingsData = await settingsResponse.json();
+                console.log('📋 Настройки Telegram:', settingsData);
+                
+                const adminChatId = settingsData.telegram_settings?.admin_chat_id;
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <h3>✅ API работает корректно</h3>
+                        <p><strong>Admin Chat ID:</strong> "${adminChatId}" (тип: ${typeof adminChatId})</p>
+                        <p><strong>Длина:</strong> ${adminChatId ? adminChatId.length : 0}</p>
+                        <details>
+                            <summary>Полный ответ API</summary>
+                            <pre>${JSON.stringify(settingsData, null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('❌ Ошибка тестирования:', error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Ошибка тестирования</h3>
+                        <p>${error.message}</p>
+                        <p><small>Проверьте консоль браузера для подробностей</small></p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Демонстрация различных состояний полей
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 Тест отображения полей:');
+            console.log('Пустое поле:', document.getElementById('empty-field').value);
+            console.log('Заполненное поле:', document.getElementById('filled-field').value);
+            console.log('Отрицательное поле:', document.getElementById('negative-field').value);
+        });
+    </script>
+</body>
+</html>
