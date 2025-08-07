@@ -33,13 +33,15 @@ interface TireConversationProps {
   onSuggestionClick: (suggestion: string) => void;
   onQuestionAnswer: (field: string, value: string) => void;
   onNewSearch: (query: string) => void;
+  onStartNewChat?: () => void;
 }
 
 const TireConversation: React.FC<TireConversationProps> = ({
   searchResponse,
   onSuggestionClick,
   onQuestionAnswer,
-  onNewSearch
+  onNewSearch,
+  onStartNewChat
 }) => {
   const { t } = useTranslation(['tireSearch', 'common']);
   const theme = useTheme();
@@ -104,8 +106,13 @@ const TireConversation: React.FC<TireConversationProps> = ({
     setSelectedAnswers({});
     setUserInput('');
     setIsInputMode(false);
-    // Можно добавить callback для сброса всего состояния чата
-    onNewSearch('');
+    // Вызываем callback для полного сброса состояния чата
+    if (onStartNewChat) {
+      onStartNewChat();
+    } else {
+      // Fallback - просто очищаем поиск
+      onNewSearch('');
+    }
   };
 
   const buildSearchQuery = () => {

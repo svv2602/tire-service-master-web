@@ -21,7 +21,7 @@ import { useTranslation } from 'react-i18next';
 import TireSearchBar from '../../components/tire-search/TireSearchBar/TireSearchBar';
 import TireSearchResults from '../../components/tire-search/TireSearchResults/TireSearchResults';
 import SupplierProductsResults from '../../components/tire-search/SupplierProductsResults';
-import { SearchHistory, PopularSearches, TireConversation } from '../../components/tire-search';
+import { TireConversation } from '../../components/tire-search';
 import { useTireSearch, useTireFavorites } from '../../hooks/useTireSearch';
 import { useSupplierProductsSearch } from '../../hooks/useSupplierProductsSearch';
 import { tireSearchCacheUtils } from '../../api/tireSearch.api';
@@ -330,65 +330,112 @@ const TireSearchPage: React.FC = () => {
     }
   };
 
+  // Функция для объединения контекста с новыми параметрами
+  const mergeSearchContext = (newQuery: string, existingContext: any = {}) => {
+    // Получаем существующий контекст из conversationData
+    const currentContext = conversationData?.query_info?.parsed_data || existingContext;
+    
+    console.log('Merging context - Current:', currentContext);
+    console.log('Merging context - New query:', newQuery);
+    
+    // Создаем объединенный запрос
+    let mergedQuery = newQuery;
+    
+    // Если есть бренд автомобиля в контексте, добавляем его
+    if (currentContext?.car_brands?.length > 0) {
+      const existingBrand = currentContext.car_brands[0];
+      // Проверяем, нет ли уже бренда в новом запросе
+      if (!newQuery.toLowerCase().includes(existingBrand.toLowerCase())) {
+        mergedQuery = `${existingBrand} ${newQuery}`;
+      }
+    }
+    
+    // Если есть диаметр в контексте, проверяем нужно ли его обновить или добавить
+    if (currentContext?.tire_sizes?.length > 0) {
+      const existingDiameter = currentContext.tire_sizes[0].diameter;
+      
+      // Проверяем наличие диаметра в новом запросе (R13, R14, на 19, 19", etc)
+      const diameterPattern = /(?:R|на\s*|^|\s)(\d{2,3})(?:"|$|\s)/i;
+      const newDiameterMatch = newQuery.match(diameterPattern);
+      
+      if (newDiameterMatch) {
+        // Если в новом запросе есть диаметр, используем его (обновляем)
+        console.log(`Updating diameter from ${existingDiameter} to ${newDiameterMatch[1]}`);
+      } else if (existingDiameter) {
+        // Если диаметра нет в новом запросе, добавляем существующий
+        mergedQuery = `${mergedQuery} на ${existingDiameter}`;
+        console.log(`Adding existing diameter: ${existingDiameter}`);
+      }
+    }
+    
+    console.log('Merged query result:', mergedQuery);
+    
+    return {
+      query: mergedQuery,
+      context: currentContext
+    };
+  };
+
   // Обработчики для мини-чата
   const handleConversationSuggestion = (suggestion: string) => {
-    // Извлекаем модель из suggestion (например, "Mazda 6" -> "6")
-    const context = conversationData?.context || {};
-    const brand = context.brand || '';
+    // Объединяем контекст с новым запросом
+    const merged = mergeSearchContext(suggestion);
     
-    // Если suggestion содержит бренд, извлекаем только модель
-    let modelQuery = suggestion;
-    
-    // Проверяем разные варианты брендов в suggestion
-    const knownBrands = ['Mazda', 'BMW', 'Mercedes', 'Audi', 'Toyota', 'Honda', 'Volkswagen', 'Ford'];
-    let detectedBrand = brand;
-    
-    // Если бренд не найден в контексте, пытаемся определить из suggestion
-    if (!detectedBrand) {
-      for (const knownBrand of knownBrands) {
-        if (suggestion.toLowerCase().includes(knownBrand.toLowerCase())) {
-          detectedBrand = knownBrand;
-          break;
-        }
-      }
-    }
-    
-    if (detectedBrand && suggestion.toLowerCase().includes(detectedBrand.toLowerCase())) {
-      // Убираем бренд из строки, оставляем только модель
-      const brandRegex = new RegExp(`^${detectedBrand}\\s+`, 'gi');
-      modelQuery = suggestion.replace(brandRegex, '').trim();
-      
-      // Если после удаления бренда ничего не осталось, используем весь suggestion
-      if (!modelQuery) {
-        modelQuery = suggestion;
-      }
-    }
-    
-    setQuery(modelQuery);
-    console.log('Suggestion click:', { 
-      original: suggestion, 
-      extracted: modelQuery, 
-      brand: detectedBrand, 
-      context 
+    setQuery(merged.query);
+    console.log('Suggestion click with context preservation:', {
+      original: suggestion,
+      merged: merged.query,
+      context: merged.context
     });
-    console.log('conversationData:', conversationData);
-    console.log('conversationData?.context:', conversationData?.context);
-    console.log('Calling handleSearch with filters:', { context });
-    handleSearch(modelQuery, { context });
+    
+    // Выполняем поиск с сохраненным контекстом
+    handleSearch(merged.query, { context: merged.context });
   };
 
   const handleConversationAnswer = (field: string, value: string) => {
     // Сохраняем ответ и обновляем состояние
     console.log(`Answered ${field}: ${value}`);
-    // Передаем ответ как новый поиск с контекстом
-    const context = conversationData?.context || {};
-    handleSearch(value, { context });
+    
+    // Объединяем контекст с ответом
+    const merged = mergeSearchContext(value);
+    
+    setQuery(merged.query);
+    console.log('Question answer with context preservation:', {
+      field,
+      value,
+      merged: merged.query,
+      context: merged.context
+    });
+    
+    // Передаем ответ как поиск с сохраненным контекстом
+    handleSearch(merged.query, { context: merged.context });
   };
 
   const handleConversationNewSearch = (query: string) => {
     setQuery(query);
-    // Для нового поиска не передаем контекст (начинаем сначала)
-    handleSearch(query);
+    
+    // Проверяем, был ли это запрос через текстовое поле в режиме уточнения
+    // Если да, то сохраняем контекст, если нет - начинаем сначала
+    if (isConversationMode && conversationData) {
+      console.log('User input in conversation mode - preserving context');
+      const merged = mergeSearchContext(query);
+      handleSearch(merged.query, { context: merged.context });
+    } else {
+      console.log('New search - clearing context');
+      // Для полностью нового поиска не передаем контекст (начинаем сначала)
+      handleSearch(query);
+    }
+  };
+
+  const handleStartNewChat = () => {
+    console.log('Starting new chat - clearing all context');
+    // Полностью очищаем состояние
+    setIsConversationMode(false);
+    setConversationData(null);
+    setQuery('');
+    
+    // Очищаем URL параметры
+    setSearchParams(new URLSearchParams(), { replace: true });
   };
 
   // Прокрутка наверх
@@ -462,24 +509,7 @@ const TireSearchPage: React.FC = () => {
           )}
         </Paper>
 
-        {/* Популярные поиски и история - показываем когда нет активного поиска */}
-        {!searchState.query && !isLoading && searchState.results.length === 0 && (
-          <Box sx={{ mb: 4 }}>
-            <PopularSearches 
-              onSearchSelect={setQuery}
-              maxItems={12}
-              showTrends={true}
-              compact={false}
-              autoRefresh={true}
-            />
-            <SearchHistory 
-              onSearchSelect={setQuery}
-              maxItems={8}
-              showFavorites={true}
-              compact={false}
-            />
-          </Box>
-        )}
+
 
         {/* Мини-чат для уточнения запроса */}
         {isConversationMode && conversationData && (
@@ -488,6 +518,7 @@ const TireSearchPage: React.FC = () => {
             onSuggestionClick={handleConversationSuggestion}
             onQuestionAnswer={handleConversationAnswer}
             onNewSearch={handleConversationNewSearch}
+            onStartNewChat={handleStartNewChat}
           />
         )}
 
@@ -532,22 +563,7 @@ const TireSearchPage: React.FC = () => {
         </Fade>
         )}
 
-        {/* Дополнительная информация */}
-        {!isLoading && !hasResults && !hasError && searchState.query && (
-          <Box sx={{ mt: 4 }}>
-            <Alert severity="info" sx={{ borderRadius: 2 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-                {t('help.tips')}
-              </Typography>
-              <ul style={{ margin: 0, paddingLeft: 20 }}>
-                <li>{t('help.tip1')}</li>
-                <li>{t('help.tip2')}</li>
-                <li>{t('help.tip3')}</li>
-                <li>{t('help.tip4')}</li>
-              </ul>
-            </Alert>
-          </Box>
-        )}
+
       </Container>
 
       {/* Кнопка "Наверх" */}

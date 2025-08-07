@@ -139,10 +139,20 @@ export const extractSearchParams = (query: string, parsedData?: any) => {
 /**
  * Проверяет, является ли результат поиска "только размером шин" без автомобиля
  * @param results - результаты поиска
- * @returns true если найден только размер шин без информации об автомобиле
+ * @returns true если найден только ПОЛНЫЙ размер шин без информации об автомобиле
  */
 export const isTireSizeOnlyResult = (results: TireSearchResult[]): boolean => {
   if (results.length === 0) return false;
+  
+  // Проверяем, что есть хотя бы один полный размер шины
+  const hasFullTireSize = results.some(result => {
+    return result.tire_sizes.some(size => 
+      size.width && size.height && size.diameter
+    );
+  });
+  
+  // Если нет полных размеров, то это НЕ "только размер шин"
+  if (!hasFullTireSize) return false;
   
   // Проверяем, что все результаты не содержат информацию об автомобиле
   const hasCarInfo = results.some(result => {
@@ -169,24 +179,27 @@ export const isTireSizeOnlyResult = (results: TireSearchResult[]): boolean => {
 /**
  * Извлекает единственный размер шины из результатов поиска
  * @param results - результаты поиска
- * @returns размер шины если найден единственный уникальный размер, иначе null
+ * @returns размер шины если найден единственный уникальный ПОЛНЫЙ размер, иначе null
  */
 export const extractSingleTireSize = (results: TireSearchResult[]): TireSize | null => {
   if (results.length === 0) return null;
   
-  // Собираем все уникальные размеры
+  // Собираем все уникальные ПОЛНЫЕ размеры (с шириной, высотой и диаметром)
   const uniqueSizes = new Map<string, TireSize>();
   
   results.forEach(result => {
     result.tire_sizes.forEach(size => {
-      const key = `${size.width}/${size.height}R${size.diameter}`;
-      if (!uniqueSizes.has(key)) {
-        uniqueSizes.set(key, size);
+      // КРИТИЧЕСКАЯ ПРОВЕРКА: размер должен быть полным
+      if (size.width && size.height && size.diameter) {
+        const key = `${size.width}/${size.height}R${size.diameter}`;
+        if (!uniqueSizes.has(key)) {
+          uniqueSizes.set(key, size);
+        }
       }
     });
   });
   
-  // Возвращаем размер только если он единственный
+  // Возвращаем размер только если он единственный И полный
   return uniqueSizes.size === 1 ? Array.from(uniqueSizes.values())[0] : null;
 };
 

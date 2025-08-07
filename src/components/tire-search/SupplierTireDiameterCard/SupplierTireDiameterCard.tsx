@@ -238,14 +238,14 @@ const SupplierTireDiameterCard: React.FC<SupplierTireDiameterCardProps> = ({
   if (isLoading) return renderLoading();
   if (error) return renderError();
   if (isSuccess) {
-    // Если нет данных или размеров, не рендерим компонент
+    // Если нет данных или размеров, показываем пустое состояние
     if (!sizesData?.sizes || sizesData.sizes.length === 0) {
-      return null;
+      return renderEmpty();
     }
     return renderContent();
   }
   
-  return null;
+  return renderEmpty();
 };
 
 export default SupplierTireDiameterCard;
