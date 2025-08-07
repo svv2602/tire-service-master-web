@@ -13,9 +13,9 @@ import { clearAllCacheData } from '../../api/baseApi';
  * Refresh токены хранятся в HttpOnly куки на сервере
  */
 
-// Начальное состояние (без localStorage)
+// Начальное состояние (с восстановлением токена из localStorage)
 const initialState: AuthState = {
-  accessToken: null, // Токен будет получен из API при инициализации
+  accessToken: localStorage.getItem('auth_token'), // Восстанавливаем токен из localStorage
   refreshToken: null, // Refresh токен в HttpOnly cookies
   user: null, // Пользователь будет получен из API при инициализации
   isAuthenticated: false, // Будет определено при инициализации через API
@@ -55,6 +55,12 @@ const authSlice = createSlice({
       state.isInitialized = true;
       state.hasLoggedOut = false; // Сбрасываем флаг выхода при входе
       localStorage.removeItem('hasLoggedOut'); // Удаляем из localStorage
+      
+      // Сохраняем токен в localStorage
+      if (accessToken) {
+        localStorage.setItem('auth_token', accessToken);
+        console.log('🔐 Токен сохранен в localStorage');
+      }
     },
     logout: (state) => {
       state.accessToken = null;
@@ -65,6 +71,8 @@ const authSlice = createSlice({
       state.isInitialized = true;
       state.hasLoggedOut = true; // Устанавливаем флаг явного выхода
       localStorage.setItem('hasLoggedOut', 'true'); // Сохраняем в localStorage
+      localStorage.removeItem('auth_token'); // Удаляем токен из localStorage
+      console.log('🗑️ Токен удален из localStorage');
     },
     setInitialized: (state) => {
       state.isInitialized = true;
@@ -79,6 +87,9 @@ const authSlice = createSlice({
       if (state.user) {
         state.isAuthenticated = true;
       }
+      // Сохраняем обновленный токен в localStorage
+      localStorage.setItem('auth_token', action.payload);
+      console.log('🔄 Обновленный токен сохранен в localStorage');
     },
   },
   extraReducers: (builder) => {
@@ -100,6 +111,12 @@ const authSlice = createSlice({
         state.isInitialized = true;
         state.hasLoggedOut = false; // Сбрасываем флаг выхода при входе
         localStorage.removeItem('hasLoggedOut'); // Удаляем из localStorage
+        
+        // Сохраняем токен в localStorage
+        if (state.accessToken) {
+          localStorage.setItem('auth_token', state.accessToken);
+          console.log('🔐 Токен сохранен в localStorage при login');
+        }
         
         console.log('Auth: login.fulfilled - state updated:', {
           isAuthenticated: state.isAuthenticated,
@@ -125,6 +142,8 @@ const authSlice = createSlice({
         state.isInitialized = true;
         state.hasLoggedOut = true; // Устанавливаем флаг явного выхода
         localStorage.setItem('hasLoggedOut', 'true'); // Сохраняем в localStorage
+        localStorage.removeItem('auth_token'); // Удаляем токен из localStorage
+        console.log('🗑️ Токен удален из localStorage при logout');
       })
       
       // Обработка refreshAuthTokens
@@ -140,7 +159,8 @@ const authSlice = createSlice({
         if (action.payload.access_token || action.payload.tokens?.access) {
           const newToken = action.payload.access_token || action.payload.tokens.access;
           state.accessToken = newToken;
-          console.log('AuthSlice: Access токен обновлен');
+          localStorage.setItem('auth_token', newToken);
+          console.log('AuthSlice: Access токен обновлен и сохранен в localStorage');
         }
       })
       .addCase(refreshAuthTokens.rejected, (state, action) => {
@@ -164,6 +184,8 @@ const authSlice = createSlice({
         // Если в ответе есть новый access токен, сохраняем его
         if (action.payload.tokens?.access) {
           state.accessToken = action.payload.tokens.access;
+          localStorage.setItem('auth_token', action.payload.tokens.access);
+          console.log('🔐 Токен сохранен в localStorage при getCurrentUser');
         }
         
         console.log('User role after getCurrentUser:', state.user?.role);
