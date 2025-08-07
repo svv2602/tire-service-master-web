@@ -318,7 +318,7 @@ const PartnerFormPage: React.FC = () => {
 
   // --- Сотрудники (операторы) ---
   const partnerId = id ? parseInt(id) : 0;
-  const { data: operators = [], isLoading: operatorsLoading, refetch: refetchOperators } = useGetOperatorsByPartnerQuery({ partnerId }, { skip: !isEdit });
+  // PartnerOperatorsManager сам загружает операторов, поэтому здесь запрос не нужен
   const [createOperator] = useCreateOperatorMutation();
   const [updateOperator] = useUpdateOperatorMutation();
   const [deleteOperator] = useDeleteOperatorMutation();
@@ -365,14 +365,7 @@ const PartnerFormPage: React.FC = () => {
         setSuccessMessage(t('forms.partner.messages.operatorDeleted'));
       }
       
-      // Обновляем список операторов
-      refetchOperators();
-      
-      // Принудительно вызываем onOperatorChange для обновления родительского компонента
-      // Это поможет обновить кэш в PartnerOperatorsManager
-      setTimeout(() => {
-        // Небольшая задержка для обеспечения корректного обновления кэша
-      }, 100);
+      // PartnerOperatorsManager сам обновит данные через onOperatorChange
       
       // Скрываем сообщение через 3 секунды
       setTimeout(() => setSuccessMessage(null), 3000);
@@ -390,8 +383,7 @@ const PartnerFormPage: React.FC = () => {
       } else {
         await createOperator({ partnerId, data }).unwrap();
       }
-      // Обновляем список операторов
-      refetchOperators();
+      // PartnerOperatorsManager сам обновит данные через onOperatorChange
       // Модальное окно закроется автоматически через setTimeout в OperatorModal
     } catch (error) {
       // Пробрасываем ошибку для обработки в OperatorModal
@@ -467,8 +459,7 @@ const PartnerFormPage: React.FC = () => {
         data: requestData
       }).unwrap();
       
-      // Обновляем список операторов
-      refetchOperators();
+      // PartnerOperatorsManager сам обновит данные через onOperatorChange
       
       // Отображаем сообщение об успехе
       setSuccessMessage(operator.is_active ? t('forms.partner.messages.operatorDeactivated') : t('forms.partner.messages.operatorActivated'));
@@ -989,8 +980,8 @@ const PartnerFormPage: React.FC = () => {
         partnerId={Number(id)}
         partnerName={partner?.company_name}
         onOperatorChange={() => {
-          // Обновляем данные операторов при изменениях
-          refetchOperators();
+          // PartnerOperatorsManager сам управляет обновлением данных
+          console.log('Операторы изменены');
         }}
         onAddOperator={handleAddOperator}
         onEditOperator={handleEditOperator}
