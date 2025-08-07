@@ -986,6 +986,7 @@ const PartnerFormPage: React.FC = () => {
           // Обновляем данные операторов при изменениях
           refetchOperators();
         }}
+        onAddOperator={handleAddOperator}
       />
       
       {/* Сохраняем старую модальную форму для совместимости */}

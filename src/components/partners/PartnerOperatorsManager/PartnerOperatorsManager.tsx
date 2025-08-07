@@ -31,12 +31,14 @@ export interface PartnerOperatorsManagerProps {
   partnerId: number;
   partnerName?: string;
   onOperatorChange?: () => void;
+  onAddOperator?: () => void;
 }
 
 export const PartnerOperatorsManager: React.FC<PartnerOperatorsManagerProps> = ({
   partnerId,
   partnerName,
   onOperatorChange,
+  onAddOperator,
 }) => {
   const { showSuccess } = useSnackbar();
 
@@ -121,7 +123,8 @@ export const PartnerOperatorsManager: React.FC<PartnerOperatorsManagerProps> = (
                 <Button
                   startIcon={<AddIcon />}
                   size="small"
-                  onClick={() => {/* TODO: Добавить оператора */}}
+                  onClick={onAddOperator}
+                  disabled={!onAddOperator}
                 >
                   Добавить
                 </Button>
