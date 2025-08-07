@@ -38,7 +38,8 @@ import {
   Close as CloseIcon,
   ShoppingCart as ShoppingCartIcon,
   Clear as ClearIcon,
-  FilterList as FilterListIcon
+  FilterList as FilterListIcon,
+  Chat as ChatIcon
 } from '@mui/icons-material';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -46,6 +47,7 @@ import Pagination from '../../components/ui/Pagination/Pagination';
 import { useGetAllSupplierProductsQuery, SupplierProduct } from '../../api/suppliers.api';
 import ClientLayout from '../../components/client/ClientLayout';
 import OrderModal from '../../components/client/OrderModal';
+import { TireChatWidget } from '../../components/tire-chat';
 
 const TireOffersPage: React.FC = () => {
   const { t } = useTranslation();
@@ -88,6 +90,9 @@ const TireOffersPage: React.FC = () => {
   // Состояние модального окна для заказа
   const [orderModalOpen, setOrderModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<SupplierProduct | null>(null);
+  
+  // Состояние чата
+  const [chatOpen, setChatOpen] = useState(false);
   
   // Извлекаем параметры из URL
   const tireSize = searchParams.get('size') || '';
@@ -362,10 +367,37 @@ const TireOffersPage: React.FC = () => {
   // Рендер заголовка страницы
   const renderHeader = () => (
     <Box sx={{ mb: 3 }}>
-      <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
-        <LocalOfferIcon sx={{ mr: 2, fontSize: 'inherit', verticalAlign: 'middle' }} />
-        {t('forms.clientPages.tireOffers.title', 'Предложения шин')}
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
+          <LocalOfferIcon sx={{ mr: 2, fontSize: 'inherit', verticalAlign: 'middle' }} />
+          {t('forms.clientPages.tireOffers.title', 'Предложения шин')}
+        </Typography>
+        
+        {/* Кнопка чата в правом верхнем углу */}
+        <Button
+          variant="contained"
+          startIcon={<ChatIcon />}
+          onClick={() => setChatOpen(true)}
+          sx={{
+            bgcolor: '#4CAF50',
+            color: 'white',
+            borderRadius: 2,
+            px: 3,
+            py: 1,
+            fontWeight: 600,
+            textTransform: 'none',
+            boxShadow: '0 4px 8px rgba(76, 175, 80, 0.3)',
+            '&:hover': {
+              bgcolor: '#45A049',
+              boxShadow: '0 6px 12px rgba(76, 175, 80, 0.4)',
+              transform: 'translateY(-1px)'
+            },
+            transition: 'all 0.2s ease'
+          }}
+        >
+          Онлайн-консультант
+        </Button>
+      </Box>
       
       {(tireSize || processedSearch.season || brand || seasonality || processedSearch.search) && (
         <Box sx={{ mb: 2 }}>
@@ -836,6 +868,13 @@ const TireOffersPage: React.FC = () => {
         open={orderModalOpen}
         onClose={handleCloseOrderModal}
         product={selectedProduct}
+      />
+
+      {/* Чат-консультант */}
+      <TireChatWidget
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        initialMessage={tireSize ? `Помогите подобрать шины размера ${tireSize}` : undefined}
       />
     </ClientLayout>
   );
