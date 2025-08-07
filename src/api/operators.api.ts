@@ -162,9 +162,15 @@ export const operatorsApi = baseApi.injectEndpoints({
       providesTags: [{ type: 'Operator', id: 'LIST' }],
     }),
     
-    getOperatorsByPartner: build.query<Operator[], number>({
-      query: (partnerId) => `/partners/${partnerId}/operators`,
-      providesTags: (result, error, partnerId) => [
+    getOperatorsByPartner: build.query<Operator[], { partnerId: number; search?: string; isActive?: boolean; servicePointSearch?: string }>({
+      query: ({ partnerId, search, isActive, servicePointSearch }) => {
+        const params = new URLSearchParams();
+        if (search) params.append('search', search);
+        if (isActive !== undefined) params.append('is_active', isActive.toString());
+        if (servicePointSearch) params.append('service_point_search', servicePointSearch);
+        return `/partners/${partnerId}/operators${params.toString() ? '?' + params.toString() : ''}`;
+      },
+      providesTags: (result, error, { partnerId }) => [
         { type: 'Partner', id: partnerId },
       ],
     }),

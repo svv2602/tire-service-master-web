@@ -9,6 +9,12 @@ import {
   Alert,
   LinearProgress,
   Chip,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Grid,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -74,6 +80,11 @@ export const PartnerOperatorsManager: React.FC<PartnerOperatorsManagerProps> = (
 }) => {
   const { showSuccess } = useSnackbar();
 
+  // Состояние для фильтров
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>(''); // '' = все, 'true' = активные, 'false' = неактивные
+  const [servicePointSearch, setServicePointSearch] = useState('');
+
   // Состояние
   const [assignmentModal, setAssignmentModal] = useState<{
     open: boolean;
@@ -88,10 +99,32 @@ export const PartnerOperatorsManager: React.FC<PartnerOperatorsManagerProps> = (
     data: operatorsData,
     isLoading: operatorsLoading,
     refetch: refetchOperators,
-  } = useGetOperatorsByPartnerQuery(partnerId);
+  } = useGetOperatorsByPartnerQuery({
+    partnerId,
+    search: searchTerm || undefined,
+    isActive: statusFilter ? statusFilter === 'true' : undefined,
+    servicePointSearch: servicePointSearch || undefined,
+  });
 
   // Обработка данных
   const operators = operatorsData || [];
+  
+  // Отладочная информация (временно)
+  console.log('PartnerOperatorsManager Debug:', {
+    partnerId,
+    searchTerm,
+    statusFilter,
+    servicePointSearch,
+    operatorsData,
+    operators,
+    operatorsLoading,
+    queryParams: {
+      partnerId,
+      search: searchTerm || undefined,
+      isActive: statusFilter ? statusFilter === 'true' : undefined,
+      servicePointSearch: servicePointSearch || undefined,
+    }
+  });
 
   // Обработчики
   const handleOpenAssignmentModal = (operator: any) => {
@@ -175,6 +208,51 @@ export const PartnerOperatorsManager: React.FC<PartnerOperatorsManagerProps> = (
         </Alert>
       </Box>
 
+      {/* Фильтры */}
+      <Box mb={3}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} md={4}>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Поиск по имени, фамилии, email или телефону..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              variant="outlined"
+            />
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Поиск по сервисной точке..."
+              value={servicePointSearch}
+              onChange={(e) => setServicePointSearch(e.target.value)}
+              variant="outlined"
+            />
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Статус</InputLabel>
+              <Select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                label="Статус"
+              >
+                <MenuItem value="">Все операторы</MenuItem>
+                <MenuItem value="true">Только активные</MenuItem>
+                <MenuItem value="false">Только неактивные</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} md={2}>
+            <Typography variant="body2" color="text.secondary" textAlign="center">
+              Найдено: {operators.length}
+            </Typography>
+          </Grid>
+        </Grid>
+      </Box>
+
       {/* Операторы */}
       <Card>
         <CardHeader
@@ -222,7 +300,7 @@ export const PartnerOperatorsManager: React.FC<PartnerOperatorsManagerProps> = (
           
           {operators.length === 0 && (
             <Typography variant="body2" color="text.secondary" textAlign="center" py={4}>
-              Нет операторов
+              Нет операторов (загружается: {operatorsLoading ? 'да' : 'нет'}, данные: {operatorsData ? JSON.stringify(operatorsData).substring(0, 100) + '...' : 'null'})
             </Typography>
           )}
         </CardContent>

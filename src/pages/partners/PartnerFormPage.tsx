@@ -318,7 +318,7 @@ const PartnerFormPage: React.FC = () => {
 
   // --- Сотрудники (операторы) ---
   const partnerId = id ? parseInt(id) : 0;
-  const { data: operators = [], isLoading: operatorsLoading, refetch: refetchOperators } = useGetOperatorsByPartnerQuery(partnerId, { skip: !isEdit });
+  const { data: operators = [], isLoading: operatorsLoading, refetch: refetchOperators } = useGetOperatorsByPartnerQuery({ partnerId }, { skip: !isEdit });
   const [createOperator] = useCreateOperatorMutation();
   const [updateOperator] = useUpdateOperatorMutation();
   const [deleteOperator] = useDeleteOperatorMutation();
