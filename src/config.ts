@@ -4,14 +4,20 @@
 
 // Функция для определения API URL в зависимости от окружения
 const getApiUrl = (): string => {
-  // Если задана переменная окружения, используем её
+  // Если задана переменная окружения, используем её (приоритет)
   if (process.env.REACT_APP_API_URL) {
+    console.log('🔧 Используем REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
     return process.env.REACT_APP_API_URL;
   }
   
-  // Если мы в Docker (проверяем по hostname или других признаках)
+  // Если мы в браузере, проверяем hostname
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
+    
+    // Специальная обработка для production домена
+    if (hostname === 'service-station.tot.biz.ua') {
+      return `http://${hostname}:8000`;
+    }
     
     // Если hostname не localhost/127.0.0.1, вероятно мы в Docker или на удаленном сервере
     if (hostname !== 'localhost' && hostname !== '127.0.0.1') {

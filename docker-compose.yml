@@ -133,9 +133,9 @@ services:
       # Node.js окружение
       NODE_ENV: development
       
-      # API настройки - используем localhost для браузера пользователя
-      REACT_APP_API_URL: "http://api:8000"
-      REACT_APP_API_BASE_URL: "http://api:8000/api/v1"
+      # API настройки - используем внешний домен для браузера пользователя
+      REACT_APP_API_URL: "http://service-station.tot.biz.ua:8000"
+      REACT_APP_API_BASE_URL: "http://service-station.tot.biz.ua:8000/api/v1"
       
       # Development настройки
       CHOKIDAR_USEPOLLING: "true"
