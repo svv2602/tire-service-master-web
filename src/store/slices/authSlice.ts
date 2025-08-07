@@ -13,9 +13,9 @@ import { clearAllCacheData } from '../../api/baseApi';
  * Refresh токены хранятся в HttpOnly куки на сервере
  */
 
-// Начальное состояние (с восстановлением токена из localStorage)
+// Начальное состояние (cookie-based аутентификация, токен не сохраняется в localStorage)
 const initialState: AuthState = {
-  accessToken: localStorage.getItem('auth_token'), // Восстанавливаем токен из localStorage
+  accessToken: null, // Токен будет получен через cookies при инициализации
   refreshToken: null, // Refresh токен в HttpOnly cookies
   user: null, // Пользователь будет получен из API при инициализации
   isAuthenticated: false, // Будет определено при инициализации через API
@@ -56,10 +56,11 @@ const authSlice = createSlice({
       state.hasLoggedOut = false; // Сбрасываем флаг выхода при входе
       localStorage.removeItem('hasLoggedOut'); // Удаляем из localStorage
       
-      // Сохраняем токен в localStorage
+      // Токен не сохраняем в localStorage при cookie-based аутентификации
       if (accessToken) {
-        localStorage.setItem('auth_token', accessToken);
-        console.log('🔐 Токен сохранен в localStorage');
+        console.log('🔐 Токен получен и сохранен в Redux состояние');
+      } else {
+        console.log('🍪 Используется cookie-based аутентификация');
       }
     },
     logout: (state) => {
@@ -71,8 +72,7 @@ const authSlice = createSlice({
       state.isInitialized = true;
       state.hasLoggedOut = true; // Устанавливаем флаг явного выхода
       localStorage.setItem('hasLoggedOut', 'true'); // Сохраняем в localStorage
-      localStorage.removeItem('auth_token'); // Удаляем токен из localStorage
-      console.log('🗑️ Токен удален из localStorage');
+      console.log('🍪 Выход из системы - cookies будут очищены сервером');
     },
     setInitialized: (state) => {
       state.isInitialized = true;
@@ -87,9 +87,7 @@ const authSlice = createSlice({
       if (state.user) {
         state.isAuthenticated = true;
       }
-      // Сохраняем обновленный токен в localStorage
-      localStorage.setItem('auth_token', action.payload);
-      console.log('🔄 Обновленный токен сохранен в localStorage');
+      console.log('🔄 Токен обновлен в Redux состоянии');
     },
   },
   extraReducers: (builder) => {

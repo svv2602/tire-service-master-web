@@ -18,86 +18,177 @@ import {
   DialogActions,
   useTheme,
   Stack,
-  Alert
+  Alert,
+  CircularProgress,
+  Chip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   Public as CountryIcon,
-  Search as SearchIcon
+  Search as SearchIcon,
+  ToggleOn as ToggleOnIcon,
+  ToggleOff as ToggleOffIcon
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { getTablePageStyles } from '../../styles';
 import Pagination from '../../components/ui/Pagination/Pagination';
-
-// Временные типы данных (позже заменить на реальные API)
-interface Country {
-  id: number;
-  name: string;
-  code: string; // ISO код страны (например, "UA", "DE", "JP")
-  flag?: string; // URL флага
-  isActive: boolean;
-  createdAt: string;
-}
+import { 
+  useGetCountriesQuery,
+  useCreateCountryMutation,
+  useUpdateCountryMutation,
+  useDeleteCountryMutation,
+  useToggleCountryStatusMutation,
+  Country,
+  CountryFormData
+} from '../../api/countries.api';
+import Notification from '../../components/Notification';
 
 const CountriesPage: React.FC = () => {
   const { t } = useTranslation();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
 
-  // Состояние
+  // Состояния
   const [searchTerm, setSearchTerm] = useState('');
-  const [page, setPage] = useState(1);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
+  const [activeOnly, setActiveOnly] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const [editingCountry, setEditingCountry] = useState<Country | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [countryToDelete, setCountryToDelete] = useState<Country | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'warning' | 'info';
+  }>({ open: false, message: '', severity: 'success' });
+  
+  // Форма
+  const [formData, setFormData] = useState<CountryFormData>({
+    name: '',
+    iso_code: '',
+    is_active: true,
+    rating_score: 5,
+    description: '',
+    aliases: []
+  });
 
-  // Временные данные (заменить на API)
-  const mockCountries: Country[] = [
-    { id: 1, name: 'Украина', code: 'UA', isActive: true, createdAt: '2025-01-01' },
-    { id: 2, name: 'Германия', code: 'DE', isActive: true, createdAt: '2025-01-01' },
-    { id: 3, name: 'Япония', code: 'JP', isActive: true, createdAt: '2025-01-01' },
-    { id: 4, name: 'Италия', code: 'IT', isActive: true, createdAt: '2025-01-01' },
-    { id: 5, name: 'Франция', code: 'FR', isActive: true, createdAt: '2025-01-01' },
-  ];
+  const itemsPerPage = 10;
 
-  const filteredCountries = mockCountries.filter(country =>
-    country.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    country.code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // API хуки
+  const { data: countriesData, isLoading, error, refetch } = useGetCountriesQuery({
+    search: searchTerm,
+    active_only: activeOnly,
+    page: currentPage,
+    per_page: itemsPerPage
+  });
 
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(filteredCountries.length / rowsPerPage);
-  const startIndex = (page - 1) * rowsPerPage;
-  const paginatedCountries = filteredCountries.slice(startIndex, startIndex + rowsPerPage);
+  const [createCountry, { isLoading: isCreating }] = useCreateCountryMutation();
+  const [updateCountry, { isLoading: isUpdating }] = useUpdateCountryMutation();
+  const [deleteCountry, { isLoading: isDeleting }] = useDeleteCountryMutation();
+  const [toggleStatus, { isLoading: isToggling }] = useToggleCountryStatusMutation();
+
+  const countries = countriesData?.data || [];
+  const pagination = countriesData?.pagination;
+
+  const showNotification = (message: string, severity: 'success' | 'error' | 'warning' | 'info') => {
+    setNotification({ open: true, message, severity });
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      iso_code: '',
+      is_active: true,
+      rating_score: 5,
+      description: '',
+      aliases: []
+    });
+    setEditingCountry(null);
+  };
 
   const handleCreate = () => {
-    setSelectedCountry(null);
-    setDialogOpen(true);
+    resetForm();
+    setOpenModal(true);
   };
 
   const handleEdit = (country: Country) => {
-    setSelectedCountry(country);
-    setDialogOpen(true);
+    setFormData({
+      name: country.name,
+      iso_code: country.iso_code || '',
+      is_active: country.is_active,
+      rating_score: country.rating_score,
+      description: '',
+      aliases: []
+    });
+    setEditingCountry(country);
+    setOpenModal(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      if (editingCountry) {
+        await updateCountry({ id: editingCountry.id, data: formData }).unwrap();
+        showNotification('Страна успешно обновлена', 'success');
+      } else {
+        await createCountry(formData).unwrap();
+        showNotification('Страна успешно создана', 'success');
+      }
+      setOpenModal(false);
+      resetForm();
+      refetch();
+    } catch (error: any) {
+      showNotification(error?.data?.error || 'Произошла ошибка', 'error');
+    }
   };
 
   const handleDelete = (country: Country) => {
-    setSelectedCountry(country);
+    setCountryToDelete(country);
     setDeleteDialogOpen(true);
   };
 
-  const handleSave = () => {
-    // TODO: Реализовать сохранение через API
-    setDialogOpen(false);
-    setSelectedCountry(null);
+  const handleConfirmDelete = async () => {
+    if (!countryToDelete) return;
+    
+    try {
+      await deleteCountry(countryToDelete.id).unwrap();
+      showNotification('Страна успешно удалена', 'success');
+      setDeleteDialogOpen(false);
+      setCountryToDelete(null);
+      refetch();
+    } catch (error: any) {
+      showNotification(error?.data?.error || 'Произошла ошибка при удалении', 'error');
+    }
   };
 
-  const handleConfirmDelete = () => {
-    // TODO: Реализовать удаление через API
-    setDeleteDialogOpen(false);
-    setSelectedCountry(null);
+  const handleToggleStatus = async (country: Country) => {
+    try {
+      await toggleStatus(country.id).unwrap();
+      showNotification(`Страна ${country.is_active ? 'деактивирована' : 'активирована'}`, 'success');
+      refetch();
+    } catch (error: any) {
+      showNotification(error?.data?.error || 'Произошла ошибка', 'error');
+    }
   };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  if (error) {
+    return (
+      <Box sx={tablePageStyles.pageContainer}>
+        <Alert severity="error">
+          Ошибка загрузки данных. Попробуйте обновить страницу.
+        </Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
@@ -119,27 +210,32 @@ const CountriesPage: React.FC = () => {
         </Button>
       </Box>
 
-      {/* Поиск */}
+      {/* Фильтры */}
       <Paper sx={tablePageStyles.filtersContainer}>
-        <TextField
-          fullWidth
-          variant="outlined"
-          placeholder="Поиск по названию или коду страны..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
-          }}
-        />
+        <Stack direction="row" spacing={2} alignItems="center">
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder="Поиск по названию или ISO коду..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+            }}
+          />
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel>Статус</InputLabel>
+            <Select
+              value={activeOnly ? 'active' : 'all'}
+              label="Статус"
+              onChange={(e) => setActiveOnly(e.target.value === 'active')}
+            >
+              <MenuItem value="all">Все</MenuItem>
+              <MenuItem value="active">Только активные</MenuItem>
+            </Select>
+          </FormControl>
+        </Stack>
       </Paper>
-
-      {/* Уведомление о разработке */}
-      <Alert severity="info" sx={{ mb: 3 }}>
-        <Typography variant="body2">
-          <strong>В разработке:</strong> Эта страница находится в стадии разработки. 
-          Функциональность создания, редактирования и удаления стран будет добавлена в следующих обновлениях.
-        </Typography>
-      </Alert>
 
       {/* Таблица */}
       <TableContainer component={Paper} sx={tablePageStyles.tableContainer}>
@@ -147,127 +243,203 @@ const CountriesPage: React.FC = () => {
           <TableHead>
             <TableRow>
               <TableCell>Название</TableCell>
-              <TableCell>Код страны</TableCell>
+              <TableCell>ISO код</TableCell>
+              <TableCell>Рейтинг</TableCell>
+              <TableCell>Бренды шин</TableCell>
               <TableCell>Статус</TableCell>
               <TableCell>Дата создания</TableCell>
               <TableCell align="center">Действия</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedCountries.map((country) => (
-              <TableRow key={country.id} hover>
-                <TableCell>
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Typography variant="body2" fontWeight={500}>
-                      {country.name}
-                    </Typography>
-                  </Stack>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                    {country.code}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      color: country.isActive ? 'success.main' : 'error.main',
-                      fontWeight: 500
-                    }}
-                  >
-                    {country.isActive ? 'Активна' : 'Неактивна'}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" color="text.secondary">
-                    {new Date(country.createdAt).toLocaleDateString()}
-                  </Typography>
-                </TableCell>
-                <TableCell align="center">
-                  <IconButton
-                    size="small"
-                    onClick={() => handleEdit(country)}
-                    sx={{ mr: 1 }}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleDelete(country)}
-                    color="error"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                  <CircularProgress />
                 </TableCell>
               </TableRow>
-            ))}
+            ) : countries.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                  <Typography color="text.secondary">
+                    Страны не найдены
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              countries.map((country) => (
+                <TableRow key={country.id} hover>
+                  <TableCell>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Typography variant="body2" fontWeight={500}>
+                        {country.name}
+                      </Typography>
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                      {country.iso_code || '—'}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {country.rating_score}/10
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {country.tire_brands_count}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={country.is_active ? 'Активна' : 'Неактивна'}
+                      color={country.is_active ? 'success' : 'default'}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color="text.secondary">
+                      {new Date(country.created_at).toLocaleDateString()}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleToggleStatus(country)}
+                      disabled={isToggling}
+                      sx={{ mr: 1 }}
+                      title={country.is_active ? 'Деактивировать' : 'Активировать'}
+                    >
+                      {country.is_active ? <ToggleOnIcon color="success" /> : <ToggleOffIcon />}
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleEdit(country)}
+                      sx={{ mr: 1 }}
+                      title="Редактировать"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDelete(country)}
+                      color="error"
+                      title="Удалить"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>
 
       {/* Пагинация */}
-      {totalPages > 1 && (
+      {pagination && pagination.total_pages > 1 && (
         <Box sx={tablePageStyles.paginationContainer}>
           <Pagination
-            count={totalPages}
-            page={page}
-            onChange={setPage}
+            count={pagination.total_pages}
+            page={pagination.current_page}
+            onChange={handlePageChange}
           />
         </Box>
       )}
 
-      {/* Диалог создания/редактирования */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+      {/* Модальное окно создания/редактирования */}
+      <Dialog 
+        open={openModal} 
+        onClose={() => setOpenModal(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>
-          {selectedCountry ? 'Редактировать страну' : 'Добавить страну'}
+          {editingCountry ? 'Редактировать страну' : 'Создать страну'}
         </DialogTitle>
         <DialogContent>
-          <Box sx={{ pt: 2 }}>
+          <Stack spacing={3} sx={{ mt: 1 }}>
             <TextField
               fullWidth
               label="Название страны"
-              variant="outlined"
-              defaultValue={selectedCountry?.name || ''}
-              sx={{ mb: 3 }}
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              required
             />
             <TextField
               fullWidth
-              label="Код страны (ISO)"
-              variant="outlined"
-              defaultValue={selectedCountry?.code || ''}
-              helperText="Двухбуквенный код страны (например: UA, DE, JP)"
+              label="ISO код (например, UA, DE, JP)"
+              value={formData.iso_code}
+              onChange={(e) => setFormData(prev => ({ ...prev, iso_code: e.target.value.toUpperCase() }))}
+              inputProps={{ maxLength: 3 }}
             />
-          </Box>
+            <TextField
+              fullWidth
+              label="Рейтинг (1-10)"
+              type="number"
+              value={formData.rating_score}
+              onChange={(e) => setFormData(prev => ({ ...prev, rating_score: Number(e.target.value) }))}
+              inputProps={{ min: 1, max: 10 }}
+            />
+            <TextField
+              fullWidth
+              label="Описание"
+              multiline
+              rows={3}
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            />
+          </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>
-            Отмена
+          <Button onClick={() => setOpenModal(false)}>
+            Отменить
           </Button>
-          <Button variant="contained" onClick={handleSave}>
-            {selectedCountry ? 'Сохранить' : 'Создать'}
+          <Button 
+            variant="contained" 
+            onClick={handleSave}
+            disabled={isCreating || isUpdating || !formData.name.trim()}
+          >
+            {isCreating || isUpdating ? <CircularProgress size={20} /> : 'Сохранить'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Диалог удаления */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Подтверждение удаления</DialogTitle>
+      {/* Диалог подтверждения удаления */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Подтвердите удаление</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы уверены, что хотите удалить страну "{selectedCountry?.name}"?
+            Вы уверены, что хотите удалить страну "{countryToDelete?.name}"?
             Это действие нельзя отменить.
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>
-            Отмена
+            Отменить
           </Button>
-          <Button variant="contained" color="error" onClick={handleConfirmDelete}>
-            Удалить
+          <Button 
+            variant="contained" 
+            color="error" 
+            onClick={handleConfirmDelete}
+            disabled={isDeleting}
+          >
+            {isDeleting ? <CircularProgress size={20} /> : 'Удалить'}
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Уведомления */}
+      <Notification
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={() => setNotification(prev => ({ ...prev, open: false }))}
+      />
     </Box>
   );
 };

@@ -19,136 +19,193 @@ import {
   useTheme,
   Stack,
   Alert,
-  Avatar,
-  Chip
+  CircularProgress,
+  Chip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormControlLabel,
+  Switch
 } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Circle as TireBrandIcon,
+  Star as TireBrandIcon,
   Search as SearchIcon,
-  Image as ImageIcon
+  ToggleOn as ToggleOnIcon,
+  ToggleOff as ToggleOffIcon,
+  StarBorder as StarBorderIcon
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { getTablePageStyles } from '../../styles';
 import Pagination from '../../components/ui/Pagination/Pagination';
-
-// Временные типы данных (позже заменить на реальные API)
-interface TireBrand {
-  id: number;
-  name: string;
-  logo?: string; // URL логотипа
-  countryId: number;
-  countryName: string;
-  description?: string;
-  isActive: boolean;
-  modelsCount: number; // Количество моделей шин этого бренда
-  createdAt: string;
-}
+import { 
+  useGetTireBrandsQuery,
+  useCreateTireBrandMutation,
+  useUpdateTireBrandMutation,
+  useDeleteTireBrandMutation,
+  useToggleTireBrandStatusMutation,
+  TireBrand,
+  TireBrandFormData
+} from '../../api/tireBrands.api';
+import { useGetCountriesQuery } from '../../api/countries.api';
+import Notification from '../../components/Notification';
 
 const TireBrandsPage: React.FC = () => {
   const { t } = useTranslation();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
 
-  // Состояние
+  // Состояния
   const [searchTerm, setSearchTerm] = useState('');
-  const [page, setPage] = useState(1);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedBrand, setSelectedBrand] = useState<TireBrand | null>(null);
+  const [countryFilter, setCountryFilter] = useState<number | ''>('');
+  const [activeOnly, setActiveOnly] = useState(false);
+  const [premiumOnly, setPremiumOnly] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const [editingBrand, setEditingBrand] = useState<TireBrand | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [brandToDelete, setBrandToDelete] = useState<TireBrand | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'warning' | 'info';
+  }>({ open: false, message: '', severity: 'success' });
+  
+  // Форма
+  const [formData, setFormData] = useState<TireBrandFormData>({
+    name: '',
+    country_id: undefined,
+    is_active: true,
+    is_premium: false,
+    rating_score: 5,
+    description: '',
+    logo_url: '',
+    aliases: []
+  });
 
-  // Временные данные (заменить на API)
-  const mockBrands: TireBrand[] = [
-    {
-      id: 1,
-      name: 'Michelin',
-      countryId: 2,
-      countryName: 'Франция',
-      isActive: true,
-      modelsCount: 15,
-      createdAt: '2025-01-01',
-      description: 'Французский производитель шин премиум класса'
-    },
-    {
-      id: 2,
-      name: 'Continental',
-      countryId: 1,
-      countryName: 'Германия',
-      isActive: true,
-      modelsCount: 12,
-      createdAt: '2025-01-01',
-      description: 'Немецкий бренд высококачественных шин'
-    },
-    {
-      id: 3,
-      name: 'Bridgestone',
-      countryId: 3,
-      countryName: 'Япония',
-      isActive: true,
-      modelsCount: 18,
-      createdAt: '2025-01-01',
-      description: 'Крупнейший японский производитель шин'
-    },
-    {
-      id: 4,
-      name: 'Pirelli',
-      countryId: 4,
-      countryName: 'Италия',
-      isActive: true,
-      modelsCount: 10,
-      createdAt: '2025-01-01',
-      description: 'Итальянский бренд спортивных шин'
-    },
-    {
-      id: 5,
-      name: 'Nokian',
-      countryId: 5,
-      countryName: 'Финляндия',
-      isActive: true,
-      modelsCount: 8,
-      createdAt: '2025-01-01',
-      description: 'Специалист по зимним шинам'
-    },
-  ];
+  const itemsPerPage = 10;
 
-  const filteredBrands = mockBrands.filter(brand =>
-    brand.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    brand.countryName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // API хуки
+  const { data: brandsData, isLoading, error, refetch } = useGetTireBrandsQuery({
+    search: searchTerm,
+    country_id: countryFilter || undefined,
+    active_only: activeOnly,
+    premium_only: premiumOnly,
+    page: currentPage,
+    per_page: itemsPerPage
+  });
 
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(filteredBrands.length / rowsPerPage);
-  const startIndex = (page - 1) * rowsPerPage;
-  const paginatedBrands = filteredBrands.slice(startIndex, startIndex + rowsPerPage);
+  const { data: countriesData } = useGetCountriesQuery({ per_page: 100 });
+
+  const [createBrand, { isLoading: isCreating }] = useCreateTireBrandMutation();
+  const [updateBrand, { isLoading: isUpdating }] = useUpdateTireBrandMutation();
+  const [deleteBrand, { isLoading: isDeleting }] = useDeleteTireBrandMutation();
+  const [toggleStatus, { isLoading: isToggling }] = useToggleTireBrandStatusMutation();
+
+  const brands = brandsData?.data || [];
+  const pagination = brandsData?.pagination;
+  const countries = countriesData?.data || [];
+
+  const showNotification = (message: string, severity: 'success' | 'error' | 'warning' | 'info') => {
+    setNotification({ open: true, message, severity });
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      country_id: undefined,
+      is_active: true,
+      is_premium: false,
+      rating_score: 5,
+      description: '',
+      logo_url: '',
+      aliases: []
+    });
+    setEditingBrand(null);
+  };
 
   const handleCreate = () => {
-    setSelectedBrand(null);
-    setDialogOpen(true);
+    resetForm();
+    setOpenModal(true);
   };
 
   const handleEdit = (brand: TireBrand) => {
-    setSelectedBrand(brand);
-    setDialogOpen(true);
+    setFormData({
+      name: brand.name,
+      country_id: brand.country_id,
+      is_active: brand.is_active,
+      is_premium: brand.is_premium,
+      rating_score: brand.rating_score,
+      description: '',
+      logo_url: brand.logo_url || '',
+      aliases: []
+    });
+    setEditingBrand(brand);
+    setOpenModal(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      if (editingBrand) {
+        await updateBrand({ id: editingBrand.id, data: formData }).unwrap();
+        showNotification('Бренд успешно обновлен', 'success');
+      } else {
+        await createBrand(formData).unwrap();
+        showNotification('Бренд успешно создан', 'success');
+      }
+      setOpenModal(false);
+      resetForm();
+      refetch();
+    } catch (error: any) {
+      showNotification(error?.data?.error || 'Произошла ошибка', 'error');
+    }
   };
 
   const handleDelete = (brand: TireBrand) => {
-    setSelectedBrand(brand);
+    setBrandToDelete(brand);
     setDeleteDialogOpen(true);
   };
 
-  const handleSave = () => {
-    // TODO: Реализовать сохранение через API
-    setDialogOpen(false);
-    setSelectedBrand(null);
+  const handleConfirmDelete = async () => {
+    if (!brandToDelete) return;
+    
+    try {
+      await deleteBrand(brandToDelete.id).unwrap();
+      showNotification('Бренд успешно удален', 'success');
+      setDeleteDialogOpen(false);
+      setBrandToDelete(null);
+      refetch();
+    } catch (error: any) {
+      showNotification(error?.data?.error || 'Произошла ошибка при удалении', 'error');
+    }
   };
 
-  const handleConfirmDelete = () => {
-    // TODO: Реализовать удаление через API
-    setDeleteDialogOpen(false);
-    setSelectedBrand(null);
+  const handleToggleStatus = async (brand: TireBrand) => {
+    try {
+      await toggleStatus(brand.id).unwrap();
+      showNotification(`Бренд ${brand.is_active ? 'деактивирован' : 'активирован'}`, 'success');
+      refetch();
+    } catch (error: any) {
+      showNotification(error?.data?.error || 'Произошла ошибка', 'error');
+    }
   };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  if (error) {
+    return (
+      <Box sx={tablePageStyles.pageContainer}>
+        <Alert severity="error">
+          Ошибка загрузки данных. Попробуйте обновить страницу.
+        </Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
@@ -170,187 +227,297 @@ const TireBrandsPage: React.FC = () => {
         </Button>
       </Box>
 
-      {/* Поиск */}
+      {/* Фильтры */}
       <Paper sx={tablePageStyles.filtersContainer}>
-        <TextField
-          fullWidth
-          variant="outlined"
-          placeholder="Поиск по названию бренда или стране..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
-          }}
-        />
+        <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
+          <TextField
+            sx={{ flexGrow: 1, minWidth: 300 }}
+            variant="outlined"
+            placeholder="Поиск по названию бренда или стране..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+            }}
+          />
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel>Страна</InputLabel>
+            <Select
+              value={countryFilter}
+              label="Страна"
+              onChange={(e) => setCountryFilter(e.target.value as number | '')}
+            >
+              <MenuItem value="">Все страны</MenuItem>
+              {countries.map((country) => (
+                <MenuItem key={country.id} value={country.id}>
+                  {country.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl sx={{ minWidth: 150 }}>
+            <InputLabel>Статус</InputLabel>
+            <Select
+              value={activeOnly ? 'active' : 'all'}
+              label="Статус"
+              onChange={(e) => setActiveOnly(e.target.value === 'active')}
+            >
+              <MenuItem value="all">Все</MenuItem>
+              <MenuItem value="active">Активные</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={premiumOnly}
+                onChange={(e) => setPremiumOnly(e.target.checked)}
+              />
+            }
+            label="Только премиум"
+          />
+        </Stack>
       </Paper>
-
-      {/* Уведомление о разработке */}
-      <Alert severity="info" sx={{ mb: 3 }}>
-        <Typography variant="body2">
-          <strong>В разработке:</strong> Эта страница находится в стадии разработки. 
-          Функциональность создания, редактирования и удаления шинных брендов будет добавлена в следующих обновлениях.
-        </Typography>
-      </Alert>
 
       {/* Таблица */}
       <TableContainer component={Paper} sx={tablePageStyles.tableContainer}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Логотип</TableCell>
-              <TableCell>Название бренда</TableCell>
+              <TableCell>Бренд</TableCell>
               <TableCell>Страна</TableCell>
+              <TableCell>Рейтинг</TableCell>
               <TableCell>Моделей</TableCell>
               <TableCell>Статус</TableCell>
+              <TableCell>Премиум</TableCell>
               <TableCell>Дата создания</TableCell>
               <TableCell align="center">Действия</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedBrands.map((brand) => (
-              <TableRow key={brand.id} hover>
-                <TableCell>
-                  <Avatar
-                    sx={{ width: 40, height: 40 }}
-                    src={brand.logo}
-                  >
-                    <ImageIcon />
-                  </Avatar>
-                </TableCell>
-                <TableCell>
-                  <Stack>
-                    <Typography variant="body1" fontWeight={600}>
-                      {brand.name}
-                    </Typography>
-                    {brand.description && (
-                      <Typography variant="caption" color="text.secondary">
-                        {brand.description}
-                      </Typography>
-                    )}
-                  </Stack>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2">
-                    {brand.countryName}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={`${brand.modelsCount} моделей`}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      color: brand.isActive ? 'success.main' : 'error.main',
-                      fontWeight: 500
-                    }}
-                  >
-                    {brand.isActive ? 'Активен' : 'Неактивен'}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" color="text.secondary">
-                    {new Date(brand.createdAt).toLocaleDateString()}
-                  </Typography>
-                </TableCell>
-                <TableCell align="center">
-                  <IconButton
-                    size="small"
-                    onClick={() => handleEdit(brand)}
-                    sx={{ mr: 1 }}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleDelete(brand)}
-                    color="error"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                  <CircularProgress />
                 </TableCell>
               </TableRow>
-            ))}
+            ) : brands.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                  <Typography color="text.secondary">
+                    Бренды шин не найдены
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              brands.map((brand) => (
+                <TableRow key={brand.id} hover>
+                  <TableCell>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Typography variant="body2" fontWeight={500}>
+                        {brand.name}
+                      </Typography>
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {brand.country_name || '—'}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {brand.rating_score}/10
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {brand.models_count}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={brand.is_active ? 'Активен' : 'Неактивен'}
+                      color={brand.is_active ? 'success' : 'default'}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    {brand.is_premium ? (
+                      <Chip
+                        icon={<StarBorderIcon />}
+                        label="Премиум"
+                        color="warning"
+                        size="small"
+                      />
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">—</Typography>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color="text.secondary">
+                      {new Date(brand.created_at).toLocaleDateString()}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleToggleStatus(brand)}
+                      disabled={isToggling}
+                      sx={{ mr: 1 }}
+                      title={brand.is_active ? 'Деактивировать' : 'Активировать'}
+                    >
+                      {brand.is_active ? <ToggleOnIcon color="success" /> : <ToggleOffIcon />}
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleEdit(brand)}
+                      sx={{ mr: 1 }}
+                      title="Редактировать"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDelete(brand)}
+                      color="error"
+                      title="Удалить"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>
 
       {/* Пагинация */}
-      {totalPages > 1 && (
+      {pagination && pagination.total_pages > 1 && (
         <Box sx={tablePageStyles.paginationContainer}>
           <Pagination
-            count={totalPages}
-            page={page}
-            onChange={setPage}
+            count={pagination.total_pages}
+            page={pagination.current_page}
+            onChange={handlePageChange}
           />
         </Box>
       )}
 
-      {/* Диалог создания/редактирования */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+      {/* Модальное окно создания/редактирования */}
+      <Dialog 
+        open={openModal} 
+        onClose={() => setOpenModal(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>
-          {selectedBrand ? 'Редактировать бренд' : 'Добавить бренд'}
+          {editingBrand ? 'Редактировать бренд' : 'Создать бренд'}
         </DialogTitle>
         <DialogContent>
-          <Box sx={{ pt: 2 }}>
+          <Stack spacing={3} sx={{ mt: 1 }}>
             <TextField
               fullWidth
               label="Название бренда"
-              variant="outlined"
-              defaultValue={selectedBrand?.name || ''}
-              sx={{ mb: 3 }}
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              required
             />
+            <FormControl fullWidth>
+              <InputLabel>Страна производства</InputLabel>
+              <Select
+                value={formData.country_id || ''}
+                label="Страна производства"
+                onChange={(e) => setFormData(prev => ({ ...prev, country_id: e.target.value as number || undefined }))}
+              >
+                <MenuItem value="">Не указана</MenuItem>
+                {countries.map((country) => (
+                  <MenuItem key={country.id} value={country.id}>
+                    {country.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <TextField
               fullWidth
-              label="Описание"
-              variant="outlined"
-              multiline
-              rows={3}
-              defaultValue={selectedBrand?.description || ''}
-              sx={{ mb: 3 }}
+              label="Рейтинг (1-10)"
+              type="number"
+              value={formData.rating_score}
+              onChange={(e) => setFormData(prev => ({ ...prev, rating_score: Number(e.target.value) }))}
+              inputProps={{ min: 1, max: 10 }}
             />
             <TextField
               fullWidth
               label="URL логотипа"
-              variant="outlined"
-              defaultValue={selectedBrand?.logo || ''}
-              helperText="Ссылка на изображение логотипа бренда"
+              value={formData.logo_url}
+              onChange={(e) => setFormData(prev => ({ ...prev, logo_url: e.target.value }))}
+              placeholder="https://example.com/logo.png"
             />
-          </Box>
+            <TextField
+              fullWidth
+              label="Описание"
+              multiline
+              rows={3}
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formData.is_premium || false}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_premium: e.target.checked }))}
+                />
+              }
+              label="Премиум бренд"
+            />
+          </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>
-            Отмена
+          <Button onClick={() => setOpenModal(false)}>
+            Отменить
           </Button>
-          <Button variant="contained" onClick={handleSave}>
-            {selectedBrand ? 'Сохранить' : 'Создать'}
+          <Button 
+            variant="contained" 
+            onClick={handleSave}
+            disabled={isCreating || isUpdating || !formData.name.trim()}
+          >
+            {isCreating || isUpdating ? <CircularProgress size={20} /> : 'Сохранить'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Диалог удаления */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Подтверждение удаления</DialogTitle>
+      {/* Диалог подтверждения удаления */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Подтвердите удаление</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы уверены, что хотите удалить бренд "{selectedBrand?.name}"?
-            Это действие также удалит все связанные модели шин. Действие нельзя отменить.
+            Вы уверены, что хотите удалить бренд "{brandToDelete?.name}"?
+            Это действие нельзя отменить.
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>
-            Отмена
+            Отменить
           </Button>
-          <Button variant="contained" color="error" onClick={handleConfirmDelete}>
-            Удалить
+          <Button 
+            variant="contained" 
+            color="error" 
+            onClick={handleConfirmDelete}
+            disabled={isDeleting}
+          >
+            {isDeleting ? <CircularProgress size={20} /> : 'Удалить'}
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Уведомления */}
+      <Notification
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={() => setNotification(prev => ({ ...prev, open: false }))}
+      />
     </Box>
   );
 };

@@ -19,170 +19,219 @@ import {
   useTheme,
   Stack,
   Alert,
+  CircularProgress,
   Chip,
-  Select,
-  MenuItem,
   FormControl,
   InputLabel,
-  Grid
+  Select,
+  MenuItem
 } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  DonutLarge as TireModelIcon,
+  DirectionsCar as TireModelIcon,
   Search as SearchIcon,
-  FilterList as FilterIcon
+  ToggleOn as ToggleOnIcon,
+  ToggleOff as ToggleOffIcon,
+  WbSunny as SummerIcon,
+  AcUnit,
+  AllInclusive as AllSeasonIcon
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { getTablePageStyles } from '../../styles';
 import Pagination from '../../components/ui/Pagination/Pagination';
-
-// Временные типы данных (позже заменить на реальные API)
-interface TireModel {
-  id: number;
-  name: string;
-  brandId: number;
-  brandName: string;
-  season: 'summer' | 'winter' | 'all_season';
-  category: 'passenger' | 'suv' | 'truck' | 'motorcycle';
-  description?: string;
-  sizes: string[]; // Доступные размеры
-  isActive: boolean;
-  createdAt: string;
-}
+import { 
+  useGetTireModelsQuery,
+  useCreateTireModelMutation,
+  useUpdateTireModelMutation,
+  useDeleteTireModelMutation,
+  useToggleTireModelStatusMutation,
+  useGetTireSeasonsQuery,
+  TireModel,
+  TireModelFormData
+} from '../../api/tireModels.api';
+import { useGetTireBrandsQuery } from '../../api/tireBrands.api';
+import Notification from '../../components/Notification';
 
 const TireModelsPage: React.FC = () => {
   const { t } = useTranslation();
   const theme = useTheme();
   const tablePageStyles = getTablePageStyles(theme);
 
-  // Состояние
+  // Состояния
   const [searchTerm, setSearchTerm] = useState('');
-  const [seasonFilter, setSeasonFilter] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [brandFilter, setBrandFilter] = useState('');
-  const [page, setPage] = useState(1);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<TireModel | null>(null);
+  const [brandFilter, setBrandFilter] = useState<number | ''>('');
+  const [seasonFilter, setSeasonFilter] = useState<'summer' | 'winter' | 'all_season' | ''>('');
+  const [activeOnly, setActiveOnly] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const [editingModel, setEditingModel] = useState<TireModel | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-
-  // Временные данные (заменить на API)
-  const mockModels: TireModel[] = [
-    {
-      id: 1,
-      name: 'Pilot Sport 4',
-      brandId: 1,
-      brandName: 'Michelin',
-      season: 'summer',
-      category: 'passenger',
-      sizes: ['205/55R16', '225/45R17', '245/40R18'],
-      isActive: true,
-      createdAt: '2025-01-01',
-      description: 'Высокопроизводительная летняя шина'
-    },
-    {
-      id: 2,
-      name: 'X-Ice Snow',
-      brandId: 1,
-      brandName: 'Michelin',
-      season: 'winter',
-      category: 'passenger',
-      sizes: ['195/65R15', '205/55R16', '215/60R16'],
-      isActive: true,
-      createdAt: '2025-01-01',
-      description: 'Зимняя шина с превосходным сцеплением'
-    },
-    {
-      id: 3,
-      name: 'PremiumContact 6',
-      brandId: 2,
-      brandName: 'Continental',
-      season: 'summer',
-      category: 'passenger',
-      sizes: ['205/55R16', '225/50R17', '235/45R18'],
-      isActive: true,
-      createdAt: '2025-01-01',
-      description: 'Комфортная летняя шина'
-    },
-    {
-      id: 4,
-      name: 'WinterContact TS 870',
-      brandId: 2,
-      brandName: 'Continental',
-      season: 'winter',
-      category: 'passenger',
-      sizes: ['185/65R15', '195/65R15', '205/55R16'],
-      isActive: true,
-      createdAt: '2025-01-01',
-      description: 'Зимняя шина нового поколения'
-    },
-  ];
-
-  const seasonLabels = {
-    summer: 'Летние',
-    winter: 'Зимние',
-    all_season: 'Всесезонные'
-  };
-
-  const categoryLabels = {
-    passenger: 'Легковые',
-    suv: 'Внедорожники',
-    truck: 'Грузовые',
-    motorcycle: 'Мотоциклетные'
-  };
-
-  const filteredModels = mockModels.filter(model => {
-    const matchesSearch = model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         model.brandName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSeason = !seasonFilter || model.season === seasonFilter;
-    const matchesCategory = !categoryFilter || model.category === categoryFilter;
-    const matchesBrand = !brandFilter || model.brandName === brandFilter;
-
-    return matchesSearch && matchesSeason && matchesCategory && matchesBrand;
+  const [modelToDelete, setModelToDelete] = useState<TireModel | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error' | 'warning' | 'info';
+  }>({ open: false, message: '', severity: 'success' });
+  
+  // Форма
+  const [formData, setFormData] = useState<TireModelFormData>({
+    name: '',
+    tire_brand_id: 0,
+    season_type: undefined,
+    is_active: true,
+    rating_score: 5,
+    description: '',
+    aliases: []
   });
 
-  const rowsPerPage = 10;
-  const totalPages = Math.ceil(filteredModels.length / rowsPerPage);
-  const startIndex = (page - 1) * rowsPerPage;
-  const paginatedModels = filteredModels.slice(startIndex, startIndex + rowsPerPage);
+  const itemsPerPage = 10;
 
-  const uniqueBrands = Array.from(new Set(mockModels.map(m => m.brandName)));
+  // API хуки
+  const { data: modelsData, isLoading, error, refetch } = useGetTireModelsQuery({
+    search: searchTerm,
+    brand_id: brandFilter || undefined,
+    season: (seasonFilter as 'summer' | 'winter' | 'all_season') || undefined,
+    active_only: activeOnly,
+    page: currentPage,
+    per_page: itemsPerPage
+  });
+
+  const { data: brandsData } = useGetTireBrandsQuery({ per_page: 100 });
+  const { data: seasonsData } = useGetTireSeasonsQuery();
+
+  const [createModel, { isLoading: isCreating }] = useCreateTireModelMutation();
+  const [updateModel, { isLoading: isUpdating }] = useUpdateTireModelMutation();
+  const [deleteModel, { isLoading: isDeleting }] = useDeleteTireModelMutation();
+  const [toggleStatus, { isLoading: isToggling }] = useToggleTireModelStatusMutation();
+
+  const models = modelsData?.data || [];
+  const pagination = modelsData?.pagination;
+  const brands = brandsData?.data || [];
+  const seasons = seasonsData?.data || [];
+
+  const showNotification = (message: string, severity: 'success' | 'error' | 'warning' | 'info') => {
+    setNotification({ open: true, message, severity });
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      tire_brand_id: 0,
+      season_type: undefined,
+      is_active: true,
+      rating_score: 5,
+      description: '',
+      aliases: []
+    });
+    setEditingModel(null);
+  };
 
   const handleCreate = () => {
-    setSelectedModel(null);
-    setDialogOpen(true);
+    resetForm();
+    setOpenModal(true);
   };
 
   const handleEdit = (model: TireModel) => {
-    setSelectedModel(model);
-    setDialogOpen(true);
+    setFormData({
+      name: model.name,
+      tire_brand_id: model.tire_brand_id,
+      season_type: model.season_type,
+      is_active: model.is_active,
+      rating_score: model.rating_score,
+      description: '',
+      aliases: []
+    });
+    setEditingModel(model);
+    setOpenModal(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      if (editingModel) {
+        await updateModel({ id: editingModel.id, data: formData }).unwrap();
+        showNotification('Модель успешно обновлена', 'success');
+      } else {
+        await createModel(formData).unwrap();
+        showNotification('Модель успешно создана', 'success');
+      }
+      setOpenModal(false);
+      resetForm();
+      refetch();
+    } catch (error: any) {
+      showNotification(error?.data?.error || 'Произошла ошибка', 'error');
+    }
   };
 
   const handleDelete = (model: TireModel) => {
-    setSelectedModel(model);
+    setModelToDelete(model);
     setDeleteDialogOpen(true);
   };
 
-  const handleSave = () => {
-    // TODO: Реализовать сохранение через API
-    setDialogOpen(false);
-    setSelectedModel(null);
+  const handleConfirmDelete = async () => {
+    if (!modelToDelete) return;
+    
+    try {
+      await deleteModel(modelToDelete.id).unwrap();
+      showNotification('Модель успешно удалена', 'success');
+      setDeleteDialogOpen(false);
+      setModelToDelete(null);
+      refetch();
+    } catch (error: any) {
+      showNotification(error?.data?.error || 'Произошла ошибка при удалении', 'error');
+    }
   };
 
-  const handleConfirmDelete = () => {
-    // TODO: Реализовать удаление через API
-    setDeleteDialogOpen(false);
-    setSelectedModel(null);
+  const handleToggleStatus = async (model: TireModel) => {
+    try {
+      await toggleStatus(model.id).unwrap();
+      showNotification(`Модель ${model.is_active ? 'деактивирована' : 'активирована'}`, 'success');
+      refetch();
+    } catch (error: any) {
+      showNotification(error?.data?.error || 'Произошла ошибка', 'error');
+    }
   };
 
-  const clearFilters = () => {
-    setSeasonFilter('');
-    setCategoryFilter('');
-    setBrandFilter('');
-    setSearchTerm('');
-    setPage(1);
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
+
+  const getSeasonIcon = (seasonType?: string) => {
+    switch (seasonType) {
+      case 'summer':
+        return <SummerIcon sx={{ fontSize: 16, color: 'orange' }} />;
+      case 'winter':
+        return <AcUnit sx={{ fontSize: 16, color: 'blue' }} />;
+      case 'all_season':
+        return <AllSeasonIcon sx={{ fontSize: 16, color: 'green' }} />;
+      default:
+        return null;
+    }
+  };
+
+  const getSeasonLabel = (seasonType?: string) => {
+    switch (seasonType) {
+      case 'summer':
+        return 'Летние';
+      case 'winter':
+        return 'Зимние';
+      case 'all_season':
+        return 'Всесезонные';
+      default:
+        return '—';
+    }
+  };
+
+  if (error) {
+    return (
+      <Box sx={tablePageStyles.pageContainer}>
+        <Alert severity="error">
+          Ошибка загрузки данных. Попробуйте обновить страницу.
+        </Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={tablePageStyles.pageContainer}>
@@ -206,85 +255,60 @@ const TireModelsPage: React.FC = () => {
 
       {/* Фильтры */}
       <Paper sx={tablePageStyles.filtersContainer}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={4}>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Поиск по названию модели или бренду..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
-              }}
-            />
-          </Grid>
-          <Grid item xs={6} md={2}>
-            <FormControl fullWidth>
-              <InputLabel>Бренд</InputLabel>
-              <Select
-                value={brandFilter}
-                onChange={(e) => setBrandFilter(e.target.value)}
-                label="Бренд"
-              >
-                <MenuItem value="">Все бренды</MenuItem>
-                {uniqueBrands.map(brand => (
-                  <MenuItem key={brand} value={brand}>{brand}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={6} md={2}>
-            <FormControl fullWidth>
-              <InputLabel>Сезон</InputLabel>
-              <Select
-                value={seasonFilter}
-                onChange={(e) => setSeasonFilter(e.target.value)}
-                label="Сезон"
-              >
-                <MenuItem value="">Все сезоны</MenuItem>
-                <MenuItem value="summer">Летние</MenuItem>
-                <MenuItem value="winter">Зимние</MenuItem>
-                <MenuItem value="all_season">Всесезонные</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={6} md={2}>
-            <FormControl fullWidth>
-              <InputLabel>Категория</InputLabel>
-              <Select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                label="Категория"
-              >
-                <MenuItem value="">Все категории</MenuItem>
-                <MenuItem value="passenger">Легковые</MenuItem>
-                <MenuItem value="suv">Внедорожники</MenuItem>
-                <MenuItem value="truck">Грузовые</MenuItem>
-                <MenuItem value="motorcycle">Мотоциклетные</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={6} md={2}>
-            <Button
-              variant="outlined"
-              startIcon={<FilterIcon />}
-              onClick={clearFilters}
-              fullWidth
+        <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
+          <TextField
+            sx={{ flexGrow: 1, minWidth: 300 }}
+            variant="outlined"
+            placeholder="Поиск по названию модели или бренда..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+            }}
+          />
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel>Бренд</InputLabel>
+            <Select
+              value={brandFilter}
+              label="Бренд"
+              onChange={(e) => setBrandFilter(e.target.value as number | '')}
             >
-              Очистить
-            </Button>
-          </Grid>
-        </Grid>
+              <MenuItem value="">Все бренды</MenuItem>
+              {brands.map((brand) => (
+                <MenuItem key={brand.id} value={brand.id}>
+                  {brand.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl sx={{ minWidth: 150 }}>
+            <InputLabel>Сезон</InputLabel>
+            <Select
+              value={seasonFilter}
+              label="Сезон"
+              onChange={(e) => setSeasonFilter(e.target.value as 'summer' | 'winter' | 'all_season' | '')}
+            >
+              <MenuItem value="">Все</MenuItem>
+              {seasons.map((season) => (
+                <MenuItem key={season.value} value={season.value}>
+                  {season.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl sx={{ minWidth: 150 }}>
+            <InputLabel>Статус</InputLabel>
+            <Select
+              value={activeOnly ? 'active' : 'all'}
+              label="Статус"
+              onChange={(e) => setActiveOnly(e.target.value === 'active')}
+            >
+              <MenuItem value="all">Все</MenuItem>
+              <MenuItem value="active">Активные</MenuItem>
+            </Select>
+          </FormControl>
+        </Stack>
       </Paper>
-
-      {/* Уведомление о разработке */}
-      <Alert severity="info" sx={{ mb: 3 }}>
-        <Typography variant="body2">
-          <strong>В разработке:</strong> Эта страница находится в стадии разработки. 
-          Функциональность создания, редактирования и удаления моделей шин будет добавлена в следующих обновлениях.
-        </Typography>
-      </Alert>
 
       {/* Таблица */}
       <TableContainer component={Paper} sx={tablePageStyles.tableContainer}>
@@ -294,218 +318,235 @@ const TireModelsPage: React.FC = () => {
               <TableCell>Модель</TableCell>
               <TableCell>Бренд</TableCell>
               <TableCell>Сезон</TableCell>
-              <TableCell>Категория</TableCell>
+              <TableCell>Рейтинг</TableCell>
               <TableCell>Размеры</TableCell>
               <TableCell>Статус</TableCell>
+              <TableCell>Дата создания</TableCell>
               <TableCell align="center">Действия</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedModels.map((model) => (
-              <TableRow key={model.id} hover>
-                <TableCell>
-                  <Stack>
-                    <Typography variant="body1" fontWeight={600}>
-                      {model.name}
-                    </Typography>
-                    {model.description && (
-                      <Typography variant="caption" color="text.secondary">
-                        {model.description}
-                      </Typography>
-                    )}
-                  </Stack>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2">
-                    {model.brandName}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={seasonLabels[model.season]}
-                    size="small"
-                    color={
-                      model.season === 'winter' ? 'info' :
-                      model.season === 'summer' ? 'warning' : 'default'
-                    }
-                  />
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2">
-                    {categoryLabels[model.category]}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {model.sizes.slice(0, 2).map((size, index) => (
-                      <Chip
-                        key={index}
-                        label={size}
-                        size="small"
-                        variant="outlined"
-                        sx={{ fontSize: '0.7rem' }}
-                      />
-                    ))}
-                    {model.sizes.length > 2 && (
-                      <Chip
-                        label={`+${model.sizes.length - 2}`}
-                        size="small"
-                        variant="outlined"
-                        sx={{ fontSize: '0.7rem' }}
-                      />
-                    )}
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      color: model.isActive ? 'success.main' : 'error.main',
-                      fontWeight: 500
-                    }}
-                  >
-                    {model.isActive ? 'Активна' : 'Неактивна'}
-                  </Typography>
-                </TableCell>
-                <TableCell align="center">
-                  <IconButton
-                    size="small"
-                    onClick={() => handleEdit(model)}
-                    sx={{ mr: 1 }}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleDelete(model)}
-                    color="error"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                  <CircularProgress />
                 </TableCell>
               </TableRow>
-            ))}
+            ) : models.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                  <Typography color="text.secondary">
+                    Модели шин не найдены
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              models.map((model) => (
+                <TableRow key={model.id} hover>
+                  <TableCell>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Typography variant="body2" fontWeight={500}>
+                        {model.name}
+                      </Typography>
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {model.tire_brand_name}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      {getSeasonIcon(model.season_type)}
+                      <Typography variant="body2">
+                        {getSeasonLabel(model.season_type)}
+                      </Typography>
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {model.rating_score}/10
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {model.available_sizes.length > 0 
+                        ? `${model.available_sizes.length} размеров`
+                        : 'Нет данных'
+                      }
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={model.is_active ? 'Активна' : 'Неактивна'}
+                      color={model.is_active ? 'success' : 'default'}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color="text.secondary">
+                      {new Date(model.created_at).toLocaleDateString()}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleToggleStatus(model)}
+                      disabled={isToggling}
+                      sx={{ mr: 1 }}
+                      title={model.is_active ? 'Деактивировать' : 'Активировать'}
+                    >
+                      {model.is_active ? <ToggleOnIcon color="success" /> : <ToggleOffIcon />}
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleEdit(model)}
+                      sx={{ mr: 1 }}
+                      title="Редактировать"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDelete(model)}
+                      color="error"
+                      title="Удалить"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>
 
       {/* Пагинация */}
-      {totalPages > 1 && (
+      {pagination && pagination.total_pages > 1 && (
         <Box sx={tablePageStyles.paginationContainer}>
           <Pagination
-            count={totalPages}
-            page={page}
-            onChange={setPage}
+            count={pagination.total_pages}
+            page={pagination.current_page}
+            onChange={handlePageChange}
           />
         </Box>
       )}
 
-      {/* Диалог создания/редактирования */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
+      {/* Модальное окно создания/редактирования */}
+      <Dialog 
+        open={openModal} 
+        onClose={() => setOpenModal(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>
-          {selectedModel ? 'Редактировать модель' : 'Добавить модель'}
+          {editingModel ? 'Редактировать модель' : 'Создать модель'}
         </DialogTitle>
         <DialogContent>
-          <Box sx={{ pt: 2 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Название модели"
-                  variant="outlined"
-                  defaultValue={selectedModel?.name || ''}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth>
-                  <InputLabel>Бренд</InputLabel>
-                  <Select
-                    defaultValue={selectedModel?.brandName || ''}
-                    label="Бренд"
-                  >
-                    {uniqueBrands.map(brand => (
-                      <MenuItem key={brand} value={brand}>{brand}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth>
-                  <InputLabel>Сезон</InputLabel>
-                  <Select
-                    defaultValue={selectedModel?.season || ''}
-                    label="Сезон"
-                  >
-                    <MenuItem value="summer">Летние</MenuItem>
-                    <MenuItem value="winter">Зимние</MenuItem>
-                    <MenuItem value="all_season">Всесезонные</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth>
-                  <InputLabel>Категория</InputLabel>
-                  <Select
-                    defaultValue={selectedModel?.category || ''}
-                    label="Категория"
-                  >
-                    <MenuItem value="passenger">Легковые</MenuItem>
-                    <MenuItem value="suv">Внедорожники</MenuItem>
-                    <MenuItem value="truck">Грузовые</MenuItem>
-                    <MenuItem value="motorcycle">Мотоциклетные</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Описание"
-                  variant="outlined"
-                  multiline
-                  rows={3}
-                  defaultValue={selectedModel?.description || ''}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Доступные размеры"
-                  variant="outlined"
-                  defaultValue={selectedModel?.sizes.join(', ') || ''}
-                  helperText="Введите размеры через запятую (например: 205/55R16, 225/45R17)"
-                />
-              </Grid>
-            </Grid>
-          </Box>
+          <Stack spacing={3} sx={{ mt: 1 }}>
+            <TextField
+              fullWidth
+              label="Название модели"
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              required
+            />
+            <FormControl fullWidth required>
+              <InputLabel>Бренд шин</InputLabel>
+              <Select
+                value={formData.tire_brand_id || ''}
+                label="Бренд шин"
+                onChange={(e) => setFormData(prev => ({ ...prev, tire_brand_id: Number(e.target.value) }))}
+              >
+                {brands.map((brand) => (
+                  <MenuItem key={brand.id} value={brand.id}>
+                    {brand.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel>Сезон</InputLabel>
+              <Select
+                value={formData.season_type || ''}
+                label="Сезон"
+                onChange={(e) => setFormData(prev => ({ ...prev, season_type: e.target.value as any }))}
+              >
+                <MenuItem value="">Не указан</MenuItem>
+                {seasons.map((season) => (
+                  <MenuItem key={season.value} value={season.value}>
+                    {season.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              fullWidth
+              label="Рейтинг (1-10)"
+              type="number"
+              value={formData.rating_score}
+              onChange={(e) => setFormData(prev => ({ ...prev, rating_score: Number(e.target.value) }))}
+              inputProps={{ min: 1, max: 10 }}
+            />
+            <TextField
+              fullWidth
+              label="Описание"
+              multiline
+              rows={3}
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            />
+          </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>
-            Отмена
+          <Button onClick={() => setOpenModal(false)}>
+            Отменить
           </Button>
-          <Button variant="contained" onClick={handleSave}>
-            {selectedModel ? 'Сохранить' : 'Создать'}
+          <Button 
+            variant="contained" 
+            onClick={handleSave}
+            disabled={isCreating || isUpdating || !formData.name.trim() || !formData.tire_brand_id}
+          >
+            {isCreating || isUpdating ? <CircularProgress size={20} /> : 'Сохранить'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Диалог удаления */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Подтверждение удаления</DialogTitle>
+      {/* Диалог подтверждения удаления */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Подтвердите удаление</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы уверены, что хотите удалить модель "{selectedModel?.name}" бренда "{selectedModel?.brandName}"?
+            Вы уверены, что хотите удалить модель "{modelToDelete?.name}"?
             Это действие нельзя отменить.
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>
-            Отмена
+            Отменить
           </Button>
-          <Button variant="contained" color="error" onClick={handleConfirmDelete}>
-            Удалить
+          <Button 
+            variant="contained" 
+            color="error" 
+            onClick={handleConfirmDelete}
+            disabled={isDeleting}
+          >
+            {isDeleting ? <CircularProgress size={20} /> : 'Удалить'}
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Уведомления */}
+      <Notification
+        open={notification.open}
+        message={notification.message}
+        severity={notification.severity}
+        onClose={() => setNotification(prev => ({ ...prev, open: false }))}
+      />
     </Box>
   );
 };
