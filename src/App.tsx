@@ -188,6 +188,11 @@ const TireDataManagementPage = lazy(() => import('./pages/admin/tire-search/Tire
 // Ленивая загрузка страницы системных настроек
 const SystemSettingsPage = lazy(() => import('./pages/admin/system-settings/SystemSettingsPage'));
 
+// Ленивая загрузка страниц справочников шин
+const CountriesPage = lazy(() => import('./pages/countries/CountriesPage'));
+const TireBrandsPage = lazy(() => import('./pages/tire-brands/TireBrandsPage'));
+const TireModelsPage = lazy(() => import('./pages/tire-models/TireModelsPage'));
+
 // Компонент для защищенных маршрутов
 const ProtectedRoute: React.FC<{
   children: React.ReactNode;
@@ -366,6 +371,9 @@ const App: React.FC = () => {
                         <Route path="regions/new" element={<RegionFormPage />} />
                         <Route path="regions/:id/edit" element={<RegionFormPage />} />
                         <Route path="cities" element={<CitiesPage />} />
+                        <Route path="countries" element={<CountriesPage />} />
+                        <Route path="tire-brands" element={<TireBrandsPage />} />
+                        <Route path="tire-models" element={<TireModelsPage />} />
                         {/* Маршруты для статей */}
                         <Route path="articles" element={<ArticlesPage />} />
                         <Route path="articles/new" element={<CreateArticlePage />} />

@@ -75,6 +75,9 @@ import {
   ShoppingCart as ShoppingCartIcon,
   Assignment,
   Analytics as DiagnosticsIcon,
+  Public as CountryIcon,
+  Circle as TireBrandIcon,
+  DonutLarge as TireModelIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -508,11 +511,32 @@ const MainLayout: React.FC = () => {
             description: t('navigation.descriptions.regionsAndCities'),
           },
           {
+            text: t('navigation.countries'),
+            icon: <CountryIcon />,
+            path: '/admin/countries',
+            roles: [UserRole.ADMIN, UserRole.MANAGER],
+            description: t('navigation.descriptions.countries'),
+          },
+          {
             text: t('navigation.vehicles'),
             icon: <CarIcon />,
             path: '/admin/car-brands',
             roles: [UserRole.ADMIN],
             description: t('navigation.descriptions.vehicles'),
+          },
+          {
+            text: t('navigation.tireBrands'),
+            icon: <TireBrandIcon />,
+            path: '/admin/tire-brands',
+            roles: [UserRole.ADMIN, UserRole.MANAGER],
+            description: t('navigation.descriptions.tireBrands'),
+          },
+          {
+            text: t('navigation.tireModels'),
+            icon: <TireModelIcon />,
+            path: '/admin/tire-models',
+            roles: [UserRole.ADMIN, UserRole.MANAGER],
+            description: t('navigation.descriptions.tireModels'),
           },
           {
             text: t('navigation.services'),
