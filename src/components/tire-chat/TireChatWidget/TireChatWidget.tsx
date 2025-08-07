@@ -50,7 +50,7 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
   onClose,
   initialMessage
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -76,7 +76,7 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
       const welcomeMessage: Message = {
         id: 'welcome',
         role: 'assistant',
-        content: 'Привет! 👋 Я ваш персональный консультант по шинам. Расскажите, какие шины вы ищете, и я помогу подобрать лучший вариант.',
+        content: t('tireChat.welcome'),
         timestamp: new Date()
       };
       setMessages([welcomeMessage]);
@@ -134,7 +134,8 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
         credentials: 'include',
         body: JSON.stringify({
           message: textToSend,
-          conversation_id: conversationId
+          conversation_id: conversationId,
+          locale: i18n.language // Передаем текущую локаль
         })
       });
 
@@ -166,7 +167,7 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
         const errorMessage: Message = {
           id: `error-${Date.now()}`,
           role: 'assistant',
-          content: 'Извините, консультант временно недоступен. Попробуйте использовать стандартные фильтры поиска.',
+          content: t('tireChat.errorMessage'),
           timestamp: new Date()
         };
         return [...newMessages, errorMessage];
@@ -194,7 +195,7 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
     const welcomeMessage: Message = {
       id: 'welcome-new',
       role: 'assistant',
-      content: 'Начинаем новый разговор! Чем могу помочь с выбором шин?',
+      content: t('tireChat.newChatWelcome'),
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
@@ -229,7 +230,7 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <AutoAwesomeIcon sx={{ mr: 1 }} />
           <Typography variant="h6" component="div">
-            Онлайн-консультант по шинам
+            {t('tireChat.title')}
           </Typography>
         </Box>
         <Box>
@@ -258,7 +259,7 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
           display: 'flex',
           flexDirection: 'column',
           p: 0,
-          bgcolor: colors.backgroundSecondary
+          bgcolor: 'rgba(30, 30, 30, 0.95)' // Темный фон для лучшего контраста
         }}
       >
         <Box
@@ -298,21 +299,26 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
                   sx={{
                     p: 2,
                     maxWidth: '70%',
-                    bgcolor: message.role === 'user' ? colors.primary : colors.backgroundCard,
-                    color: message.role === 'user' ? 'white' : colors.textPrimary,
+                    bgcolor: message.role === 'user' 
+                      ? colors.primary 
+                      : 'rgba(60, 60, 60, 0.9)', // Темно-серый фон для бота
+                    color: 'white', // Белый текст для всех сообщений
                     borderRadius: 2,
-                    position: 'relative'
+                    position: 'relative',
+                    border: message.role === 'assistant' 
+                      ? `1px solid ${colors.borderPrimary}` 
+                      : 'none'
                   }}
                 >
                   {message.isLoading ? (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CircularProgress size={16} />
-                      <Typography variant="body2">
-                        Думаю...
+                      <CircularProgress size={16} sx={{ color: 'white' }} />
+                      <Typography variant="body2" sx={{ color: 'white' }}>
+                        {t('tireChat.loading')}
                       </Typography>
                     </Box>
                   ) : (
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', color: 'white' }}>
                       {message.content}
                     </Typography>
                   )}
@@ -320,10 +326,11 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
                   <Typography
                     variant="caption"
                     sx={{
-                      opacity: 0.7,
+                      opacity: 0.8,
                       fontSize: '0.65rem',
                       mt: 0.5,
-                      display: 'block'
+                      display: 'block',
+                      color: 'rgba(255, 255, 255, 0.8)' // Полупрозрачный белый для времени
                     }}
                   >
                     {message.timestamp.toLocaleTimeString('ru', {
@@ -355,7 +362,7 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
       <DialogActions
         sx={{
           p: 2,
-          bgcolor: colors.backgroundCard,
+          bgcolor: 'rgba(40, 40, 40, 0.95)', // Темно-серый фон для поля ввода
           borderTop: `1px solid ${colors.borderPrimary}`
         }}
       >
@@ -367,13 +374,33 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Напишите ваш вопрос о шинах..."
+            placeholder={t('tireChat.placeholder')}
             variant="outlined"
             size="small"
             disabled={isLoading}
             sx={{
               '& .MuiOutlinedInput-root': {
-                borderRadius: 2
+                borderRadius: 2,
+                bgcolor: 'rgba(70, 70, 70, 0.9)', // Темно-серый фон для поля ввода
+                color: '#fff', // Белый текст
+                '& input::placeholder': {
+                  color: 'rgba(255, 255, 255, 0.6)' // Светлый placeholder
+                },
+                '& textarea::placeholder': {
+                  color: 'rgba(255, 255, 255, 0.6)' // Светлый placeholder для textarea
+                },
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.3)' // Светлая рамка
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.5)' // Ярче при наведении
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: colors.primary // Основной цвет при фокусе
+                }
+              },
+              '& .MuiInputBase-input': {
+                color: '#fff' // Белый текст в поле ввода
               }
             }}
           />

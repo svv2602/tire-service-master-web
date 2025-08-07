@@ -395,7 +395,7 @@ const TireOffersPage: React.FC = () => {
             transition: 'all 0.2s ease'
           }}
         >
-          Онлайн-консультант
+          {t('tireChat.button', 'Онлайн-консультант')}
         </Button>
       </Box>
       
@@ -874,7 +874,7 @@ const TireOffersPage: React.FC = () => {
       <TireChatWidget
         open={chatOpen}
         onClose={() => setChatOpen(false)}
-        initialMessage={tireSize ? `Помогите подобрать шины размера ${tireSize}` : undefined}
+        initialMessage={tireSize ? `${t('tireChat.helpSizeMessage', 'Помогите подобрать шины размера')} ${tireSize}` : undefined}
       />
     </ClientLayout>
   );
