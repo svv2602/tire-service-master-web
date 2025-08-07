@@ -1805,6 +1805,19 @@
     "loading": "Думаю...",
     "newChat": "Новый разговор",
     "errorMessage": "Извините, консультант временно недоступен. Попробуйте использовать стандартные фильтры поиска.",
-    "helpSizeMessage": "Помогите подобрать шины размера"
+    "helpSizeMessage": "Помогите подобрать шины размера",
+    "recommendations": "Рекомендации:",
+    "showQuickQuestions": "Показать быстрые вопросы",
+    "quickQuestions": {
+      "title": "Быстрые вопросы:",
+      "winterTires": "Зимние шины",
+      "summerTires": "Летние шины", 
+      "allSeasonTires": "Всесезонные шины",
+      "cheapTires": "Недорогие шины",
+      "premiumTires": "Премиум шины",
+      "sizeRecommendation": "Какой размер выбрать?",
+      "brandComparison": "Сравнить бренды",
+      "fuelEfficiency": "Экономичные шины"
+    }
   }
 }

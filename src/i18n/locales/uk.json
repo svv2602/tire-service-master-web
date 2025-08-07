@@ -1731,6 +1731,19 @@
     "loading": "Думаю...",
     "newChat": "Нова розмова",
     "errorMessage": "Вибачте, консультант тимчасово недоступний. Спробуйте використовувати стандартні фільтри пошуку.",
-    "helpSizeMessage": "Допоможіть підібрати шини розміру"
+    "helpSizeMessage": "Допоможіть підібрати шини розміру",
+    "recommendations": "Рекомендації:",
+    "showQuickQuestions": "Показати швидкі запитання",
+    "quickQuestions": {
+      "title": "Швидкі запитання:",
+      "winterTires": "Зимові шини",
+      "summerTires": "Літні шини",
+      "allSeasonTires": "Всесезонні шини", 
+      "cheapTires": "Недорогі шини",
+      "premiumTires": "Преміум шини",
+      "sizeRecommendation": "Який розмір обрати?",
+      "brandComparison": "Порівняти бренди",
+      "fuelEfficiency": "Економні шини"
+    }
   }
 }

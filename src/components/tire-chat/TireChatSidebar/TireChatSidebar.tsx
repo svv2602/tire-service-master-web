@@ -1,0 +1,546 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  Drawer,
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Paper,
+  Stack,
+  Chip,
+  IconButton,
+  Avatar,
+  useTheme,
+  CircularProgress,
+  Fade,
+  Collapse,
+  Divider
+} from '@mui/material';
+import {
+  Send as SendIcon,
+  Close as CloseIcon,
+  AutoAwesome as AutoAwesomeIcon,
+  Refresh as RefreshIcon,
+  SmartToy as BotIcon,
+  Person as PersonIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon
+} from '@mui/icons-material';
+import { useTranslation } from 'react-i18next';
+import { getThemeColors } from '../../../styles';
+import config from '../../../config';
+
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  isLoading?: boolean;
+  tireRecommendations?: TireRecommendation[];
+}
+
+interface TireRecommendation {
+  id: number;
+  brand: string;
+  model: string;
+  size: string;
+  price: number;
+  season: string;
+  supplier: string;
+}
+
+interface TireChatSidebarProps {
+  open: boolean;
+  onClose: () => void;
+  initialMessage?: string;
+  onTireRecommendationClick?: (tireId: string) => void;
+}
+
+const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
+  open,
+  onClose,
+  initialMessage,
+  onTireRecommendationClick
+}) => {
+  const { t, i18n } = useTranslation();
+  const theme = useTheme();
+  const colors = getThemeColors(theme);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [showQuickQuestions, setShowQuickQuestions] = useState(true);
+
+  // Быстрые вопросы в зависимости от языка
+  const quickQuestions = [
+    t('tireChat.quickQuestions.winterTires', 'Зимние шины'),
+    t('tireChat.quickQuestions.summerTires', 'Летние шины'),
+    t('tireChat.quickQuestions.allSeasonTires', 'Всесезонные шины'),
+    t('tireChat.quickQuestions.cheapTires', 'Недорогие шины'),
+    t('tireChat.quickQuestions.premiumTires', 'Премиум шины'),
+    t('tireChat.quickQuestions.sizeRecommendation', 'Какой размер выбрать?'),
+    t('tireChat.quickQuestions.brandComparison', 'Сравнить бренды'),
+    t('tireChat.quickQuestions.fuelEfficiency', 'Экономичные шины')
+  ];
+
+  // Скроллим к концу при добавлении новых сообщений
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
+  // Инициализация чата при открытии
+  useEffect(() => {
+    if (open && messages.length === 0) {
+      const welcomeMessage: Message = {
+        id: 'welcome',
+        role: 'assistant',
+        content: t('tireChat.welcome'),
+        timestamp: new Date()
+      };
+      setMessages([welcomeMessage]);
+
+      if (initialMessage) {
+        setTimeout(() => {
+          handleSendMessage(initialMessage);
+        }, 1000);
+      }
+    }
+  }, [open, initialMessage, t]);
+
+  // Обработка клика на рекомендацию шины
+  const handleTireRecommendationClick = (tire: TireRecommendation) => {
+    onTireRecommendationClick?.(tire.id.toString());
+  };
+
+  // Отправка сообщения
+  const handleSendMessage = async (messageText?: string) => {
+    const textToSend = messageText || inputMessage.trim();
+    if (!textToSend) return;
+
+    // Скрываем быстрые вопросы после первого сообщения
+    if (showQuickQuestions) {
+      setShowQuickQuestions(false);
+    }
+
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: textToSend,
+      timestamp: new Date()
+    };
+
+    const loadingMessage: Message = {
+      id: `loading-${Date.now()}`,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(),
+      isLoading: true
+    };
+
+    setMessages(prev => [...prev, userMessage, loadingMessage]);
+    setInputMessage('');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${config.API_URL}/api/v1/tire_chat/message`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          message: textToSend,
+          conversation_id: conversationId,
+          locale: i18n.language
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessages(prev => {
+          const newMessages = prev.filter(msg => !msg.isLoading);
+          const assistantMessage: Message = {
+            id: `assistant-${Date.now()}`,
+            role: 'assistant',
+            content: data.response.message || t('tireChat.errorMessage'),
+            timestamp: new Date(),
+            tireRecommendations: data.response.tire_recommendations || []
+          };
+          return [...newMessages, assistantMessage];
+        });
+        
+        setConversationId(data.conversation_id);
+      } else {
+        throw new Error(data.error || 'Ошибка сервера');
+      }
+    } catch (error) {
+      console.error('Ошибка отправки сообщения:', error);
+      
+      setMessages(prev => {
+        const newMessages = prev.filter(msg => !msg.isLoading);
+        const errorMessage: Message = {
+          id: `error-${Date.now()}`,
+          role: 'assistant',
+          content: t('tireChat.errorMessage'),
+          timestamp: new Date()
+        };
+        return [...newMessages, errorMessage];
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Обработка нажатия Enter
+  const handleKeyPress = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  // Новый разговор
+  const handleNewConversation = () => {
+    setMessages([]);
+    setConversationId(null);
+    setInputMessage('');
+    setShowQuickQuestions(true);
+    
+    const welcomeMessage: Message = {
+      id: 'welcome-new',
+      role: 'assistant',
+      content: t('tireChat.newChatWelcome'),
+      timestamp: new Date()
+    };
+    setMessages([welcomeMessage]);
+  };
+
+  // Обработка клика на быстрый вопрос
+  const handleQuickQuestionClick = (question: string) => {
+    handleSendMessage(question);
+  };
+
+  return (
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={onClose}
+      variant="temporary"
+      sx={{
+        '& .MuiDrawer-paper': {
+          width: 400,
+          maxWidth: '90vw',
+          height: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          bgcolor: 'rgba(30, 30, 30, 0.98)',
+          borderLeft: `1px solid ${colors.borderPrimary}`
+        }
+      }}
+    >
+      {/* Заголовок */}
+      <Box
+        sx={{
+          p: 2,
+          bgcolor: colors.primary,
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: `1px solid ${colors.borderPrimary}`
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <AutoAwesomeIcon sx={{ mr: 1 }} />
+          <Typography variant="h6" component="div">
+            {t('tireChat.title')}
+          </Typography>
+        </Box>
+        <Box>
+          <IconButton
+            size="small"
+            onClick={handleNewConversation}
+            sx={{ color: 'white', mr: 1 }}
+            title={t('tireChat.newChat')}
+          >
+            <RefreshIcon />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={onClose}
+            sx={{ color: 'white' }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </Box>
+      </Box>
+
+      {/* Быстрые вопросы */}
+      <Collapse in={showQuickQuestions}>
+        <Box sx={{ p: 2, borderBottom: `1px solid ${colors.borderPrimary}` }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <Typography variant="subtitle2" sx={{ color: colors.textSecondary, flexGrow: 1 }}>
+              {t('tireChat.quickQuestions.title', 'Быстрые вопросы:')}
+            </Typography>
+            <IconButton
+              size="small"
+              onClick={() => setShowQuickQuestions(false)}
+              sx={{ color: colors.textSecondary }}
+            >
+              <ExpandLessIcon />
+            </IconButton>
+          </Box>
+          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+            {quickQuestions.map((question, index) => (
+              <Chip
+                key={index}
+                label={question}
+                onClick={() => handleQuickQuestionClick(question)}
+                size="small"
+                sx={{
+                  bgcolor: colors.backgroundCard,
+                  color: colors.textPrimary,
+                  border: `1px solid ${colors.borderPrimary}`,
+                  '&:hover': {
+                    bgcolor: colors.primary,
+                    color: 'white'
+                  },
+                  cursor: 'pointer',
+                  fontSize: '0.75rem'
+                }}
+              />
+            ))}
+          </Stack>
+        </Box>
+      </Collapse>
+
+      {/* Область сообщений */}
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: 'auto',
+          p: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 1
+        }}
+      >
+        {messages.map((message) => (
+          <Fade key={message.id} in timeout={300}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
+                alignItems: 'flex-start',
+                gap: 1
+              }}
+            >
+              {message.role === 'assistant' && (
+                <Avatar
+                  sx={{
+                    bgcolor: colors.primary,
+                    width: 28,
+                    height: 28
+                  }}
+                >
+                  <BotIcon sx={{ fontSize: 16 }} />
+                </Avatar>
+              )}
+
+              <Box sx={{ maxWidth: '75%' }}>
+                <Paper
+                  elevation={1}
+                  sx={{
+                    p: 1.5,
+                    bgcolor: message.role === 'user' 
+                      ? colors.primary 
+                      : 'rgba(60, 60, 60, 0.9)',
+                    color: 'white',
+                    borderRadius: 2,
+                    mb: 0.5
+                  }}
+                >
+                  {message.isLoading ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CircularProgress size={14} sx={{ color: 'white' }} />
+                      <Typography variant="body2" sx={{ color: 'white', fontSize: '0.85rem' }}>
+                        {t('tireChat.loading')}
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', color: 'white', fontSize: '0.85rem' }}>
+                      {message.content}
+                    </Typography>
+                  )}
+                </Paper>
+
+                {/* Рекомендации шин */}
+                {message.tireRecommendations && message.tireRecommendations.length > 0 && (
+                  <Box sx={{ mt: 1 }}>
+                    <Typography variant="caption" sx={{ color: colors.textSecondary, display: 'block', mb: 1 }}>
+                      {t('tireChat.recommendations', 'Рекомендации:')}
+                    </Typography>
+                    <Stack spacing={1}>
+                      {message.tireRecommendations.map((tire) => (
+                        <Paper
+                          key={tire.id}
+                          elevation={1}
+                          onClick={() => handleTireRecommendationClick(tire)}
+                          sx={{
+                            p: 1.5,
+                            bgcolor: colors.backgroundCard,
+                            border: `1px solid ${colors.borderPrimary}`,
+                            borderRadius: 1,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              bgcolor: colors.primary + '20',
+                              borderColor: colors.primary,
+                              transform: 'translateY(-1px)'
+                            }
+                          }}
+                        >
+                          <Typography variant="subtitle2" sx={{ color: colors.textPrimary, fontWeight: 600 }}>
+                            {tire.brand} {tire.model}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: colors.textSecondary, display: 'block' }}>
+                            {tire.size} • {tire.season} • {tire.supplier}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: colors.primary, fontWeight: 600, mt: 0.5 }}>
+                            {tire.price} грн
+                          </Typography>
+                        </Paper>
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
+
+                {/* Время сообщения */}
+                <Typography
+                  variant="caption"
+                  sx={{
+                    opacity: 0.7,
+                    fontSize: '0.6rem',
+                    color: colors.textSecondary,
+                    display: 'block',
+                    textAlign: message.role === 'user' ? 'right' : 'left'
+                  }}
+                >
+                  {message.timestamp.toLocaleTimeString('ru', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </Typography>
+              </Box>
+
+              {message.role === 'user' && (
+                <Avatar
+                  sx={{
+                    bgcolor: colors.warning,
+                    width: 28,
+                    height: 28
+                  }}
+                >
+                  <PersonIcon sx={{ fontSize: 16 }} />
+                </Avatar>
+              )}
+            </Box>
+          </Fade>
+        ))}
+        <div ref={messagesEndRef} />
+      </Box>
+
+      {/* Кнопка для показа быстрых вопросов */}
+      {!showQuickQuestions && (
+        <Box sx={{ px: 2, pb: 1 }}>
+          <Button
+            size="small"
+            startIcon={<ExpandMoreIcon />}
+            onClick={() => setShowQuickQuestions(true)}
+            sx={{
+              color: colors.textSecondary,
+              fontSize: '0.75rem',
+              textTransform: 'none'
+            }}
+          >
+            {t('tireChat.showQuickQuestions', 'Показать быстрые вопросы')}
+          </Button>
+        </Box>
+      )}
+
+      {/* Поле ввода */}
+      <Box
+        sx={{
+          p: 2,
+          bgcolor: 'rgba(40, 40, 40, 0.95)',
+          borderTop: `1px solid ${colors.borderPrimary}`
+        }}
+      >
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <TextField
+            fullWidth
+            multiline
+            maxRows={3}
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder={t('tireChat.placeholder')}
+            variant="outlined"
+            size="small"
+            disabled={isLoading}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+                bgcolor: 'rgba(70, 70, 70, 0.9)',
+                color: '#fff',
+                fontSize: '0.85rem',
+                '& input::placeholder': {
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: '0.85rem'
+                },
+                '& textarea::placeholder': {
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: '0.85rem'
+                },
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.3)'
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(255, 255, 255, 0.5)'
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: colors.primary
+                }
+              },
+              '& .MuiInputBase-input': {
+                color: '#fff'
+              }
+            }}
+          />
+          <Button
+            variant="contained"
+            onClick={() => handleSendMessage()}
+            disabled={!inputMessage.trim() || isLoading}
+            sx={{
+              minWidth: 'auto',
+              px: 1.5,
+              borderRadius: 2,
+              height: 'fit-content'
+            }}
+          >
+            <SendIcon sx={{ fontSize: 18 }} />
+          </Button>
+        </Box>
+      </Box>
+    </Drawer>
+  );
+};
+
+export default TireChatSidebar;

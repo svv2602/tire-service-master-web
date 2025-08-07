@@ -47,7 +47,7 @@ import Pagination from '../../components/ui/Pagination/Pagination';
 import { useGetAllSupplierProductsQuery, SupplierProduct } from '../../api/suppliers.api';
 import ClientLayout from '../../components/client/ClientLayout';
 import OrderModal from '../../components/client/OrderModal';
-import { TireChatWidget } from '../../components/tire-chat';
+import { TireChatSidebar } from '../../components/tire-chat';
 
 const TireOffersPage: React.FC = () => {
   const { t } = useTranslation();
@@ -93,6 +93,7 @@ const TireOffersPage: React.FC = () => {
   
   // Состояние чата
   const [chatOpen, setChatOpen] = useState(false);
+  const [highlightedTireId, setHighlightedTireId] = useState<number | null>(null);
   
   // Извлекаем параметры из URL
   const tireSize = searchParams.get('size') || '';
@@ -364,6 +365,23 @@ const TireOffersPage: React.FC = () => {
     setPage(1);
   };
 
+  // Обработчик клика по рекомендации шины из чата
+  const handleTireRecommendationClick = (tireId: string) => {
+    const numericTireId = parseInt(tireId, 10);
+    setHighlightedTireId(numericTireId);
+    
+    // Скроллим к таблице и находим шину
+    const tableElement = document.querySelector('[data-testid="offers-table"]');
+    if (tableElement) {
+      tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    
+    // Убираем подсветку через 3 секунды
+    setTimeout(() => {
+      setHighlightedTireId(null);
+    }, 3000);
+  };
+
   // Рендер заголовка страницы
   const renderHeader = () => (
     <Box sx={{ mb: 3 }}>
@@ -574,7 +592,7 @@ const TireOffersPage: React.FC = () => {
     }
 
     return (
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} data-testid="offers-table">
         <Table>
           <TableHead>
             <TableRow>
@@ -591,7 +609,22 @@ const TireOffersPage: React.FC = () => {
           </TableHead>
           <TableBody>
             {offersResponse.data.map((product: SupplierProduct) => (
-              <TableRow key={product.id} hover>
+              <TableRow 
+                key={product.id} 
+                hover
+                sx={{
+                  ...(highlightedTireId === product.id && {
+                    bgcolor: 'rgba(76, 175, 80, 0.1)',
+                    border: '2px solid #4CAF50',
+                    animation: 'pulse 2s infinite',
+                    '@keyframes pulse': {
+                      '0%': { boxShadow: '0 0 0 0 rgba(76, 175, 80, 0.4)' },
+                      '70%': { boxShadow: '0 0 0 10px rgba(76, 175, 80, 0)' },
+                      '100%': { boxShadow: '0 0 0 0 rgba(76, 175, 80, 0)' }
+                    }
+                  })
+                }}
+              >
                 {/* Фото товара */}
                 <TableCell>
                   <Box sx={{ width: 60, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -871,10 +904,11 @@ const TireOffersPage: React.FC = () => {
       />
 
       {/* Чат-консультант */}
-      <TireChatWidget
+      <TireChatSidebar
         open={chatOpen}
         onClose={() => setChatOpen(false)}
         initialMessage={tireSize ? `${t('tireChat.helpSizeMessage', 'Помогите подобрать шины размера')} ${tireSize}` : undefined}
+        onTireRecommendationClick={handleTireRecommendationClick}
       />
     </ClientLayout>
   );
