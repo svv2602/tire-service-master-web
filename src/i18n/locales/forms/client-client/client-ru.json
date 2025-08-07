@@ -570,6 +570,72 @@
         "addCarError": "Не удалось добавить автомобиль",
         "unknownError": "Неизвестная ошибка",
         "loadingReferencesError": "Ошибка загрузки справочников"
+      },
+      "tireOffers": {
+        "title": "Предложения шин",
+        "filters": {
+          "size": "Размер",
+          "brand": "Бренд", 
+          "season": "Сезон",
+          "inStock": "Только в наличии",
+          "sortBy": "Сортировать по"
+        },
+        "seasons": {
+          "winter": "Зимние",
+          "summer": "Летние",
+          "all_season": "Всесезонные"
+        },
+        "chips": {
+          "removeFilter": "Удалить фильтр"
+        },
+        "search": {
+          "placeholder": "Поиск шин по размеру, бренду, модели...",
+          "noResults": "Ошибка загрузки предложений. Попробуйте обновить страницу.",
+          "loading": "Обновить данные",
+          "clear": "Поиск"
+        },
+        "sorting": {
+          "price_asc": "Цена: по возрастанию",
+          "price_desc": "Цена: по убыванию", 
+          "name_asc": "Название: А-Я",
+          "name_desc": "Название: Я-А",
+          "updated_at": "По дате обновления",
+          "supplier_name": "По поставщику"
+        },
+        "table": {
+          "supplier": "Поставщик",
+          "product": "Товар",
+          "size": "Размер",
+          "season": "Сезон",
+          "price": "Цена",
+          "availability": "Наличие",
+          "actions": "Действия",
+          "unknownSupplier": "Неизвестный поставщик",
+          "priceOnRequest": "Цена по запросу",
+          "noResults": "По заданным критериям предложения не найдены.",
+          "actualOffers": "Актуальные предложения от проверенных поставщиков"
+        },
+        "actions": {
+          "order": "Заказать товар",
+          "openWebsite": "Открыть на сайте поставщика",
+          "productInfo": "Информация о товаре",
+          "supplierInfo": "Поставщик: {{name}}\nID: {{id}}\nПриоритет: {{priority}}"
+        },
+        "filters": {
+          "activeFilters": "Активные фильтры:",
+          "clearAll": "Очистить все",
+          "searchHelper": "Используйте пробелы или слеши (/) для поиска по нескольким словам",
+          "tryChangeFilters": "Попробуйте изменить фильтры или обратитесь к менеджеру."
+        },
+        "availability": {
+          "inStock": "В наличии",
+          "onOrder": "Под заказ",
+          "noPhoto": "Нет фото"
+        },
+        "tableHeaders": {
+          "photo": "Фото",
+          "updated": "Обновлено"
+        }
       }
     }
   }

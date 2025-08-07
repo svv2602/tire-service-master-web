@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест исправления поиска сезонности</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #1976d2;
+            border-bottom: 2px solid #1976d2;
+            padding-bottom: 10px;
+        }
+        .test-case {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #28a745;
+            border-radius: 4px;
+        }
+        .test-input {
+            font-family: monospace;
+            background-color: #e9ecef;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .expected {
+            color: #28a745;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .problem {
+            color: #dc3545;
+            font-weight: bold;
+            background-color: #f8d7da;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        .fixed {
+            color: #28a745;
+            font-weight: bold;
+            background-color: #d4edda;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        .status {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 15px 0;
+        }
+        .before, .after {
+            padding: 15px;
+            border: 2px solid;
+            border-radius: 8px;
+        }
+        .before {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        .after {
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+        .test-simulator {
+            background-color: #e3f2fd;
+            border: 1px solid #1976d2;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .test-simulator h4 {
+            color: #1976d2;
+            margin-top: 0;
+        }
+        .search-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .result-chip {
+            display: inline-block;
+            padding: 6px 12px;
+            margin: 5px;
+            background-color: #1976d2;
+            color: white;
+            border-radius: 16px;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Исправление поиска сезонности: "ле", "лет" и украинские варианты</h1>
+        
+        <div class="status success">
+            ✅ ИСПРАВЛЕНО: Добавлены короткие сокращения для лучшего поиска
+        </div>
+
+        <!-- Проблема и решение -->
+        <div class="test-section">
+            <h3>🚨 Проблема</h3>
+            <div class="problem">
+                При поиске "лет", "ле" и украинских сокращений не срабатывал фильтр сезонности
+            </div>
+            
+            <div class="comparison">
+                <div class="before">
+                    <h4>❌ До исправления:</h4>
+                    <div class="test-input">"лет" → нет результата</div>
+                    <div class="test-input">"ле" → нет результата</div>
+                    <div class="test-input">"літ" → нет результата</div>
+                    <div>Отсутствовали короткие сокращения</div>
+                </div>
+                <div class="after">
+                    <h4>✅ После исправления:</h4>
+                    <div class="test-input">"лет" → season=summer</div>
+                    <div class="test-input">"ле" → season=summer</div>
+                    <div class="test-input">"літ" → season=summer</div>
+                    <div>Добавлены короткие сокращения</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Новые добавленные сокращения -->
+        <div class="test-section">
+            <h3>➕ Добавленные сокращения</h3>
+            
+            <div class="test-case">
+                <h4>🇷🇺 Русские сокращения:</h4>
+                <div class="test-input">'зим': 'winter' (было: отсутствовал)</div>
+                <div class="test-input">'лет': 'summer' (было: отсутствовал)</div>
+                <div class="test-input">'ле': 'summer' (было: отсутствовал)</div>
+                <div class="expected">→ Теперь поиск "лет шины" найдет летние шины</div>
+            </div>
+
+            <div class="test-case">
+                <h4>🇺🇦 Украинские сокращения:</h4>
+                <div class="test-input">'літн': 'summer' (было: удален по ошибке)</div>
+                <div class="test-input">'літ': 'summer' (было: отсутствовал)</div>
+                <div class="expected">→ Теперь поиск "літ шини" найдет летние шины</div>
+            </div>
+        </div>
+
+        <!-- Симулятор тестирования -->
+        <div class="test-simulator">
+            <h4>🧪 Симулятор поиска сезонности</h4>
+            <p>Введите поисковый запрос для проверки:</p>
+            <input type="text" class="search-input" id="searchInput" placeholder="Введите: лет, ле, літ, зим, и т.д." oninput="testSearch()">
+            <div id="searchResult"></div>
+        </div>
+
+        <!-- Полный список поддерживаемых вариантов -->
+        <div class="test-section">
+            <h3>📋 Полный список поддерживаемых вариантов</h3>
+            
+            <div class="test-case">
+                <h4>🌨️ Зимние шины (winter):</h4>
+                <div class="test-input">
+                    <strong>Русский:</strong> зимние, зимняя, зимний, зима, зимн, зим, зимних, зимой, зимне, зимку<br>
+                    <strong>Украинский:</strong> зимові, зимова, зимовий, зимових, зимовою, зимове
+                </div>
+            </div>
+
+            <div class="test-case">
+                <h4>☀️ Летние шины (summer):</h4>
+                <div class="test-input">
+                    <strong>Русский:</strong> летние, летняя, летний, лето, летн, лет, ле, летних, летом, летне<br>
+                    <strong>Украинский:</strong> літні, літня, літній, літо, літн, літ, літніх, літньою, літнє
+                </div>
+            </div>
+
+            <div class="test-case">
+                <h4>🔄 Всесезонные шины (all_season):</h4>
+                <div class="test-input">
+                    <strong>Русский:</strong> всесезонные, всесезонная, всесезонный, всесезон, всесезонка, всесезонных, всесезонными, круглогодичные, круглогодичная, круглогодичный<br>
+                    <strong>Украинский:</strong> всесезонні, всесезонна, всесезонний, всесезонних, всесезонними, цілорічні, цілорічна, цілорічний
+                </div>
+            </div>
+        </div>
+
+        <!-- Инструкции по тестированию -->
+        <div class="test-section">
+            <h3>🧪 Инструкции по тестированию</h3>
+            
+            <div class="test-case">
+                <h4>Тест 1: Короткие сокращения</h4>
+                <ol>
+                    <li>Откройте <code>/client/tire-offers</code></li>
+                    <li>Введите в поиск: <code>"лет"</code></li>
+                    <li>Должен появиться чип: <span class="result-chip">Сезон: Летние</span></li>
+                    <li>Проверьте Network: запрос должен содержать <code>season=summer</code></li>
+                </ol>
+            </div>
+
+            <div class="test-case">
+                <h4>Тест 2: Очень короткие сокращения</h4>
+                <ol>
+                    <li>Введите в поиск: <code>"ле шины 225/60R16"</code></li>
+                    <li>Должен появиться чип: <span class="result-chip">Сезон: Летние</span></li>
+                    <li>Размер и сезон должны работать одновременно</li>
+                </ol>
+            </div>
+
+            <div class="test-case">
+                <h4>Тест 3: Украинские варианты</h4>
+                <ol>
+                    <li>Переключите язык на украинский</li>
+                    <li>Введите в поиск: <code>"літ"</code></li>
+                    <li>Должен появиться чип: <span class="result-chip">Сезон: Літні</span></li>
+                    <li>Проверьте, что API запрос корректный</li>
+                </ol>
+            </div>
+
+            <div class="test-case">
+                <h4>Тест 4: Комбинированный поиск</h4>
+                <ol>
+                    <li>Введите: <code>"зим michelin 235/55R18"</code></li>
+                    <li>Должны появиться чипы для размера, бренда и сезона</li>
+                    <li>Все фильтры должны работать одновременно</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="status success">
+            🎉 Исправление завершено! Поиск по сокращениям "ле", "лет", "літ" теперь работает корректно.
+        </div>
+    </div>
+
+    <script>
+        // Симуляция функции convertSeasonForAPI
+        function convertSeasonForAPI(season) {
+            const seasonMap = {
+                // Русский
+                'зимние': 'winter', 'зимняя': 'winter', 'зимний': 'winter',
+                'зима': 'winter', 'зимн': 'winter', 'зим': 'winter',
+                'летние': 'summer', 'летняя': 'summer', 'летний': 'summer',
+                'лето': 'summer', 'летн': 'summer', 'лет': 'summer', 'ле': 'summer',
+                'всесезонные': 'all_season', 'всесезон': 'all_season', 'всесезонка': 'all_season',
+                
+                // Украинский
+                'зимові': 'winter', 'зимова': 'winter', 'зимовий': 'winter',
+                'літні': 'summer', 'літня': 'summer', 'літній': 'summer',
+                'літо': 'summer', 'літн': 'summer', 'літ': 'summer',
+                'всесезонні': 'all_season', 'цілорічні': 'all_season',
+                
+                // Английский
+                'winter': 'winter', 'summer': 'summer', 'all_season': 'all_season'
+            };
+            return seasonMap[season.toLowerCase()] || null;
+        }
+
+        function testSearch() {
+            const input = document.getElementById('searchInput').value;
+            const result = document.getElementById('searchResult');
+            
+            if (!input.trim()) {
+                result.innerHTML = '';
+                return;
+            }
+
+            const words = input.toLowerCase().split(/[\s\/]+/).filter(word => word.length > 0);
+            const seasonResults = [];
+            
+            for (const word of words) {
+                const season = convertSeasonForAPI(word);
+                if (season) {
+                    const seasonLabels = {
+                        'winter': 'Зимние',
+                        'summer': 'Летние', 
+                        'all_season': 'Всесезонные'
+                    };
+                    seasonResults.push(`<span class="result-chip">Сезон: ${seasonLabels[season]}</span>`);
+                }
+            }
+            
+            if (seasonResults.length > 0) {
+                result.innerHTML = `<div style="margin-top: 10px;"><strong>✅ Найдено:</strong><br>${seasonResults.join('')}</div>`;
+            } else {
+                result.innerHTML = `<div style="margin-top: 10px; color: #666;">Сезонность не найдена в запросе "${input}"</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

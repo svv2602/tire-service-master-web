@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест загрузки переводов TireOffers</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .debug-info {
+            background-color: #e2e3e5;
+            color: #383d41;
+            border: 1px solid #d6d8db;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #1565c0;
+        }
+        .language-switcher {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Отладка переводов /client/tire-offers</h1>
+        
+        <div class="language-switcher">
+            <button onclick="switchLanguage('ru')">🇷🇺 Русский</button>
+            <button onclick="switchLanguage('uk')">🇺🇦 Українська</button>
+            <button onclick="testTranslations()">🧪 Тест переводов</button>
+        </div>
+
+        <div class="test-section">
+            <h3>1. Информация о текущем состоянии</h3>
+            <div id="current-info" class="debug-info">Загрузка...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Тест ключей переводов TireOffers</h3>
+            <div id="translation-tests"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Структура ресурсов i18n</h3>
+            <div id="resources-info" class="debug-info">Загрузка...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Инструкции по исправлению</h3>
+            <div class="debug-info">
+Шаги для исправления проблемы:
+
+1. Откройте консоль браузера (F12)
+2. Переключитесь на украинский язык
+3. Проверьте ошибки в консоли
+4. Убедитесь, что файлы переводов загружаются
+5. Проверьте структуру namespace в i18n
+
+Возможные проблемы:
+- Неправильный namespace в useTranslation()
+- Файлы переводов не загружаются
+- Неправильная структура ключей переводов
+- Проблемы с кэшированием браузера
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Симуляция проверки переводов (в реальном приложении это делает i18next)
+        const translationKeys = [
+            'forms.clientPages.tireOffers.title',
+            'forms.clientPages.tireOffers.filters.activeFilters',
+            'forms.clientPages.tireOffers.filters.clearAll',
+            'forms.clientPages.tireOffers.table.supplier',
+            'forms.clientPages.tireOffers.table.product',
+            'forms.clientPages.tireOffers.availability.inStock',
+            'forms.clientPages.tireOffers.seasons.winter',
+            'forms.clientPages.tireOffers.seasons.summer',
+            'forms.clientPages.tireOffers.seasons.all_season'
+        ];
+
+        const mockTranslations = {
+            ru: {
+                'forms.clientPages.tireOffers.title': 'Предложения шин',
+                'forms.clientPages.tireOffers.filters.activeFilters': 'Активные фильтры:',
+                'forms.clientPages.tireOffers.filters.clearAll': 'Очистить все',
+                'forms.clientPages.tireOffers.table.supplier': 'Поставщик',
+                'forms.clientPages.tireOffers.table.product': 'Товар',
+                'forms.clientPages.tireOffers.availability.inStock': 'В наличии',
+                'forms.clientPages.tireOffers.seasons.winter': 'Зимние',
+                'forms.clientPages.tireOffers.seasons.summer': 'Летние',
+                'forms.clientPages.tireOffers.seasons.all_season': 'Всесезонные'
+            },
+            uk: {
+                'forms.clientPages.tireOffers.title': 'Пропозиції шин',
+                'forms.clientPages.tireOffers.filters.activeFilters': 'Активні фільтри:',
+                'forms.clientPages.tireOffers.filters.clearAll': 'Очистити все',
+                'forms.clientPages.tireOffers.table.supplier': 'Постачальник',
+                'forms.clientPages.tireOffers.table.product': 'Товар',
+                'forms.clientPages.tireOffers.availability.inStock': 'В наявності',
+                'forms.clientPages.tireOffers.seasons.winter': 'Зимові',
+                'forms.clientPages.tireOffers.seasons.summer': 'Літні',
+                'forms.clientPages.tireOffers.seasons.all_season': 'Всесезонні'
+            }
+        };
+
+        let currentLanguage = 'ru';
+
+        function switchLanguage(lang) {
+            currentLanguage = lang;
+            console.log(`Переключение на язык: ${lang}`);
+            
+            // В реальном приложении это делает i18next
+            localStorage.setItem('i18nextLng', lang);
+            
+            updateCurrentInfo();
+            testTranslations();
+        }
+
+        function updateCurrentInfo() {
+            const info = document.getElementById('current-info');
+            const currentTime = new Date().toLocaleString();
+            const storedLang = localStorage.getItem('i18nextLng') || 'не установлен';
+            
+            info.textContent = `
+Время проверки: ${currentTime}
+Текущий язык: ${currentLanguage}
+Сохраненный язык в localStorage: ${storedLang}
+URL страницы: ${window.location.href}
+
+Проверка доступности i18next:
+- window.i18next: ${typeof window.i18next !== 'undefined' ? 'доступен' : 'НЕ ДОСТУПЕН'}
+- React i18next: проверьте в консоли браузера
+            `;
+        }
+
+        function testTranslations() {
+            const testsContainer = document.getElementById('translation-tests');
+            testsContainer.innerHTML = '';
+
+            translationKeys.forEach(key => {
+                const testDiv = document.createElement('div');
+                testDiv.className = 'test-result';
+                
+                const ruValue = mockTranslations.ru[key] || 'НЕ НАЙДЕН';
+                const ukValue = mockTranslations.uk[key] || 'НЕ НАЙДЕН';
+                
+                if (currentLanguage === 'uk' && ukValue !== 'НЕ НАЙДЕН') {
+                    testDiv.className += ' success';
+                    testDiv.innerHTML = `✅ <strong>${key}</strong><br>UK: ${ukValue}`;
+                } else if (currentLanguage === 'ru' && ruValue !== 'НЕ НАЙДЕН') {
+                    testDiv.className += ' success';
+                    testDiv.innerHTML = `✅ <strong>${key}</strong><br>RU: ${ruValue}`;
+                } else {
+                    testDiv.className += ' error';
+                    testDiv.innerHTML = `❌ <strong>${key}</strong><br>Перевод не найден для ${currentLanguage}`;
+                }
+                
+                testsContainer.appendChild(testDiv);
+            });
+        }
+
+        function updateResourcesInfo() {
+            const resourcesInfo = document.getElementById('resources-info');
+            
+            // В реальном приложении можно проверить window.i18next.store.data
+            resourcesInfo.textContent = `
+Структура ресурсов i18next (ожидаемая):
+
+resources: {
+  uk: {
+    translation: {
+      forms: {
+        clientPages: {
+          tireOffers: {
+            title: "Пропозиції шин",
+            filters: { ... },
+            table: { ... },
+            ...
+          }
+        }
+      }
+    }
+  },
+  ru: {
+    translation: {
+      forms: {
+        clientPages: {
+          tireOffers: {
+            title: "Предложения шин",
+            filters: { ... },
+            table: { ... },
+            ...
+          }
+        }
+      }
+    }
+  }
+}
+
+Namespace: по умолчанию 'translation'
+Использование: t('forms.clientPages.tireOffers.title')
+            `;
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCurrentInfo();
+            updateResourcesInfo();
+            testTranslations();
+            
+            // Проверяем каждые 5 секунд
+            setInterval(updateCurrentInfo, 5000);
+        });
+    </script>
+</body>
+</html>

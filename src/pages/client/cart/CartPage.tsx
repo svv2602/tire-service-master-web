@@ -51,6 +51,22 @@ import PhoneField from '../../../components/ui/PhoneField';
 
 const CartPage: React.FC = () => {
   const { t } = useTranslation(['client', 'common']);
+
+  // Функция для получения локализованного названия сезона
+  const getSeasonLabel = (season: string): string => {
+    const seasonKey = `forms.clientPages.tireOffers.seasons.${season}`;
+    const translated = t(seasonKey);
+    // Если перевод не найден, используем fallback
+    if (translated === seasonKey) {
+      switch (season) {
+        case 'winter': return 'Зимние';
+        case 'summer': return 'Летние';
+        case 'all_season': return 'Всесезонные';
+        default: return season;
+      }
+    }
+    return translated;
+  };
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
 
@@ -382,10 +398,7 @@ const CartPage: React.FC = () => {
                           </TableCell>
                           <TableCell>
                             <Chip 
-                              label={
-                                item.supplier_tire_product.season === 'winter' ? 'Зимние' :
-                                item.supplier_tire_product.season === 'summer' ? 'Летние' : 'Всесезонные'
-                              } 
+                              label={getSeasonLabel(item.supplier_tire_product.season)} 
                               size="small" 
                               color="secondary" 
                             />

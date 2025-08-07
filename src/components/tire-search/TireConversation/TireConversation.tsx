@@ -43,6 +43,22 @@ const TireConversation: React.FC<TireConversationProps> = ({
 }) => {
   const { t } = useTranslation(['tireSearch', 'common']);
   const theme = useTheme();
+
+  // Функция для получения локализованного названия сезона
+  const getSeasonLabel = (season: string): string => {
+    const seasonKey = `forms.clientPages.tireOffers.seasons.${season}`;
+    const translated = t(seasonKey);
+    // Если перевод не найден, используем fallback
+    if (translated === seasonKey) {
+      switch (season) {
+        case 'winter': return 'Зимние';
+        case 'summer': return 'Летние';
+        case 'all_season': return 'Всесезонные';
+        default: return season;
+      }
+    }
+    return translated;
+  };
   const colors = getThemeColors(theme);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [userInput, setUserInput] = useState('');
@@ -207,8 +223,7 @@ const TireConversation: React.FC<TireConversationProps> = ({
               )}
               {(searchResponse.query_info.parsed_data as any).seasonality && (
                 <Chip 
-                  label={`Сезон: ${(searchResponse.query_info.parsed_data as any).seasonality === 'winter' ? 'Зимние' : 
-                    (searchResponse.query_info.parsed_data as any).seasonality === 'summer' ? 'Летние' : 'Всесезонные'}`}
+                  label={`Сезон: ${getSeasonLabel((searchResponse.query_info.parsed_data as any).seasonality)}`}
                   size="small"
                   color="success"
                   variant="outlined"

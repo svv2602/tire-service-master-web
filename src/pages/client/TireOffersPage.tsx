@@ -48,9 +48,25 @@ import ClientLayout from '../../components/client/ClientLayout';
 import OrderModal from '../../components/client/OrderModal';
 
 const TireOffersPage: React.FC = () => {
-  const { t } = useTranslation(['client', 'common']);
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // Функция для получения локализованного названия сезона
+  const getSeasonLabel = (season: string): string => {
+    const seasonKey = `forms.clientPages.tireOffers.seasons.${season}`;
+    const translated = t(seasonKey);
+    // Если перевод не найден, используем fallback
+    if (translated === seasonKey) {
+      switch (season) {
+        case 'winter': return 'Зимние';
+        case 'summer': return 'Летние';
+        case 'all_season': return 'Всесезонные';
+        default: return season;
+      }
+    }
+    return translated;
+  };
   
   // Состояние страницы
   const [page, setPage] = useState(1);
@@ -104,34 +120,73 @@ const TireOffersPage: React.FC = () => {
   // Преобразование сезонности для API с расширенной локализацией
   const convertSeasonForAPI = (season: string): string => {
     const seasonMap: { [key: string]: string } = {
-      // Русский
+      // Русский - полные формы и сокращения
       'зимние': 'winter',
       'зимняя': 'winter',
       'зимний': 'winter',
       'зима': 'winter',
+      'зимн': 'winter',
+      'зим': 'winter',
+      'зимних': 'winter',
+      'зимой': 'winter',
+      'зимне': 'winter',
+      'зимку': 'winter',
+      
       'летние': 'summer', 
       'летняя': 'summer',
       'летний': 'summer',
       'лето': 'summer',
+      'летн': 'summer',
+      'лет': 'summer',
+      'ле': 'summer',
+      'летних': 'summer',
+      'летом': 'summer',
+      'летне': 'summer',
+      
       'всесезонные': 'all_season',
       'всесезонная': 'all_season',
       'всесезонный': 'all_season',
       'всесезон': 'all_season',
-      // Украинский
+      'всесезонка': 'all_season',
+      'всесезонных': 'all_season',
+      'всесезонными': 'all_season',
+      'круглогодичные': 'all_season',
+      'круглогодичная': 'all_season',
+      'круглогодичный': 'all_season',
+      
+      // Украинский - уникальные формы и сокращения
       'зимові': 'winter',
       'зимова': 'winter',
       'зимовий': 'winter',
+      'зимових': 'winter',
+      'зимовою': 'winter',
+      'зимове': 'winter',
+      
       'літні': 'summer',
       'літня': 'summer',
       'літній': 'summer',
       'літо': 'summer',
+      'літн': 'summer',
+      'літ': 'summer',
+      'літніх': 'summer',
+      'літньою': 'summer',
+      'літнє': 'summer',
+      
       'всесезонні': 'all_season',
       'всесезонна': 'all_season',
       'всесезонний': 'all_season',
+      'всесезонних': 'all_season',
+      'всесезонними': 'all_season',
+      'цілорічні': 'all_season',
+      'цілорічна': 'all_season',
+      'цілорічний': 'all_season',
+      
       // Английский (как есть)
       'winter': 'winter',
       'summer': 'summer',
-      'all_season': 'all_season'
+      'all_season': 'all_season',
+      'all-season': 'all_season',
+      'allseason': 'all_season'
     };
     return seasonMap[season.toLowerCase()] || season;
   };
@@ -236,8 +291,13 @@ const TireOffersPage: React.FC = () => {
 
   const handleSupplierClick = (product: SupplierProduct) => {
     if (product.supplier?.id) {
-      // Показываем информацию о поставщике
-      alert(`Поставщик: ${product.supplier.name}\nID: ${product.supplier.firm_id}\nПриоритет: ${product.supplier.priority}`);
+          // Показываем информацию о поставщике
+    alert(t('forms.clientPages.tireOffers.actions.supplierInfo', {
+      name: product.supplier.name,
+      id: product.supplier.firm_id,
+      priority: product.supplier.priority,
+      defaultValue: 'Поставщик: {{name}}\nID: {{id}}\nПриоритет: {{priority}}'
+    }));
     }
   };
 
@@ -304,7 +364,7 @@ const TireOffersPage: React.FC = () => {
     <Box sx={{ mb: 3 }}>
       <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
         <LocalOfferIcon sx={{ mr: 2, fontSize: 'inherit', verticalAlign: 'middle' }} />
-        Предложения шин
+        {t('forms.clientPages.tireOffers.title', 'Предложения шин')}
       </Typography>
       
       {(tireSize || processedSearch.season || brand || seasonality || processedSearch.search) && (
@@ -312,7 +372,7 @@ const TireOffersPage: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <FilterListIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
             <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
-              Активные фильтры:
+              {t('forms.clientPages.tireOffers.filters.activeFilters', 'Активные фильтры:')}
             </Typography>
             <Button
               size="small"
@@ -326,14 +386,14 @@ const TireOffersPage: React.FC = () => {
                 '&:hover': { color: 'error.main' }
               }}
             >
-              Очистить все
+              {t('forms.clientPages.tireOffers.filters.clearAll', 'Очистить все')}
             </Button>
           </Box>
           
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
             {tireSize && (
               <Chip 
-                label={`Размер: ${tireSize}`} 
+                label={`${t('forms.clientPages.tireOffers.filters.size', 'Размер')}: ${tireSize}`} 
                 color="primary" 
                 variant="filled"
                 icon={<CategoryIcon />}
@@ -348,7 +408,7 @@ const TireOffersPage: React.FC = () => {
             )}
             {brand && (
               <Chip 
-                label={`Бренд: ${brand}`} 
+                label={`${t('forms.clientPages.tireOffers.filters.brand', 'Бренд')}: ${brand}`} 
                 color="secondary" 
                 variant="outlined"
                 onDelete={() => handleRemoveFilter('brand')}
@@ -362,10 +422,11 @@ const TireOffersPage: React.FC = () => {
             )}
             {(processedSearch.season || seasonality) && (
               <Chip 
-                label={`Сезон: ${processedSearch.season === 'winter' ? 'Зимние' : 
-                                processedSearch.season === 'summer' ? 'Летние' : 
-                                processedSearch.season === 'all_season' ? 'Всесезонные' : 
-                                seasonality}`} 
+                label={`${t('forms.clientPages.tireOffers.filters.season', 'Сезон')}: ${
+                  processedSearch.season 
+                    ? getSeasonLabel(processedSearch.season)
+                    : seasonality
+                }`} 
                 color="info" 
                 variant={processedSearch.season ? "filled" : "outlined"}
                 icon={processedSearch.season ? <SearchIcon /> : undefined}
@@ -380,7 +441,7 @@ const TireOffersPage: React.FC = () => {
             )}
             {processedSearch.search && (
               <Chip 
-                label={`Поиск: "${processedSearch.search}"`} 
+                label={`${t('forms.clientPages.tireOffers.search.clear', 'Поиск')}: "${processedSearch.search}"`} 
                 color="success" 
                 variant="outlined"
                 icon={<SearchIcon />}
@@ -398,7 +459,7 @@ const TireOffersPage: React.FC = () => {
       )}
       
       <Typography variant="body1" color="text.secondary">
-        Актуальные предложения от проверенных поставщиков
+        {t('forms.clientPages.tireOffers.table.actualOffers', 'Актуальные предложения от проверенных поставщиков')}
       </Typography>
     </Box>
   );
@@ -409,7 +470,7 @@ const TireOffersPage: React.FC = () => {
       {/* Основная строка фильтров */}
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center" sx={{ mb: 2 }}>
         <TextField
-          placeholder="Поиск по названию, бренду, сезонности (зимние/зимова, летние/літні, всесезонные/всесезонні)..."
+          placeholder={t('forms.clientPages.tireOffers.search.placeholder', 'Поиск шин по размеру, бренду, модели...')}
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
           size="small"
@@ -417,7 +478,7 @@ const TireOffersPage: React.FC = () => {
           InputProps={{
             startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
           }}
-          helperText="Используйте пробелы или слеши (/) для поиска по нескольким словам"
+                      helperText={t('forms.clientPages.tireOffers.filters.searchHelper', 'Используйте пробелы или слеши (/) для поиска по нескольким словам')}
         />
         
         <FormControlLabel
@@ -427,20 +488,20 @@ const TireOffersPage: React.FC = () => {
               onChange={(e) => setInStockOnly(e.target.checked)}
             />
           }
-          label="Только в наличии"
+          label={t('forms.clientPages.tireOffers.filters.inStock', 'Только в наличии')}
         />
         
         <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel>Сортировка</InputLabel>
+          <InputLabel>{t('forms.clientPages.tireOffers.filters.sortBy', 'Сортировка')}</InputLabel>
           <Select
             value={sortBy}
-            label="Сортировка"
+            label={t('forms.clientPages.tireOffers.filters.sortBy', 'Сортировка')}
             onChange={(e) => setSortBy(e.target.value)}
           >
-            <MenuItem value="price_asc">Цена: по возрастанию</MenuItem>
-            <MenuItem value="price_desc">Цена: по убыванию</MenuItem>
-            <MenuItem value="updated_at">По дате обновления</MenuItem>
-            <MenuItem value="supplier_name">По поставщику</MenuItem>
+            <MenuItem value="price_asc">{t('forms.clientPages.tireOffers.sorting.price_asc', 'Цена: по возрастанию')}</MenuItem>
+            <MenuItem value="price_desc">{t('forms.clientPages.tireOffers.sorting.price_desc', 'Цена: по убыванию')}</MenuItem>
+            <MenuItem value="updated_at">{t('forms.clientPages.tireOffers.sorting.updated_at', 'По дате обновления')}</MenuItem>
+            <MenuItem value="supplier_name">{t('forms.clientPages.tireOffers.sorting.supplier_name', 'По поставщику')}</MenuItem>
           </Select>
         </FormControl>
         
@@ -453,10 +514,10 @@ const TireOffersPage: React.FC = () => {
           size="small"
           disabled={!search.trim()}
         >
-          Очистить
+          {t('forms.clientPages.tireOffers.chips.removeFilter', 'Очистить')}
         </Button>
         
-        <Tooltip title="Обновить данные">
+        <Tooltip title={t('forms.clientPages.tireOffers.search.loading', 'Обновить данные')}>
           <IconButton onClick={handleRefresh} color="primary">
             <RefreshIcon />
           </IconButton>
@@ -473,8 +534,8 @@ const TireOffersPage: React.FC = () => {
       return (
         <Alert severity="info" sx={{ mt: 2 }}>
           <Typography>
-            По заданным критериям предложения не найдены. 
-            Попробуйте изменить фильтры или обратитесь к менеджеру.
+            {t('forms.clientPages.tireOffers.table.noResults', 'По заданным критериям предложения не найдены.')} 
+            {t('forms.clientPages.tireOffers.filters.tryChangeFilters', 'Попробуйте изменить фильтры или обратитесь к менеджеру.')}
           </Typography>
         </Alert>
       );
@@ -485,15 +546,15 @@ const TireOffersPage: React.FC = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Фото</TableCell>
-              <TableCell>Поставщик</TableCell>
-              <TableCell>Товар</TableCell>
-              <TableCell>Размер</TableCell>
-              <TableCell>Сезон</TableCell>
-              <TableCell>Цена</TableCell>
-              <TableCell>Наличие</TableCell>
-              <TableCell>Обновлено</TableCell>
-              <TableCell align="center">Действия</TableCell>
+              <TableCell>{t('forms.clientPages.tireOffers.tableHeaders.photo', 'Фото')}</TableCell>
+              <TableCell>{t('forms.clientPages.tireOffers.table.supplier', 'Поставщик')}</TableCell>
+              <TableCell>{t('forms.clientPages.tireOffers.table.product', 'Товар')}</TableCell>
+              <TableCell>{t('forms.clientPages.tireOffers.table.size', 'Размер')}</TableCell>
+              <TableCell>{t('forms.clientPages.tireOffers.table.season', 'Сезон')}</TableCell>
+              <TableCell>{t('forms.clientPages.tireOffers.table.price', 'Цена')}</TableCell>
+              <TableCell>{t('forms.clientPages.tireOffers.table.availability', 'Наличие')}</TableCell>
+              <TableCell>{t('forms.clientPages.tireOffers.tableHeaders.updated', 'Обновлено')}</TableCell>
+              <TableCell align="center">{t('forms.clientPages.tireOffers.table.actions', 'Действия')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -524,12 +585,12 @@ const TireOffersPage: React.FC = () => {
                         }}
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
-                          e.currentTarget.parentElement!.innerHTML = '<span style="color: #999; font-size: 12px;">Нет фото</span>';
+                          e.currentTarget.parentElement!.innerHTML = `<span style="color: #999; font-size: 12px;">${t('forms.clientPages.tireOffers.availability.noPhoto', 'Нет фото')}</span>`;
                         }}
                       />
                     ) : (
                       <Typography variant="caption" color="text.secondary" textAlign="center">
-                        Нет фото
+                        {t('forms.clientPages.tireOffers.availability.noPhoto', 'Нет фото')}
                       </Typography>
                     )}
                   </Box>
@@ -543,7 +604,7 @@ const TireOffersPage: React.FC = () => {
                     </Avatar>
                     <Box>
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {product.supplier?.name || 'Неизвестный поставщик'}
+                        {product.supplier?.name || t('forms.clientPages.tireOffers.table.unknownSupplier', 'Неизвестный поставщик')}
                       </Typography>
                       {product.supplier?.firm_id && (
                         <Typography variant="caption" color="text.secondary">
@@ -600,14 +661,14 @@ const TireOffersPage: React.FC = () => {
                     </Typography>
                   ) : (
                     <Typography variant="caption" color="text.secondary">
-                      Цена по запросу
+                      {t('forms.clientPages.tireOffers.table.priceOnRequest', 'Цена по запросу')}
                     </Typography>
                   )}
                 </TableCell>
                 
                 <TableCell>
                   <Chip
-                    label={product.in_stock ? 'В наличии' : 'Под заказ'}
+                    label={product.in_stock ? t('forms.clientPages.tireOffers.availability.inStock', 'В наличии') : t('forms.clientPages.tireOffers.availability.onOrder', 'Под заказ')}
                     size="small"
                     color={product.in_stock ? 'success' : 'warning'}
                     variant={product.in_stock ? 'filled' : 'outlined'}
@@ -627,7 +688,7 @@ const TireOffersPage: React.FC = () => {
                 
                 <TableCell align="center">
                   <Stack direction="row" spacing={1} justifyContent="center">
-                    <Tooltip title="Заказать товар">
+                    <Tooltip title={t('forms.clientPages.tireOffers.actions.order', 'Заказать товар')}>
                       <Button
                         variant="contained"
                         size="small"
@@ -641,7 +702,7 @@ const TireOffersPage: React.FC = () => {
                     </Tooltip>
                     
                     {product.product_url && (
-                      <Tooltip title="Открыть на сайте поставщика">
+                      <Tooltip title={t('forms.clientPages.tireOffers.actions.openWebsite', 'Открыть на сайте поставщика')}>
                         <IconButton
                           size="small"
                           onClick={() => handleProductClick(product)}
@@ -652,7 +713,7 @@ const TireOffersPage: React.FC = () => {
                       </Tooltip>
                     )}
                     
-                    <Tooltip title="Информация о товаре">
+                    <Tooltip title={t('forms.clientPages.tireOffers.actions.productInfo', 'Информация о товаре')}>
                       <IconButton
                         size="small"
                         onClick={() => handleSupplierClick(product)}
@@ -702,7 +763,7 @@ const TireOffersPage: React.FC = () => {
         
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            Ошибка загрузки предложений. Попробуйте обновить страницу.
+            {t('forms.clientPages.tireOffers.search.noResults', 'Ошибка загрузки предложений. Попробуйте обновить страницу.')}
           </Alert>
         )}
         
