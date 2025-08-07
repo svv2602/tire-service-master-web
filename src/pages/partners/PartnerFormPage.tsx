@@ -987,6 +987,8 @@ const PartnerFormPage: React.FC = () => {
           refetchOperators();
         }}
         onAddOperator={handleAddOperator}
+        onEditOperator={handleEditOperator}
+        onDeleteOperator={handleDeleteOperator}
       />
       
       {/* Сохраняем старую модальную форму для совместимости */}

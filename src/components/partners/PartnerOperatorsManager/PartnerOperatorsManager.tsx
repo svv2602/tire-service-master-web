@@ -3,7 +3,6 @@ import {
   Box,
   Typography,
   Button,
-  Grid,
   Card,
   CardContent,
   CardHeader,
@@ -13,15 +12,14 @@ import {
 import {
   Add as AddIcon,
   Assignment as AssignmentIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
 
 // API хуки
 import {
   useGetOperatorsByPartnerQuery,
 } from '../../../api/operators.api';
-import {
-  useGetServicePointsByPartnerIdQuery,
-} from '../../../api/servicePoints.api';
 
 // UI компоненты
 import { OperatorAssignmentModal } from '../../ui/OperatorAssignmentModal';
@@ -32,6 +30,8 @@ export interface PartnerOperatorsManagerProps {
   partnerName?: string;
   onOperatorChange?: () => void;
   onAddOperator?: () => void;
+  onEditOperator?: (operator: any) => void;
+  onDeleteOperator?: (operator: any) => void;
 }
 
 export const PartnerOperatorsManager: React.FC<PartnerOperatorsManagerProps> = ({
@@ -39,6 +39,8 @@ export const PartnerOperatorsManager: React.FC<PartnerOperatorsManagerProps> = (
   partnerName,
   onOperatorChange,
   onAddOperator,
+  onEditOperator,
+  onDeleteOperator,
 }) => {
   const { showSuccess } = useSnackbar();
 
@@ -58,14 +60,8 @@ export const PartnerOperatorsManager: React.FC<PartnerOperatorsManagerProps> = (
     refetch: refetchOperators,
   } = useGetOperatorsByPartnerQuery(partnerId);
 
-  const {
-    data: servicePointsData,
-    isLoading: servicePointsLoading,
-  } = useGetServicePointsByPartnerIdQuery({ partner_id: partnerId });
-
   // Обработка данных
   const operators = operatorsData || [];
-  const servicePoints = servicePointsData?.data || [];
 
   // Обработчики
   const handleOpenAssignmentModal = (operator: any) => {
@@ -88,7 +84,7 @@ export const PartnerOperatorsManager: React.FC<PartnerOperatorsManagerProps> = (
     showSuccess('Назначения успешно обновлены');
   };
 
-  if (operatorsLoading || servicePointsLoading) {
+  if (operatorsLoading) {
     return (
       <Box display="flex" justifyContent="center" py={4}>
         <LinearProgress sx={{ width: '100%' }} />
@@ -106,101 +102,83 @@ export const PartnerOperatorsManager: React.FC<PartnerOperatorsManagerProps> = (
         
         <Alert severity="info" sx={{ mt: 2 }}>
           <Typography variant="body2">
-            <strong>Статистика:</strong> {operators.length} операторов, {servicePoints.length} сервисных точек.
-            Используйте кнопки "Управление назначениями" для настройки доступа операторов к сервисным точкам.
+            <strong>Статистика:</strong> {operators.length} операторов.
+            Используйте кнопки "Редактировать" для изменения данных операторов и "Назначения" для настройки доступа к сервисным точкам.
           </Typography>
         </Alert>
       </Box>
 
-      <Grid container spacing={3}>
-        {/* Операторы */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardHeader
-              title="Операторы"
-              subheader={`${operators.length} операторов`}
-              action={
+      {/* Операторы */}
+      <Card>
+        <CardHeader
+          title="Операторы"
+          subheader={`${operators.length} операторов`}
+          action={
+            <Button
+              startIcon={<AddIcon />}
+              size="small"
+              onClick={onAddOperator}
+              disabled={!onAddOperator}
+            >
+              Добавить
+            </Button>
+          }
+        />
+        <CardContent>
+          {operators.map((operator: any) => (
+            <Box 
+              key={operator.id} 
+              display="flex" 
+              justifyContent="space-between" 
+              alignItems="center"
+              py={1}
+              borderBottom="1px solid"
+              borderColor="divider"
+            >
+              <Box>
+                <Typography variant="body2" fontWeight="bold">
+                  {operator.user?.first_name} {operator.user?.last_name}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {operator.user?.email} • {operator.position}
+                </Typography>
+              </Box>
+              <Box display="flex" gap={1}>
                 <Button
-                  startIcon={<AddIcon />}
                   size="small"
-                  onClick={onAddOperator}
-                  disabled={!onAddOperator}
+                  startIcon={<EditIcon />}
+                  onClick={() => onEditOperator?.(operator)}
+                  disabled={!onEditOperator}
                 >
-                  Добавить
+                  Редактировать
                 </Button>
-              }
-            />
-            <CardContent>
-              {operators.map((operator: any) => (
-                <Box 
-                  key={operator.id} 
-                  display="flex" 
-                  justifyContent="space-between" 
-                  alignItems="center"
-                  py={1}
-                  borderBottom="1px solid"
-                  borderColor="divider"
+                <Button
+                  size="small"
+                  startIcon={<AssignmentIcon />}
+                  onClick={() => handleOpenAssignmentModal(operator)}
                 >
-                  <Box>
-                    <Typography variant="body2" fontWeight="bold">
-                      {operator.user?.first_name} {operator.user?.last_name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {operator.user?.email}
-                    </Typography>
-                  </Box>
-                  <Button
-                    size="small"
-                    startIcon={<AssignmentIcon />}
-                    onClick={() => handleOpenAssignmentModal(operator)}
-                  >
-                    Назначения
-                  </Button>
-                </Box>
-              ))}
-              
-              {operators.length === 0 && (
-                <Typography variant="body2" color="text.secondary" textAlign="center" py={4}>
-                  Нет операторов
-                </Typography>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Сервисные точки */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardHeader
-              title="Сервисные точки"
-              subheader={`${servicePoints.length} точек`}
-            />
-            <CardContent>
-              {servicePoints.map((point: any) => (
-                <Box 
-                  key={point.id}
-                  py={1}
-                  borderBottom="1px solid"
-                  borderColor="divider"
+                  Назначения
+                </Button>
+                <Button
+                  size="small"
+                  startIcon={<DeleteIcon />}
+                  onClick={() => onDeleteOperator?.(operator)}
+                  disabled={!onDeleteOperator}
+                  color="error"
                 >
-                  <Typography variant="body2" fontWeight="bold">
-                    {point.name}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {point.address}
-                  </Typography>
-                </Box>
-              ))}
-              
-              {servicePoints.length === 0 && (
-                <Typography variant="body2" color="text.secondary" textAlign="center" py={4}>
-                  Нет сервисных точек
-                </Typography>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+                  Удалить
+                </Button>
+              </Box>
+            </Box>
+          ))}
+          
+          {operators.length === 0 && (
+            <Typography variant="body2" color="text.secondary" textAlign="center" py={4}>
+              Нет операторов
+            </Typography>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Модальное окно управления назначениями */}
       <OperatorAssignmentModal
