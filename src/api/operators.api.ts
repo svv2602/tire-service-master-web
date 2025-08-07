@@ -176,7 +176,10 @@ export const operatorsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, { partnerId }) => [
         { type: 'Partner', id: partnerId },
+        { type: 'Partner', id: 'LIST' },
         { type: 'Operator', id: 'LIST' },
+        // Инвалидируем кэш назначений для корректного отображения статистики
+        { type: 'OperatorAssignment', id: 'LIST' },
       ],
     }),
     updateOperator: build.mutation<Operator, { id: number; data: UpdateOperatorRequest }>({
@@ -188,6 +191,9 @@ export const operatorsApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { id }) => [
         { type: 'Partner', id: 'LIST' },
         { type: 'Operator', id: 'LIST' },
+        { type: 'Operator', id },
+        // Инвалидируем кэш назначений для корректного отображения статистики
+        { type: 'OperatorAssignment', id: 'LIST' },
       ],
     }),
     deleteOperator: build.mutation<{ message: string }, { id: number; partnerId: number }>({
@@ -195,9 +201,13 @@ export const operatorsApi = baseApi.injectEndpoints({
         url: `/operators/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: (result, error, { partnerId }) => [
+      invalidatesTags: (result, error, { partnerId, id }) => [
         { type: 'Partner', id: partnerId },
         { type: 'Operator', id: 'LIST' },
+        { type: 'Operator', id },
+        // Инвалидируем также кэш назначений для удаленного оператора
+        { type: 'OperatorAssignment', id },
+        { type: 'OperatorAssignment', id: 'LIST' },
       ],
     }),
 

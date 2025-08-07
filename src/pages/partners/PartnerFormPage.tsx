@@ -368,6 +368,12 @@ const PartnerFormPage: React.FC = () => {
       // Обновляем список операторов
       refetchOperators();
       
+      // Принудительно вызываем onOperatorChange для обновления родительского компонента
+      // Это поможет обновить кэш в PartnerOperatorsManager
+      setTimeout(() => {
+        // Небольшая задержка для обеспечения корректного обновления кэша
+      }, 100);
+      
       // Скрываем сообщение через 3 секунды
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
