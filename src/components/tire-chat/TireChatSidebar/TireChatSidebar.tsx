@@ -286,13 +286,19 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
       <Collapse in={showQuickQuestions}>
         <Box sx={{ p: 2, borderBottom: `1px solid ${colors.borderPrimary}` }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <Typography variant="subtitle2" sx={{ color: colors.textSecondary, flexGrow: 1 }}>
+            <Typography variant="subtitle2" sx={{ color: 'rgba(255, 255, 255, 0.9)', flexGrow: 1, fontWeight: 500 }}>
               {t('tireChat.quickQuestions.title', 'Быстрые вопросы:')}
             </Typography>
             <IconButton
               size="small"
               onClick={() => setShowQuickQuestions(false)}
-              sx={{ color: colors.textSecondary }}
+              sx={{ 
+                color: 'rgba(255, 255, 255, 0.7)',
+                '&:hover': {
+                  color: '#ffffff',
+                  bgcolor: 'rgba(255, 255, 255, 0.1)'
+                }
+              }}
             >
               <ExpandLessIcon />
             </IconButton>
@@ -305,15 +311,17 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
                 onClick={() => handleQuickQuestionClick(question)}
                 size="small"
                 sx={{
-                  bgcolor: colors.backgroundCard,
-                  color: colors.textPrimary,
-                  border: `1px solid ${colors.borderPrimary}`,
+                  bgcolor: 'rgba(70, 70, 70, 0.8)',
+                  color: '#ffffff',
+                  border: `1px solid rgba(255, 255, 255, 0.3)`,
                   '&:hover': {
                     bgcolor: colors.primary,
-                    color: 'white'
+                    color: 'white',
+                    borderColor: colors.primary
                   },
                   cursor: 'pointer',
-                  fontSize: '0.75rem'
+                  fontSize: '0.75rem',
+                  fontWeight: 400
                 }}
               />
             ))}
@@ -356,26 +364,35 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
 
               <Box sx={{ maxWidth: '75%' }}>
                 <Paper
-                  elevation={1}
+                  elevation={message.role === 'user' ? 0 : 1}
                   sx={{
                     p: 1.5,
                     bgcolor: message.role === 'user' 
-                      ? colors.primary 
-                      : 'rgba(60, 60, 60, 0.9)',
-                    color: 'white',
+                      ? 'transparent'
+                      : 'rgba(50, 50, 50, 0.95)',
+                    border: message.role === 'user' 
+                      ? 'none'
+                      : 'none',
                     borderRadius: 2,
                     mb: 0.5
                   }}
                 >
                   {message.isLoading ? (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CircularProgress size={14} sx={{ color: 'white' }} />
-                      <Typography variant="body2" sx={{ color: 'white', fontSize: '0.85rem' }}>
+                      <CircularProgress size={14} sx={{ color: '#ffffff' }} />
+                      <Typography variant="body2" sx={{ color: '#ffffff', fontSize: '0.85rem', fontWeight: 400 }}>
                         {t('tireChat.loading')}
                       </Typography>
                     </Box>
                   ) : (
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', color: 'white', fontSize: '0.85rem' }}>
+                    <Typography variant="body2" sx={{ 
+                      whiteSpace: 'pre-wrap', 
+                      color: message.role === 'user' ? '#ffffff' : '#ffffff', 
+                      fontSize: '0.85rem',
+                      fontWeight: message.role === 'user' ? 500 : 400,
+                      lineHeight: 1.4,
+                      textShadow: message.role === 'user' ? '1px 1px 2px rgba(0,0,0,0.8)' : 'none'
+                    }}>
                       {message.content}
                     </Typography>
                   )}
@@ -384,7 +401,7 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
                 {/* Рекомендации шин */}
                 {message.tireRecommendations && message.tireRecommendations.length > 0 && (
                   <Box sx={{ mt: 1 }}>
-                    <Typography variant="caption" sx={{ color: colors.textSecondary, display: 'block', mb: 1 }}>
+                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.8)', display: 'block', mb: 1, fontWeight: 500 }}>
                       {t('tireChat.recommendations', 'Рекомендации:')}
                     </Typography>
                     <Stack spacing={1}>
@@ -395,25 +412,25 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
                           onClick={() => handleTireRecommendationClick(tire)}
                           sx={{
                             p: 1.5,
-                            bgcolor: colors.backgroundCard,
-                            border: `1px solid ${colors.borderPrimary}`,
+                            bgcolor: 'rgba(70, 70, 70, 0.9)',
+                            border: `1px solid rgba(255, 255, 255, 0.2)`,
                             borderRadius: 1,
                             cursor: 'pointer',
                             transition: 'all 0.2s ease',
                             '&:hover': {
-                              bgcolor: colors.primary + '20',
-                              borderColor: colors.primary,
+                              bgcolor: 'rgba(76, 175, 80, 0.2)',
+                              borderColor: '#4CAF50',
                               transform: 'translateY(-1px)'
                             }
                           }}
                         >
-                          <Typography variant="subtitle2" sx={{ color: colors.textPrimary, fontWeight: 600 }}>
+                          <Typography variant="subtitle2" sx={{ color: '#ffffff', fontWeight: 600 }}>
                             {tire.brand} {tire.model}
                           </Typography>
-                          <Typography variant="caption" sx={{ color: colors.textSecondary, display: 'block' }}>
+                          <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', display: 'block' }}>
                             {tire.size} • {tire.season} • {tire.supplier}
                           </Typography>
-                          <Typography variant="body2" sx={{ color: colors.primary, fontWeight: 600, mt: 0.5 }}>
+                          <Typography variant="body2" sx={{ color: '#4CAF50', fontWeight: 600, mt: 0.5 }}>
                             {tire.price} грн
                           </Typography>
                         </Paper>
@@ -426,9 +443,9 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
                 <Typography
                   variant="caption"
                   sx={{
-                    opacity: 0.7,
+                    opacity: 0.8,
                     fontSize: '0.6rem',
-                    color: colors.textSecondary,
+                    color: 'rgba(255, 255, 255, 0.7)',
                     display: 'block',
                     textAlign: message.role === 'user' ? 'right' : 'left'
                   }}
@@ -465,9 +482,13 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
             startIcon={<ExpandMoreIcon />}
             onClick={() => setShowQuickQuestions(true)}
             sx={{
-              color: colors.textSecondary,
+              color: 'rgba(255, 255, 255, 0.8)',
               fontSize: '0.75rem',
-              textTransform: 'none'
+              textTransform: 'none',
+              '&:hover': {
+                color: '#ffffff',
+                bgcolor: 'rgba(255, 255, 255, 0.1)'
+              }
             }}
           >
             {t('tireChat.showQuickQuestions', 'Показать быстрые вопросы')}
