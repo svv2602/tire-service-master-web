@@ -108,23 +108,6 @@ export const PartnerOperatorsManager: React.FC<PartnerOperatorsManagerProps> = (
 
   // Обработка данных
   const operators = operatorsData || [];
-  
-  // Отладочная информация (временно)
-  console.log('PartnerOperatorsManager Debug:', {
-    partnerId,
-    searchTerm,
-    statusFilter,
-    servicePointSearch,
-    operatorsData,
-    operators,
-    operatorsLoading,
-    queryParams: {
-      partnerId,
-      search: searchTerm || undefined,
-      isActive: statusFilter ? statusFilter === 'true' : undefined,
-      servicePointSearch: servicePointSearch || undefined,
-    }
-  });
 
   // Обработчики
   const handleOpenAssignmentModal = (operator: any) => {
@@ -300,7 +283,7 @@ export const PartnerOperatorsManager: React.FC<PartnerOperatorsManagerProps> = (
           
           {operators.length === 0 && (
             <Typography variant="body2" color="text.secondary" textAlign="center" py={4}>
-              Нет операторов (загружается: {operatorsLoading ? 'да' : 'нет'}, данные: {operatorsData ? JSON.stringify(operatorsData).substring(0, 100) + '...' : 'null'})
+              Нет операторов
             </Typography>
           )}
         </CardContent>

@@ -923,12 +923,9 @@ const PartnerFormPage: React.FC = () => {
           formik.setFieldValue('is_active', false);
           setSuccessMessage(t('forms.partner.messages.deactivateSuccess'));
           
-          // Обновляем данные сервисных точек и операторов
+          // Обновляем данные сервисных точек
           if (servicePointsData) {
             refetchServicePoints();
-          }
-          if (operators) {
-            refetchOperators();
           }
         } catch (error: any) {
           setApiError(error?.data?.message || t('forms.partner.errors.deactivateError'));
