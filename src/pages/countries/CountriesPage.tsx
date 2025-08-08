@@ -40,6 +40,7 @@ import { getTablePageStyles } from '../../styles';
 import Pagination from '../../components/ui/Pagination/Pagination';
 import { 
   useGetCountriesQuery,
+  useGetCountryByIdQuery,
   useCreateCountryMutation,
   useUpdateCountryMutation,
   useDeleteCountryMutation,
@@ -115,16 +116,36 @@ const CountriesPage: React.FC = () => {
     setOpenModal(true);
   };
 
-  const handleEdit = (country: Country) => {
-    setFormData({
-      name: country.name,
-      iso_code: country.iso_code || '',
-      is_active: country.is_active,
-      rating_score: country.rating_score,
-      aliases: []
-    });
-    setEditingCountry(country);
-    setOpenModal(true);
+  const handleEdit = async (country: Country) => {
+    try {
+      // Загружаем детальную информацию с алиасами
+      const detailedResult = await fetch(`http://localhost:8000/api/v1/countries/${country.id}`, {
+        credentials: 'include'
+      });
+      const detailedData = await detailedResult.json();
+      
+      setFormData({
+        name: country.name,
+        iso_code: country.iso_code || '',
+        is_active: country.is_active,
+        rating_score: country.rating_score,
+        aliases: detailedData.data?.aliases || []
+      });
+      setEditingCountry(country);
+      setOpenModal(true);
+    } catch (error) {
+      console.error('Ошибка загрузки детальной информации:', error);
+      // Fallback: загружаем без алиасов
+      setFormData({
+        name: country.name,
+        iso_code: country.iso_code || '',
+        is_active: country.is_active,
+        rating_score: country.rating_score,
+        aliases: []
+      });
+      setEditingCountry(country);
+      setOpenModal(true);
+    }
   };
 
   const handleSave = async () => {
@@ -379,6 +400,46 @@ const CountriesPage: React.FC = () => {
               onChange={(e) => setFormData(prev => ({ ...prev, rating_score: Number(e.target.value) }))}
               inputProps={{ min: 1, max: 10 }}
             />
+            
+            {/* Поле алиасов */}
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Алиасы (альтернативные названия)
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                {formData.aliases?.map((alias, index) => (
+                  <Chip
+                    key={index}
+                    label={alias}
+                    onDelete={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        aliases: prev.aliases?.filter((_, i) => i !== index) || []
+                      }));
+                    }}
+                    size="small"
+                  />
+                ))}
+              </Box>
+              <TextField
+                fullWidth
+                label="Добавить алиас"
+                placeholder="Введите альтернативное название"
+                size="small"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    const value = (e.target as HTMLInputElement).value.trim();
+                    if (value && !formData.aliases?.includes(value)) {
+                      setFormData(prev => ({
+                        ...prev,
+                        aliases: [...(prev.aliases || []), value]
+                      }));
+                      (e.target as HTMLInputElement).value = '';
+                    }
+                  }
+                }}
+              />
+            </Box>
 
           </Stack>
         </DialogContent>
