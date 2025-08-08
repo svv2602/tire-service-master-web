@@ -7,7 +7,6 @@ export interface Country {
   iso_code?: string;
   is_active: boolean;
   rating_score: number;
-  description?: string;
   tire_brands_count: number;
   created_at: string;
   updated_at: string;
@@ -28,7 +27,6 @@ export interface CountryFormData {
   iso_code?: string;
   is_active?: boolean;
   rating_score?: number;
-  description?: string;
   aliases?: string[];
 }
 

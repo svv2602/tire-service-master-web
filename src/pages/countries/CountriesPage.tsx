@@ -74,7 +74,6 @@ const CountriesPage: React.FC = () => {
     iso_code: '',
     is_active: true,
     rating_score: 5,
-    description: '',
     aliases: []
   });
 
@@ -106,7 +105,6 @@ const CountriesPage: React.FC = () => {
       iso_code: '',
       is_active: true,
       rating_score: 5,
-      description: '',
       aliases: []
     });
     setEditingCountry(null);
@@ -123,7 +121,6 @@ const CountriesPage: React.FC = () => {
       iso_code: country.iso_code || '',
       is_active: country.is_active,
       rating_score: country.rating_score,
-      description: '',
       aliases: []
     });
     setEditingCountry(country);
@@ -382,14 +379,7 @@ const CountriesPage: React.FC = () => {
               onChange={(e) => setFormData(prev => ({ ...prev, rating_score: Number(e.target.value) }))}
               inputProps={{ min: 1, max: 10 }}
             />
-            <TextField
-              fullWidth
-              label="Описание"
-              multiline
-              rows={3}
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            />
+
           </Stack>
         </DialogContent>
         <DialogActions>
