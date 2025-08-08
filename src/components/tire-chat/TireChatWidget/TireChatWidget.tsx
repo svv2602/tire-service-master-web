@@ -54,6 +54,7 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -63,6 +64,13 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
   // Скроллим к концу при добавлении новых сообщений
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Фокус на поле ввода
+  const focusInput = () => {
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100); // Небольшая задержка для корректной работы
   };
 
   useEffect(() => {
@@ -86,6 +94,9 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
         setTimeout(() => {
           handleSendMessage(initialMessage);
         }, 1000);
+      } else {
+        // Фокусируем поле ввода при открытии чата
+        focusInput();
       }
     }
   }, [open, initialMessage]);
@@ -155,6 +166,9 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
         });
         
         setConversationId(data.conversation_id);
+        
+        // Фокусируем поле ввода после получения ответа
+        focusInput();
       } else {
         throw new Error(data.error || 'Ошибка сервера');
       }
@@ -172,6 +186,9 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
         };
         return [...newMessages, errorMessage];
       });
+      
+      // Фокусируем поле ввода после ошибки
+      focusInput();
     } finally {
       setIsLoading(false);
     }
@@ -199,6 +216,9 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
+    
+    // Фокусируем поле ввода после начала нового разговора
+    focusInput();
   };
 
   return (
@@ -368,6 +388,7 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
       >
         <Box sx={{ width: '100%', display: 'flex', gap: 1 }}>
           <TextField
+            inputRef={inputRef}
             fullWidth
             multiline
             maxRows={3}

@@ -66,6 +66,7 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -90,6 +91,13 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
+  // Фокус на поле ввода
+  const focusInput = useCallback(() => {
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100); // Небольшая задержка для корректной работы
+  }, []);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
@@ -109,9 +117,12 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
         setTimeout(() => {
           handleSendMessage(initialMessage);
         }, 1000);
+      } else {
+        // Фокусируем поле ввода при открытии чата
+        focusInput();
       }
     }
-  }, [open, initialMessage, t]);
+  }, [open, initialMessage, t, focusInput]);
 
   // Обработка клика на рекомендацию шины
   const handleTireRecommendationClick = (tire: TireRecommendation) => {
@@ -177,6 +188,9 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
         });
         
         setConversationId(data.conversation_id);
+        
+        // Фокусируем поле ввода после получения ответа
+        focusInput();
       } else {
         throw new Error(data.error || 'Ошибка сервера');
       }
@@ -193,6 +207,9 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
         };
         return [...newMessages, errorMessage];
       });
+      
+      // Фокусируем поле ввода после ошибки
+      focusInput();
     } finally {
       setIsLoading(false);
     }
@@ -220,6 +237,9 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
+    
+    // Фокусируем поле ввода после начала нового разговора
+    focusInput();
   };
 
   // Обработка клика на быстрый вопрос
@@ -506,6 +526,7 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
       >
         <Box sx={{ display: 'flex', gap: 1 }}>
           <TextField
+            inputRef={inputRef}
             fullWidth
             multiline
             maxRows={3}
