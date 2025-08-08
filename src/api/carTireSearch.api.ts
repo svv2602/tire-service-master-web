@@ -71,6 +71,12 @@ export interface ResolveBrandRequest {
   locale?: string;
 }
 
+export interface ResolveModelRequest {
+  model_id: number;
+  year?: number;
+  locale?: string;
+}
+
 // API endpoints
 export const carTireSearchApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -91,10 +97,20 @@ export const carTireSearchApi = baseApi.injectEndpoints({
         body: data,
       }),
     }),
+
+    // Получение размеров шин для конкретной модели
+    resolveModel: builder.mutation<CarTireSearchResponse, ResolveModelRequest>({
+      query: (data) => ({
+        url: 'car_tire_search/resolve_model',
+        method: 'POST',
+        body: data,
+      }),
+    }),
   }),
 });
 
 export const {
   useSearchCarTiresMutation,
   useResolveBrandMutation,
+  useResolveModelMutation,
 } = carTireSearchApi;

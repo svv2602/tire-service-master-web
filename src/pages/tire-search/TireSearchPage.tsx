@@ -26,7 +26,7 @@ import { TireConversation } from '../../components/tire-search';
 import { useTireSearch, useTireFavorites } from '../../hooks/useTireSearch';
 import { useSupplierProductsSearch } from '../../hooks/useSupplierProductsSearch';
 import { tireSearchCacheUtils } from '../../api/tireSearch.api';
-import { useSearchCarTiresMutation, useResolveBrandMutation } from '../../api/carTireSearch.api';
+import { useSearchCarTiresMutation, useResolveBrandMutation, useResolveModelMutation } from '../../api/carTireSearch.api';
 import type { CarTireSearchResponse, TireSize, TireOffer } from '../../api/carTireSearch.api';
 import { useAppDispatch } from '../../store';
 import { getThemeColors } from '../../styles';
@@ -89,6 +89,7 @@ const TireSearchPage: React.FC = () => {
   // Хуки для поиска автомобилей
   const [searchCarTires] = useSearchCarTiresMutation();
   const [resolveBrand] = useResolveBrandMutation();
+  const [resolveModel] = useResolveModelMutation();
 
   // Хук для поиска товаров поставщиков
   const {
@@ -219,8 +220,17 @@ const TireSearchPage: React.FC = () => {
     
     // ВАЖНО: "тигуан" НЕ включен в carModels, чтобы "шины на тигуан на 19" шло по обычному поиску
     
-    // Возвращаем true только если есть четкие признаки автомобиля БЕЗ размеров
-    return (hasBrand || hasModel) && hasYear;
+    // Возвращаем true если есть четкие признаки автомобиля БЕЗ размеров
+    // Либо марка/модель + год, либо просто конкретная модель (gle, x5, q5)
+    if (hasYear && (hasBrand || hasModel)) {
+      return true; // мерседес gle 2020, bmw x5 2019
+    }
+    
+    // Или если есть конкретная модель БЕЗ общих слов как "тигуан"
+    const specificModels = ['gle', 'glc', 'gla', 'x5', 'x3', 'x1', 'q5', 'q7', 'c-class', 'e-class', 's-class'];
+    const hasSpecificModel = specificModels.some(model => normalizedQuery.includes(model));
+    
+    return hasSpecificModel || (hasBrand && hasModel);
   };
   
   // Обработка поиска товаров поставщиков на основе parsed_data
@@ -404,9 +414,26 @@ const TireSearchPage: React.FC = () => {
     }
   };
 
-  const handleCarModelSelect = (modelId: number) => {
-    // Здесь можно добавить логику для выбора конкретной модели
+  const handleCarModelSelect = async (modelId: number) => {
     console.log('Selected model ID:', modelId);
+    
+    try {
+      const resolveResponse = await resolveModel({
+        model_id: modelId,
+        year: carSearchResult?.year,
+        locale: 'ru'
+      }).unwrap();
+      
+      console.log('Model resolve response:', resolveResponse);
+      setCarSearchResult(resolveResponse);
+    } catch (error) {
+      console.error('Error resolving model:', error);
+      setNotification({
+        open: true,
+        message: 'Ошибка при выборе модели автомобиля',
+        severity: 'error'
+      });
+    }
   };
 
   const handleTireSizeSelect = (tireSize: TireSize) => {
