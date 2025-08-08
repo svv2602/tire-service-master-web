@@ -162,7 +162,7 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
     // Используем window.location для перехода с передачей поискового запроса
     const searchParams = new URLSearchParams();
     if (carQuery) {
-      searchParams.set('search', carQuery);
+      searchParams.set('q', carQuery);
     }
     window.location.href = `/client/tire-search?${searchParams.toString()}`;
   };

@@ -104,7 +104,8 @@ const TireSearchPage: React.FC = () => {
 
   // Инициализация поиска из URL параметров
   useEffect(() => {
-    const queryFromUrl = searchParams.get('q');
+    // Поддерживаем оба параметра: 'q' (стандартный) и 'search' (из чата)
+    const queryFromUrl = searchParams.get('q') || searchParams.get('search');
     const pageFromUrl = parseInt(searchParams.get('page') || '1');
     
     if (queryFromUrl && queryFromUrl !== searchState.query) {
