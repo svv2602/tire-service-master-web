@@ -366,20 +366,63 @@ const TireOffersPage: React.FC = () => {
   };
 
   // Обработчик клика по рекомендации шины из чата
-  const handleTireRecommendationClick = (tireId: string) => {
-    const numericTireId = parseInt(tireId, 10);
-    setHighlightedTireId(numericTireId);
+  const handleTireRecommendationClick = (tireData: any) => {
+    console.log('Применение фильтров из рекомендации чата:', tireData);
     
-    // Скроллим к таблице и находим шину
+    // Извлекаем данные из объекта рекомендации
+    const product = tireData.product || tireData;
+    
+    // Создаем новые параметры URL на основе данных шины
+    const newParams = new URLSearchParams();
+    
+    // Формируем строку поиска с брендом и моделью для лучшего поиска
+    const searchParts = [];
+    if (product.brand_normalized || product.original_brand) {
+      searchParts.push(product.brand_normalized || product.original_brand);
+    }
+    if (product.original_model) {
+      searchParts.push(product.original_model);
+    }
+    
+    // Применяем поиск по бренду и модели
+    if (searchParts.length > 0) {
+      newParams.set('search', searchParts.join(' '));
+    }
+    
+    // Применяем размер шины
+    if (product.width) {
+      newParams.set('width', product.width.toString());
+    }
+    if (product.height) {
+      newParams.set('height', product.height.toString());
+    }
+    if (product.diameter) {
+      newParams.set('diameter', product.diameter.toString());
+    }
+    
+    // Применяем сезон
+    if (product.season) {
+      newParams.set('seasonality', product.season);
+    }
+    
+    // Обновляем URL параметры
+    setSearchParams(newParams);
+    setPage(1);
+    
+    // Скроллим к таблице
     const tableElement = document.querySelector('[data-testid="offers-table"]');
     if (tableElement) {
       tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     
-    // Убираем подсветку через 3 секунды
-    setTimeout(() => {
-      setHighlightedTireId(null);
-    }, 3000);
+    // Показываем уведомление о применении фильтров
+    console.log('Фильтры применены из чата:', {
+      search: searchParts.join(' '),
+      width: product.width,
+      height: product.height,
+      diameter: product.diameter,
+      season: product.season
+    });
   };
 
   // Рендер заголовка страницы

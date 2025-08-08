@@ -40,20 +40,27 @@ interface Message {
 }
 
 interface TireRecommendation {
-  id: number;
-  brand: string;
-  model: string;
-  size: string;
-  price: number;
-  season: string;
-  supplier: string;
+  product: {
+    id: number;
+    brand_normalized: string;
+    original_brand: string;
+    original_model: string;
+    name: string;
+    width: number;
+    height: number;
+    diameter: string;
+    season: string;
+    price_uah: string;
+    description: string;
+  };
+  optimality_score: number;
 }
 
 interface TireChatSidebarProps {
   open: boolean;
   onClose: () => void;
   initialMessage?: string;
-  onTireRecommendationClick?: (tireId: string) => void;
+  onTireRecommendationClick?: (tireData: any) => void;
 }
 
 const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
@@ -67,6 +74,22 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
   const colors = getThemeColors(theme);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Функция для получения локализованного названия сезона
+  const getSeasonLabel = (season: string): string => {
+    const seasonKey = `forms.clientPages.tireOffers.seasons.${season}`;
+    const translated = t(seasonKey);
+    // Если перевод не найден, используем fallback
+    if (translated === seasonKey) {
+      switch (season) {
+        case 'winter': return 'Зимние';
+        case 'summer': return 'Летние';
+        case 'all_season': return 'Всесезонные';
+        default: return season;
+      }
+    }
+    return translated;
+  };
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -126,11 +149,12 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
 
   // Обработка клика на рекомендацию шины
   const handleTireRecommendationClick = (tire: TireRecommendation) => {
-    onTireRecommendationClick?.(tire.id.toString());
+    // Передаем полный объект рекомендации для применения фильтров
+    onTireRecommendationClick?.(tire);
   };
 
   // Отправка сообщения
-  const handleSendMessage = async (messageText?: string) => {
+  const handleSendMessage = async (messageText?: string, isQuickQuestion?: boolean) => {
     const textToSend = messageText || inputMessage.trim();
     if (!textToSend) return;
 
@@ -168,7 +192,8 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
         body: JSON.stringify({
           message: textToSend,
           conversation_id: conversationId,
-          locale: i18n.language
+          locale: i18n.language,
+          is_quick_question: isQuickQuestion || false
         })
       });
 
@@ -182,7 +207,7 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
             role: 'assistant',
             content: data.response.message || t('tireChat.errorMessage'),
             timestamp: new Date(),
-            tireRecommendations: data.response.tire_recommendations || []
+            tireRecommendations: data.response.recommendations || []
           };
           return [...newMessages, assistantMessage];
         });
@@ -244,7 +269,22 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
 
   // Обработка клика на быстрый вопрос
   const handleQuickQuestionClick = (question: string) => {
-    handleSendMessage(question);
+    // Сбрасываем разговор для нового поиска
+    setMessages([]);
+    setConversationId(null);
+    setInputMessage('');
+    
+    // Добавляем приветственное сообщение
+    const welcomeMessage: Message = {
+      id: 'welcome-quick',
+      role: 'assistant',
+      content: t('tireChat.welcome'),
+      timestamp: new Date()
+    };
+    setMessages([welcomeMessage]);
+    
+    // Отправляем быстрый вопрос с флагом сброса
+    handleSendMessage(question, true); // true = quick question (reset filters)
   };
 
   return (
@@ -427,7 +467,7 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
                     <Stack spacing={1}>
                       {message.tireRecommendations.map((tire) => (
                         <Paper
-                          key={tire.id}
+                          key={tire.product.id}
                           elevation={1}
                           onClick={() => handleTireRecommendationClick(tire)}
                           sx={{
@@ -445,13 +485,13 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
                           }}
                         >
                           <Typography variant="subtitle2" sx={{ color: '#ffffff', fontWeight: 600 }}>
-                            {tire.brand} {tire.model}
+                            {tire.product.brand_normalized || tire.product.original_brand} {tire.product.original_model}
                           </Typography>
                           <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', display: 'block' }}>
-                            {tire.size} • {tire.season} • {tire.supplier}
+                            {tire.product.width}/{tire.product.height}R{tire.product.diameter} • {getSeasonLabel(tire.product.season)}
                           </Typography>
                           <Typography variant="body2" sx={{ color: '#4CAF50', fontWeight: 600, mt: 0.5 }}>
-                            {tire.price} грн
+                            {tire.product.price_uah} грн
                           </Typography>
                         </Paper>
                       ))}
