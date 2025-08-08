@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест логики определения автомобильного поиска</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .test-case { 
+            margin: 15px 0; 
+            padding: 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+            background: #f9f9f9; 
+        }
+        .query { font-weight: bold; color: #333; margin-bottom: 10px; }
+        .result { font-size: 14px; }
+        .car-search { color: #2196F3; font-weight: bold; }
+        .tire-search { color: #4CAF50; font-weight: bold; }
+        .excluded { color: #FF9800; font-weight: bold; }
+        .details { font-size: 12px; color: #666; margin-top: 5px; }
+        h1 { color: #1976d2; text-align: center; }
+        h2 { color: #333; border-bottom: 2px solid #1976d2; padding-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Тест логики определения автомобильного поиска</h1>
+        
+        <h2>Запросы, которые ДОЛЖНЫ идти как обычный поиск шин</h2>
+        <div id="tire-search-tests"></div>
+        
+        <h2>Запросы, которые ДОЛЖНЫ идти как поиск автомобилей</h2>
+        <div id="car-search-tests"></div>
+    </div>
+
+    <script>
+        // Копируем логику из TireSearchPage
+        function isCarSearchQuery(query) {
+            const normalizedQuery = query.toLowerCase().trim();
+            
+            // ИСКЛЮЧЕНИЯ: запросы, которые НЕ должны обрабатываться как автомобильные
+            
+            // 1. Если есть конкретные размеры шин (175/65R16, 205/55r17)
+            const hasTireSize = /\b\d{3}\/\d{2}r?\d{2}\b/i.test(normalizedQuery);
+            if (hasTireSize) {
+                return { result: false, reason: 'Найден размер шины' };
+            }
+            
+            // 2. Если есть диаметры R13-R24 (шины на тигуан на 19, резина r16)
+            const hasDiameter = /\b(на\s+)?(r?\d{2}|диаметр\s+\d{2})\b/i.test(normalizedQuery);
+            if (hasDiameter) {
+                return { result: false, reason: 'Найден диаметр' };
+            }
+            
+            // 3. Если есть числа после "на" которые могут быть диаметрами (13-24)
+            const hasNumberAfterNa = /\bна\s+(1[3-9]|2[0-4])\b/.test(normalizedQuery);
+            if (hasNumberAfterNa) {
+                return { result: false, reason: 'Найдено число после "на" (диаметр)' };
+            }
+            
+            // 4. Если есть ключевые слова размеров шин
+            const hasSizeKeywords = /\b(ширина|высота|профиль|диаметр)\b/.test(normalizedQuery);
+            if (hasSizeKeywords) {
+                return { result: false, reason: 'Найдены ключевые слова размеров' };
+            }
+            
+            // ПРОВЕРКА НА АВТОМОБИЛЬНЫЙ ЗАПРОС
+            
+            // Точные марки автомобилей (только если нет размеров)
+            const carBrands = ['mercedes', 'мерседес', 'bmw', 'бмв', 'audi', 'ауди', 'toyota', 'тойота', 
+                             'volkswagen', 'фольксваген', 'vw', 'nissan', 'ниссан', 'honda', 'хонда',
+                             'hyundai', 'хундай', 'kia', 'киа', 'mazda', 'мазда', 'ford', 'форд',
+                             'chevrolet', 'шевроле', 'skoda', 'шкода', 'volvo', 'вольво', 'ваз', 'vaz',
+                             'лада', 'lada', 'газ', 'gaz', 'уаз', 'uaz'];
+            
+            // Точные модели автомобилей (только если нет размеров)
+            const carModels = ['x5', 'x3', 'x1', 'q5', 'q7', 'gle', 'glc', 'gla', 'c-class', 'e-class',
+                              's-class', 'passat', 'пассат', 'golf', 'гольф', 'polo', 'поло', 
+                              'jetta', 'джетта', 'camry', 'камри', 'corolla', 'королла',
+                              'rav4', 'рав4', 'prius', 'приус', 'accord', 'аккорд', 'civic', 'цивик',
+                              'crv', 'cr-v', 'outlander', 'аутлендер', 'lancer', 'лансер'];
+            
+            // Проверяем наличие марок или моделей автомобилей
+            const hasBrand = carBrands.some(brand => normalizedQuery.includes(brand));
+            const hasModel = carModels.some(model => normalizedQuery.includes(model));
+            
+            // Дополнительные признаки автомобильного запроса (БЕЗ размеров)
+            const hasYear = /\b(19[8-9]\d|20[0-3]\d)\b/.test(normalizedQuery);
+            
+            // Возвращаем true только если есть четкие признаки автомобиля БЕЗ размеров
+            const isCarSearch = (hasBrand || hasModel) && hasYear;
+            
+            let reason = '';
+            if (isCarSearch) {
+                reason = 'Найдены: ';
+                if (hasBrand) reason += 'марка ';
+                if (hasModel) reason += 'модель ';
+                if (hasYear) reason += 'год';
+            } else {
+                reason = 'Недостаточно признаков автомобильного запроса';
+            }
+            
+            return { result: isCarSearch, reason };
+        }
+
+        // Тестовые запросы для обычного поиска шин
+        const tireSearchQueries = [
+            "шины на тигуан на 19",
+            "резина на тигуан на 20",
+            "шины на фольксваген на 18",
+            "колеса на мерседес на 17", 
+            "175/65R14",
+            "205/55R16 зимние",
+            "шины 225/60R17",
+            "резина R16",
+            "шины диаметр 18",
+            "тигуан шины",
+            "шины bmw",
+            "резина мерседес",
+            "зимние шины",
+            "летние шины 19",
+            "шины профиль 55",
+            "ширина 225 высота 60"
+        ];
+
+        // Тестовые запросы для поиска автомобилей  
+        const carSearchQueries = [
+            "мерседес gle 2020",
+            "мерседес gle-class 2020",
+            "bmw x5 2019",
+            "audi q5 2021",
+            "toyota camry 2018",
+            "volkswagen passat 2020",
+            "mercedes e-class 2022",
+            "лада гранта 2020"
+        ];
+
+        function renderTestCases(queries, containerId, expectedResult) {
+            const container = document.getElementById(containerId);
+            
+            queries.forEach(query => {
+                const testResult = isCarSearchQuery(query);
+                const isCorrect = testResult.result === expectedResult;
+                
+                const div = document.createElement('div');
+                div.className = 'test-case';
+                div.innerHTML = `
+                    <div class="query">📝 "${query}"</div>
+                    <div class="result">
+                        Результат: <span class="${testResult.result ? 'car-search' : 'tire-search'}">
+                            ${testResult.result ? '🚗 Поиск автомобилей' : '🔧 Поиск шин'}
+                        </span>
+                        ${isCorrect ? '✅' : '❌'}
+                    </div>
+                    <div class="details">💡 ${testResult.reason}</div>
+                `;
+                
+                if (!isCorrect) {
+                    div.style.border = '2px solid #f44336';
+                    div.style.background = '#ffebee';
+                }
+                
+                container.appendChild(div);
+            });
+        }
+
+        // Рендерим тесты
+        renderTestCases(tireSearchQueries, 'tire-search-tests', false);
+        renderTestCases(carSearchQueries, 'car-search-tests', true);
+        
+        // Подсчет результатов
+        setTimeout(() => {
+            const allTests = document.querySelectorAll('.test-case');
+            const correctTests = Array.from(allTests).filter(test => 
+                test.innerHTML.includes('✅')
+            ).length;
+            
+            const summary = document.createElement('div');
+            summary.innerHTML = `
+                <h2>📊 Результаты тестирования</h2>
+                <div style="font-size: 18px; text-align: center; padding: 20px; background: #e3f2fd; border-radius: 8px;">
+                    <strong>Пройдено: ${correctTests} из ${allTests.length} тестов</strong>
+                    <br>
+                    Точность: ${Math.round((correctTests / allTests.length) * 100)}%
+                </div>
+            `;
+            document.querySelector('.container').appendChild(summary);
+        }, 100);
+    </script>
+</body>
+</html>

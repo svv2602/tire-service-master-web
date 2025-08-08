@@ -21,10 +21,13 @@ import { useTranslation } from 'react-i18next';
 import TireSearchBar from '../../components/tire-search/TireSearchBar/TireSearchBar';
 import TireSearchResults from '../../components/tire-search/TireSearchResults/TireSearchResults';
 import SupplierProductsResults from '../../components/tire-search/SupplierProductsResults';
+import CarTireSearchResults from '../../components/tire-search/CarTireSearchResults/CarTireSearchResults';
 import { TireConversation } from '../../components/tire-search';
 import { useTireSearch, useTireFavorites } from '../../hooks/useTireSearch';
 import { useSupplierProductsSearch } from '../../hooks/useSupplierProductsSearch';
 import { tireSearchCacheUtils } from '../../api/tireSearch.api';
+import { useSearchCarTiresMutation, useResolveBrandMutation } from '../../api/carTireSearch.api';
+import type { CarTireSearchResponse, TireSize, TireOffer } from '../../api/carTireSearch.api';
 import { useAppDispatch } from '../../store';
 import { getThemeColors } from '../../styles';
 import { isTireSizeOnlyResult, extractSingleTireSize, createTireOffersUrl, extractSearchParams } from '../../utils/tireSearchUtils';
@@ -57,6 +60,10 @@ const TireSearchPage: React.FC = () => {
   
   // Состояние для автоматического перенаправления
   const [pendingRedirect, setPendingRedirect] = useState<string | null>(null);
+  
+  // Состояние для поиска автомобилей
+  const [carSearchResult, setCarSearchResult] = useState<CarTireSearchResponse | null>(null);
+  const [isCarSearchMode, setIsCarSearchMode] = useState(false);
 
   // Хуки для поиска
   const {
@@ -78,6 +85,10 @@ const TireSearchPage: React.FC = () => {
   });
 
   const { favorites, toggleFavorite, isFavorite } = useTireFavorites();
+  
+  // Хуки для поиска автомобилей
+  const [searchCarTires] = useSearchCarTiresMutation();
+  const [resolveBrand] = useResolveBrandMutation();
 
   // Хук для поиска товаров поставщиков
   const {
@@ -153,6 +164,65 @@ const TireSearchPage: React.FC = () => {
     tireSearchCacheUtils.prefetchPopularData(dispatch);
   }, [dispatch]);
 
+  // Функция для определения, является ли запрос поиском автомобиля
+  const isCarSearchQuery = (query: string): boolean => {
+    const normalizedQuery = query.toLowerCase().trim();
+    
+    // ИСКЛЮЧЕНИЯ: запросы, которые НЕ должны обрабатываться как автомобильные
+    
+    // 1. Если есть конкретные размеры шин (175/65R16, 205/55r17)
+    const hasTireSize = /\b\d{3}\/\d{2}r?\d{2}\b/i.test(normalizedQuery);
+    if (hasTireSize) {
+      return false;
+    }
+    
+    // 2. Если есть диаметры R13-R24 (шины на тигуан на 19, резина r16)
+    const hasDiameter = /\b(на\s+)?(r?\d{2}|диаметр\s+\d{2})\b/i.test(normalizedQuery);
+    if (hasDiameter) {
+      return false;
+    }
+    
+    // 3. Если есть числа после "на" которые могут быть диаметрами (13-24)
+    const hasNumberAfterNa = /\bна\s+(1[3-9]|2[0-4])\b/.test(normalizedQuery);
+    if (hasNumberAfterNa) {
+      return false;
+    }
+    
+    // 4. Если есть ключевые слова размеров шин
+    const hasSizeKeywords = /\b(ширина|высота|профиль|диаметр)\b/.test(normalizedQuery);
+    if (hasSizeKeywords) {
+      return false;
+    }
+    
+    // ПРОВЕРКА НА АВТОМОБИЛЬНЫЙ ЗАПРОС
+    
+    // Точные марки автомобилей (только если нет размеров)
+    const carBrands = ['mercedes', 'мерседес', 'bmw', 'бмв', 'audi', 'ауди', 'toyota', 'тойота', 
+                     'volkswagen', 'фольксваген', 'vw', 'nissan', 'ниссан', 'honda', 'хонда',
+                     'hyundai', 'хундай', 'kia', 'киа', 'mazda', 'мазда', 'ford', 'форд',
+                     'chevrolet', 'шевроле', 'skoda', 'шкода', 'volvo', 'вольво', 'ваз', 'vaz',
+                     'лада', 'lada', 'газ', 'gaz', 'уаз', 'uaz'];
+    
+    // Точные модели автомобилей (только если нет размеров)
+    const carModels = ['x5', 'x3', 'x1', 'q5', 'q7', 'gle', 'glc', 'gla', 'c-class', 'e-class',
+                      's-class', 'passat', 'пассат', 'golf', 'гольф', 'polo', 'поло', 
+                      'jetta', 'джетта', 'camry', 'камри', 'corolla', 'королла',
+                      'rav4', 'рав4', 'prius', 'приус', 'accord', 'аккорд', 'civic', 'цивик',
+                      'crv', 'cr-v', 'outlander', 'аутлендер', 'lancer', 'лансер'];
+    
+    // Проверяем наличие марок или моделей автомобилей
+    const hasBrand = carBrands.some(brand => normalizedQuery.includes(brand));
+    const hasModel = carModels.some(model => normalizedQuery.includes(model));
+    
+    // Дополнительные признаки автомобильного запроса (БЕЗ размеров)
+    const hasYear = /\b(19[8-9]\d|20[0-3]\d)\b/.test(normalizedQuery);
+    
+    // ВАЖНО: "тигуан" НЕ включен в carModels, чтобы "шины на тигуан на 19" шло по обычному поиску
+    
+    // Возвращаем true только если есть четкие признаки автомобиля БЕЗ размеров
+    return (hasBrand || hasModel) && hasYear;
+  };
+  
   // Обработка поиска товаров поставщиков на основе parsed_data
   const handleSupplierProductsSearch = async (parsedData: any) => {
     try {
@@ -211,6 +281,31 @@ const TireSearchPage: React.FC = () => {
     }
 
     try {
+      // Проверяем, является ли запрос поиском автомобиля
+      if (isCarSearchQuery(query.trim())) {
+        console.log('Detected car search query:', query.trim());
+        
+        // Используем API поиска автомобилей
+        const carSearchResponse = await searchCarTires({
+          query: query.trim(),
+          locale: 'ru'
+        }).unwrap();
+        
+        console.log('Car search result:', carSearchResponse);
+        
+        setCarSearchResult(carSearchResponse);
+        setIsCarSearchMode(true);
+        
+        // Очищаем режимы обычного поиска
+        setIsConversationMode(false);
+        setConversationData(null);
+        
+        return;
+      }
+      
+      // Если не автомобиль, используем обычный поиск шин
+      setIsCarSearchMode(false);
+      setCarSearchResult(null);
       const result = await search(query.trim(), filters);
       
       // Отладочная информация
@@ -285,6 +380,51 @@ const TireSearchPage: React.FC = () => {
         severity: 'error'
       });
     }
+  };
+
+  // Обработчики для поиска автомобилей
+  const handleCarBrandSelect = async (brandId: number) => {
+    if (!carSearchResult?.query) return;
+    
+    try {
+      const resolveResponse = await resolveBrand({
+        brand_id: brandId,
+        query: carSearchResult.query.original_query,
+        locale: 'ru'
+      }).unwrap();
+      
+      setCarSearchResult(resolveResponse);
+    } catch (error) {
+      console.error('Error resolving brand:', error);
+      setNotification({
+        open: true,
+        message: 'Ошибка при выборе марки автомобиля',
+        severity: 'error'
+      });
+    }
+  };
+
+  const handleCarModelSelect = (modelId: number) => {
+    // Здесь можно добавить логику для выбора конкретной модели
+    console.log('Selected model ID:', modelId);
+  };
+
+  const handleTireSizeSelect = (tireSize: TireSize) => {
+    // Переходим на страницу предложений шин с конкретным размером
+    const url = `/client/tire-offers?width=${tireSize.width}&height=${tireSize.height}&diameter=${tireSize.diameter}`;
+    navigate(url);
+  };
+
+  const handleTireOfferSelect = (offer: TireOffer) => {
+    // Переходим на страницу предложений с фильтром по бренду и модели шины
+    const searchQuery = `${offer.brand} ${offer.model}`;
+    const url = `/client/tire-offers?search=${encodeURIComponent(searchQuery)}&width=${offer.tire_size_info.width}&height=${offer.tire_size_info.height}&diameter=${offer.tire_size_info.diameter}`;
+    navigate(url);
+  };
+
+  const handleCarSearchRetry = () => {
+    setIsCarSearchMode(false);
+    setCarSearchResult(null);
   };
 
   // Обработка выбора предложения
@@ -523,8 +663,24 @@ const TireSearchPage: React.FC = () => {
           />
         )}
 
-        {/* Результаты поиска - скрываем в режиме диалога */}
-        {!isConversationMode && (
+        {/* Результаты поиска автомобилей */}
+        {isCarSearchMode && carSearchResult && (
+          <Fade in timeout={500}>
+            <Box sx={{ mb: 3 }}>
+              <CarTireSearchResults
+                result={carSearchResult}
+                onBrandSelect={handleCarBrandSelect}
+                onModelSelect={handleCarModelSelect}
+                onTireSizeSelect={handleTireSizeSelect}
+                onTireOfferSelect={handleTireOfferSelect}
+                onRetry={handleCarSearchRetry}
+              />
+            </Box>
+          </Fade>
+        )}
+
+        {/* Результаты поиска - скрываем в режиме диалога и поиска автомобилей */}
+        {!isConversationMode && !isCarSearchMode && (
           <Fade in timeout={500}>
             <Box id="search-results-section">
               <TireSearchResults
