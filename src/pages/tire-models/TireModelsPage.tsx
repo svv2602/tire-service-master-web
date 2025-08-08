@@ -82,7 +82,6 @@ const TireModelsPage: React.FC = () => {
     season_type: undefined,
     is_active: true,
     rating_score: 5,
-    description: '',
     aliases: []
   });
 
@@ -122,7 +121,6 @@ const TireModelsPage: React.FC = () => {
       season_type: undefined,
       is_active: true,
       rating_score: 5,
-      description: '',
       aliases: []
     });
     setEditingModel(null);
@@ -140,7 +138,6 @@ const TireModelsPage: React.FC = () => {
       season_type: model.season_type,
       is_active: model.is_active,
       rating_score: model.rating_score,
-      description: '',
       aliases: []
     });
     setEditingModel(model);
@@ -489,14 +486,7 @@ const TireModelsPage: React.FC = () => {
               onChange={(e) => setFormData(prev => ({ ...prev, rating_score: Number(e.target.value) }))}
               inputProps={{ min: 1, max: 10 }}
             />
-            <TextField
-              fullWidth
-              label="Описание"
-              multiline
-              rows={3}
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            />
+
           </Stack>
         </DialogContent>
         <DialogActions>

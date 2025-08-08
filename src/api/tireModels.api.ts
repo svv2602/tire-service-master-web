@@ -15,7 +15,6 @@ export interface TireModel {
 }
 
 export interface TireModelDetailed extends TireModel {
-  description?: string;
   aliases: string[];
   normalized_name: string;
   full_name: string;
@@ -35,7 +34,6 @@ export interface TireModelFormData {
   season_type?: 'summer' | 'winter' | 'all_season';
   is_active?: boolean;
   rating_score?: number;
-  description?: string;
   aliases?: string[];
 }
 
