@@ -330,7 +330,7 @@ const TireOffersPage: React.FC = () => {
   };
 
   // Обработчики удаления фильтров
-  const handleRemoveFilter = (filterType: 'size' | 'brand' | 'season' | 'search') => {
+  const handleRemoveFilter = (filterType: 'size' | 'width' | 'height' | 'diameter' | 'brand' | 'season' | 'search') => {
     console.log('Удаление фильтра:', filterType);
     const newParams = new URLSearchParams(searchParams);
     
@@ -339,6 +339,15 @@ const TireOffersPage: React.FC = () => {
         newParams.delete('size');
         newParams.delete('width');
         newParams.delete('height'); 
+        newParams.delete('diameter');
+        break;
+      case 'width':
+        newParams.delete('width');
+        break;
+      case 'height':
+        newParams.delete('height');
+        break;
+      case 'diameter':
         newParams.delete('diameter');
         break;
       case 'brand':
@@ -460,7 +469,7 @@ const TireOffersPage: React.FC = () => {
         </Button>
       </Box>
       
-      {(tireSize || processedSearch.season || brand || seasonality || processedSearch.search) && (
+      {(tireSize || widthFilter || heightFilter || diameterFilter || processedSearch.season || brand || seasonality || processedSearch.search) && (
         <Box sx={{ mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
             <FilterListIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
@@ -491,6 +500,51 @@ const TireOffersPage: React.FC = () => {
                 variant="filled"
                 icon={<CategoryIcon />}
                 onDelete={() => handleRemoveFilter('size')}
+                deleteIcon={<CloseIcon />}
+                sx={{
+                  '& .MuiChip-deleteIcon': {
+                    fontSize: 18
+                  }
+                }}
+              />
+            )}
+            {widthFilter && (
+              <Chip 
+                label={`${t('forms.clientPages.tireOffers.filters.width', 'Ширина')}: ${widthFilter}`} 
+                color="primary" 
+                variant="outlined"
+                icon={<CategoryIcon />}
+                onDelete={() => handleRemoveFilter('width')}
+                deleteIcon={<CloseIcon />}
+                sx={{
+                  '& .MuiChip-deleteIcon': {
+                    fontSize: 18
+                  }
+                }}
+              />
+            )}
+            {heightFilter && (
+              <Chip 
+                label={`${t('forms.clientPages.tireOffers.filters.height', 'Высота')}: ${heightFilter}`} 
+                color="primary" 
+                variant="outlined"
+                icon={<CategoryIcon />}
+                onDelete={() => handleRemoveFilter('height')}
+                deleteIcon={<CloseIcon />}
+                sx={{
+                  '& .MuiChip-deleteIcon': {
+                    fontSize: 18
+                  }
+                }}
+              />
+            )}
+            {diameterFilter && (
+              <Chip 
+                label={`${t('forms.clientPages.tireOffers.filters.diameter', 'Диаметр')}: ${diameterFilter}`} 
+                color="primary" 
+                variant="outlined"
+                icon={<CategoryIcon />}
+                onDelete={() => handleRemoveFilter('diameter')}
                 deleteIcon={<CloseIcon />}
                 sx={{
                   '& .MuiChip-deleteIcon': {

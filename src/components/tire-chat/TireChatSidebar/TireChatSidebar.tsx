@@ -37,6 +37,8 @@ interface Message {
   timestamp: Date;
   isLoading?: boolean;
   tireRecommendations?: TireRecommendation[];
+  showCarSearchButton?: boolean;
+  carSearchQuery?: string;
 }
 
 interface TireRecommendation {
@@ -153,6 +155,18 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
     onTireRecommendationClick?.(tire);
   };
 
+  // Обработка клика на кнопку поиска по автомобилю
+  const handleCarSearchClick = (carQuery: string) => {
+    // Закрываем чат и переходим на страницу поиска по автомобилю
+    onClose();
+    // Используем window.location для перехода с передачей поискового запроса
+    const searchParams = new URLSearchParams();
+    if (carQuery) {
+      searchParams.set('search', carQuery);
+    }
+    window.location.href = `/client/tire-search?${searchParams.toString()}`;
+  };
+
   // Отправка сообщения
   const handleSendMessage = async (messageText?: string, isQuickQuestion?: boolean) => {
     const textToSend = messageText || inputMessage.trim();
@@ -207,7 +221,9 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
             role: 'assistant',
             content: data.response.message || t('tireChat.errorMessage'),
             timestamp: new Date(),
-            tireRecommendations: data.response.recommendations || []
+            tireRecommendations: data.response.recommendations || [],
+            showCarSearchButton: data.response.action === 'show_car_search_button',
+            carSearchQuery: data.response.car_search_query || ''
           };
           return [...newMessages, assistantMessage];
         });
@@ -496,6 +512,28 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
                         </Paper>
                       ))}
                     </Stack>
+                  </Box>
+                )}
+
+                {/* Кнопка поиска по автомобилю */}
+                {message.showCarSearchButton && (
+                  <Box sx={{ mt: 1 }}>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      onClick={() => handleCarSearchClick(message.carSearchQuery || '')}
+                      sx={{
+                        bgcolor: '#4CAF50',
+                        color: '#ffffff',
+                        fontWeight: 600,
+                        py: 1.5,
+                        '&:hover': {
+                          bgcolor: '#45a049'
+                        }
+                      }}
+                    >
+                      🔍 Поиск шин по автомобилю
+                    </Button>
                   </Box>
                 )}
 
