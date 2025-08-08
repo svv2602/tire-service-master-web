@@ -189,9 +189,15 @@ const TireSearchPage: React.FC = () => {
       return false;
     }
     
-    // 4. Если есть ключевые слова размеров шин
+    // 4. Если есть ключевые слова размеров шин (НО НЕ "шины на")
     const hasSizeKeywords = /\b(ширина|высота|профиль|диаметр)\b/.test(normalizedQuery);
     if (hasSizeKeywords) {
+      return false;
+    }
+    
+    // 5. Исключение для "шины на [марка] на [диаметр]" - это размерный поиск
+    const isShinyNaWithDiameter = /\b(шины|резина|колеса)\s+на\s+\w+\s+на\s+(1[3-9]|2[0-4])\b/.test(normalizedQuery);
+    if (isShinyNaWithDiameter) {
       return false;
     }
     
@@ -209,7 +215,10 @@ const TireSearchPage: React.FC = () => {
                       's-class', 'passat', 'пассат', 'golf', 'гольф', 'polo', 'поло', 
                       'jetta', 'джетта', 'camry', 'камри', 'corolla', 'королла',
                       'rav4', 'рав4', 'prius', 'приус', 'accord', 'аккорд', 'civic', 'цивик',
-                      'crv', 'cr-v', 'outlander', 'аутлендер', 'lancer', 'лансер'];
+                      'crv', 'cr-v', 'outlander', 'аутлендер', 'lancer', 'лансер',
+                      // BMW модели с номерами
+                      '320i', '320d', '325i', '330i', '335i', '520i', '525i', '530i', '535i',
+                      '740i', '750i', 'x1', 'x3', 'x5', 'x6'];
     
     // Проверяем наличие марок или моделей автомобилей
     const hasBrand = carBrands.some(brand => normalizedQuery.includes(brand));
@@ -217,6 +226,9 @@ const TireSearchPage: React.FC = () => {
     
     // Дополнительные признаки автомобильного запроса (БЕЗ размеров)
     const hasYear = /\b(19[8-9]\d|20[0-3]\d)\b/.test(normalizedQuery);
+    
+    // Ключевые слова шин (не должны блокировать автомобильный поиск)
+    const hasTireKeywords = /\b(шины|резина|колеса|покрышки)\b/.test(normalizedQuery);
     
     // ВАЖНО: "тигуан" НЕ включен в carModels, чтобы "шины на тигуан на 19" шло по обычному поиску
     
@@ -230,7 +242,17 @@ const TireSearchPage: React.FC = () => {
     const specificModels = ['gle', 'glc', 'gla', 'x5', 'x3', 'x1', 'q5', 'q7', 'c-class', 'e-class', 's-class'];
     const hasSpecificModel = specificModels.some(model => normalizedQuery.includes(model));
     
-    return hasSpecificModel || (hasBrand && hasModel);
+    // Или если есть марка + модель + ключевые слова шин (Mercedes C-Class резина)
+    if ((hasBrand && hasModel) || hasSpecificModel) {
+      return true;
+    }
+    
+    // Или если есть марка + ключевые слова шин БЕЗ размеров (Mercedes резина)
+    if (hasBrand && hasTireKeywords) {
+      return true;
+    }
+    
+    return false;
   };
   
   // Обработка поиска товаров поставщиков на основе parsed_data
