@@ -16,7 +16,6 @@ export interface TireBrand {
 }
 
 export interface TireBrandDetailed extends TireBrand {
-  description?: string;
   aliases: string[];
   normalized_name: string;
   tire_models: {
@@ -38,8 +37,6 @@ export interface TireBrandFormData {
   is_active?: boolean;
   is_premium?: boolean;
   rating_score?: number;
-  logo_url?: string;
-  description?: string;
   aliases?: string[];
 }
 

@@ -81,8 +81,6 @@ const TireBrandsPage: React.FC = () => {
     is_active: true,
     is_premium: false,
     rating_score: 5,
-    description: '',
-    logo_url: '',
     aliases: []
   });
 
@@ -120,8 +118,6 @@ const TireBrandsPage: React.FC = () => {
       is_active: true,
       is_premium: false,
       rating_score: 5,
-      description: '',
-      logo_url: '',
       aliases: []
     });
     setEditingBrand(null);
@@ -139,8 +135,6 @@ const TireBrandsPage: React.FC = () => {
       is_active: brand.is_active,
       is_premium: brand.is_premium,
       rating_score: brand.rating_score,
-      description: '',
-      logo_url: brand.logo_url || '',
       aliases: []
     });
     setEditingBrand(brand);
@@ -444,21 +438,7 @@ const TireBrandsPage: React.FC = () => {
               onChange={(e) => setFormData(prev => ({ ...prev, rating_score: Number(e.target.value) }))}
               inputProps={{ min: 1, max: 10 }}
             />
-            <TextField
-              fullWidth
-              label="URL логотипа"
-              value={formData.logo_url}
-              onChange={(e) => setFormData(prev => ({ ...prev, logo_url: e.target.value }))}
-              placeholder="https://example.com/logo.png"
-            />
-            <TextField
-              fullWidth
-              label="Описание"
-              multiline
-              rows={3}
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            />
+
             <FormControlLabel
               control={
                 <Switch
