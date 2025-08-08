@@ -43,6 +43,7 @@ import { getTablePageStyles } from '../../styles';
 import Pagination from '../../components/ui/Pagination/Pagination';
 import { 
   useGetTireModelsQuery,
+  useGetTireModelByIdQuery,
   useCreateTireModelMutation,
   useUpdateTireModelMutation,
   useDeleteTireModelMutation,
@@ -131,17 +132,38 @@ const TireModelsPage: React.FC = () => {
     setOpenModal(true);
   };
 
-  const handleEdit = (model: TireModel) => {
-    setFormData({
-      name: model.name,
-      tire_brand_id: model.tire_brand_id,
-      season_type: model.season_type,
-      is_active: model.is_active,
-      rating_score: model.rating_score,
-      aliases: []
-    });
-    setEditingModel(model);
-    setOpenModal(true);
+  const handleEdit = async (model: TireModel) => {
+    try {
+      // Загружаем детальную информацию с алиасами
+      const detailedResult = await fetch(`http://localhost:8000/api/v1/tire_models/${model.id}`, {
+        credentials: 'include'
+      });
+      const detailedData = await detailedResult.json();
+      
+      setFormData({
+        name: model.name,
+        tire_brand_id: model.tire_brand_id,
+        season_type: model.season_type,
+        is_active: model.is_active,
+        rating_score: model.rating_score,
+        aliases: detailedData.data?.aliases || []
+      });
+      setEditingModel(model);
+      setOpenModal(true);
+    } catch (error) {
+      console.error('Ошибка загрузки детальной информации:', error);
+      // Fallback: загружаем без алиасов
+      setFormData({
+        name: model.name,
+        tire_brand_id: model.tire_brand_id,
+        season_type: model.season_type,
+        is_active: model.is_active,
+        rating_score: model.rating_score,
+        aliases: []
+      });
+      setEditingModel(model);
+      setOpenModal(true);
+    }
   };
 
   const handleSave = async () => {
@@ -486,6 +508,46 @@ const TireModelsPage: React.FC = () => {
               onChange={(e) => setFormData(prev => ({ ...prev, rating_score: Number(e.target.value) }))}
               inputProps={{ min: 1, max: 10 }}
             />
+            
+            {/* Поле алиасов */}
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Алиасы (альтернативные названия)
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                {formData.aliases?.map((alias, index) => (
+                  <Chip
+                    key={index}
+                    label={alias}
+                    onDelete={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        aliases: prev.aliases?.filter((_, i) => i !== index) || []
+                      }));
+                    }}
+                    size="small"
+                  />
+                ))}
+              </Box>
+              <TextField
+                fullWidth
+                label="Добавить алиас"
+                placeholder="Введите альтернативное название модели"
+                size="small"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    const value = (e.target as HTMLInputElement).value.trim();
+                    if (value && !formData.aliases?.includes(value)) {
+                      setFormData(prev => ({
+                        ...prev,
+                        aliases: [...(prev.aliases || []), value]
+                      }));
+                      (e.target as HTMLInputElement).value = '';
+                    }
+                  }
+                }}
+              />
+            </Box>
 
           </Stack>
         </DialogContent>
