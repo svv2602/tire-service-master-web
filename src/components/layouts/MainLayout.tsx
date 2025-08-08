@@ -78,6 +78,7 @@ import {
   Public as CountryIcon,
   Circle as TireBrandIcon,
   DonutLarge as TireModelIcon,
+  AutoFixHigh as AutoFixHighIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -544,6 +545,13 @@ const MainLayout: React.FC = () => {
             path: '/admin/services',
             roles: [UserRole.ADMIN],
             description: t('navigation.descriptions.services'),
+          },
+          {
+            text: t('navigation.normalizationMonitoring'),
+            icon: <AutoFixHighIcon />,
+            path: '/admin/normalization',
+            roles: [UserRole.ADMIN, UserRole.MANAGER],
+            description: t('navigation.descriptions.normalizationMonitoring'),
           },
         ],
       },

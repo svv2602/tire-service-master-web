@@ -91,12 +91,35 @@ export interface PaginatedResponse<T> {
   };
 }
 
+export interface UploadPriceStatistics {
+  total_items: number;
+  processed_items: number;
+  created_items: number;
+  updated_items: number;
+  error_items: number;
+  processing_time_ms: number;
+}
+
+export interface NormalizationStatistics {
+  total_products: number;
+  processed: number;
+  normalized_brands: number;
+  normalized_countries: number;
+  normalized_models: number;
+  failed: number;
+  processing_time_ms: number;
+  summary: string;
+  error?: string;
+}
+
 export interface UploadPriceResponse {
   success: boolean;
   message: string;
   version?: string;
   processing_started?: boolean;
   supplier_id?: number;
+  statistics?: UploadPriceStatistics;
+  normalization?: NormalizationStatistics;
 }
 
 // API эндпоинты для поставщиков

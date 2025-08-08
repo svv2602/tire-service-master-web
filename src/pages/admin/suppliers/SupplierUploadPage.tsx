@@ -26,6 +26,7 @@ import {
   Code as CodeIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
+  Assessment as StatsIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -38,6 +39,8 @@ import {
 import { getTablePageStyles } from '../../../styles/tablePageStyles';
 import { useTheme } from '@mui/material/styles';
 import AdminPageWrapper from '../../../components/admin/AdminPageWrapper';
+import NormalizationStats from '../../../components/admin/NormalizationStats';
+import NormalizationProgress from '../../../components/admin/NormalizationProgress';
 
 const SupplierUploadPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -312,35 +315,97 @@ const SupplierUploadPage: React.FC = () => {
 
                 {/* Прогресс загрузки */}
                 {isUploading && (
-                  <Box sx={{ mt: 2 }}>
-                    <LinearProgress />
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                      Загрузка и обработка прайс-листа...
-                    </Typography>
-                  </Box>
+                  <NormalizationProgress stage="processing" />
                 )}
 
                 {/* Результат загрузки */}
                 {uploadResult && (
-                  <Alert 
-                    severity={uploadResult.success ? 'success' : 'error'} 
-                    sx={{ mt: 2 }}
-                    icon={uploadResult.success ? <CheckCircleIcon /> : undefined}
-                  >
-                    <Typography variant="body2">
-                      {uploadResult.message}
-                    </Typography>
-                    {uploadResult.version && (
-                      <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
-                        Версия: {uploadResult.version}
+                  <>
+                    <Alert 
+                      severity={uploadResult.success ? 'success' : 'error'} 
+                      sx={{ mt: 2 }}
+                      icon={uploadResult.success ? <CheckCircleIcon /> : undefined}
+                    >
+                      <Typography variant="body2">
+                        {uploadResult.message}
                       </Typography>
+                      {uploadResult.version && (
+                        <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
+                          Версия: {uploadResult.version}
+                        </Typography>
+                      )}
+                      {uploadResult.processing_started && (
+                        <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
+                          Обработка запущена в фоновом режиме
+                        </Typography>
+                      )}
+                    </Alert>
+
+                    {/* Статистика обработки */}
+                    {uploadResult.success && uploadResult.statistics && (
+                      <Card sx={{ mt: 2 }}>
+                        <CardContent>
+                          <Box display="flex" alignItems="center" mb={2}>
+                            <StatsIcon sx={{ mr: 1, color: 'info.main' }} />
+                            <Typography variant="h6">
+                              Статистика обработки
+                            </Typography>
+                          </Box>
+                          <Grid container spacing={2}>
+                            <Grid item xs={6} sm={3}>
+                              <Typography variant="body2" color="text.secondary">
+                                Всего товаров
+                              </Typography>
+                              <Typography variant="h6" color="primary">
+                                {uploadResult.statistics.total_items.toLocaleString()}
+                              </Typography>
+                            </Grid>
+                            <Grid item xs={6} sm={3}>
+                              <Typography variant="body2" color="text.secondary">
+                                Обработано
+                              </Typography>
+                              <Typography variant="h6" color="success.main">
+                                {uploadResult.statistics.processed_items.toLocaleString()}
+                              </Typography>
+                            </Grid>
+                            <Grid item xs={6} sm={3}>
+                              <Typography variant="body2" color="text.secondary">
+                                Создано новых
+                              </Typography>
+                              <Typography variant="h6" color="info.main">
+                                {uploadResult.statistics.created_items.toLocaleString()}
+                              </Typography>
+                            </Grid>
+                            <Grid item xs={6} sm={3}>
+                              <Typography variant="body2" color="text.secondary">
+                                Обновлено
+                              </Typography>
+                              <Typography variant="h6" color="warning.main">
+                                {uploadResult.statistics.updated_items.toLocaleString()}
+                              </Typography>
+                            </Grid>
+                          </Grid>
+                          {uploadResult.statistics.error_items > 0 && (
+                            <Box mt={2}>
+                              <Typography variant="body2" color="error.main">
+                                Ошибок обработки: {uploadResult.statistics.error_items}
+                              </Typography>
+                            </Box>
+                          )}
+                          <Box mt={2}>
+                            <Typography variant="body2" color="text.secondary">
+                              Время обработки: {(uploadResult.statistics.processing_time_ms / 1000).toFixed(2)}с
+                            </Typography>
+                          </Box>
+                        </CardContent>
+                      </Card>
                     )}
-                    {uploadResult.processing_started && (
-                      <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
-                        Обработка запущена в фоновом режиме
-                      </Typography>
+
+                    {/* Статистика нормализации */}
+                    {uploadResult.success && uploadResult.normalization && (
+                      <NormalizationStats stats={uploadResult.normalization} />
                     )}
-                  </Alert>
+                  </>
                 )}
 
                 {/* Ошибка загрузки */}

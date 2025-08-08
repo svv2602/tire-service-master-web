@@ -193,6 +193,11 @@ const CountriesPage = lazy(() => import('./pages/countries/CountriesPage'));
 const TireBrandsPage = lazy(() => import('./pages/tire-brands/TireBrandsPage'));
 const TireModelsPage = lazy(() => import('./pages/tire-models/TireModelsPage'));
 
+// Ленивая загрузка страниц нормализации
+const NormalizationMonitoringPage = lazy(() => import('./pages/admin/normalization/NormalizationMonitoringPage'));
+const UnprocessedDataPage = lazy(() => import('./pages/admin/normalization/UnprocessedDataPage'));
+const ProblematicDataAnalysisPage = lazy(() => import('./pages/admin/normalization/ProblematicDataAnalysisPage'));
+
 // Компонент для защищенных маршрутов
 const ProtectedRoute: React.FC<{
   children: React.ReactNode;
@@ -374,6 +379,9 @@ const App: React.FC = () => {
                         <Route path="countries" element={<CountriesPage />} />
                         <Route path="tire-brands" element={<TireBrandsPage />} />
                         <Route path="tire-models" element={<TireModelsPage />} />
+                        <Route path="normalization" element={<NormalizationMonitoringPage />} />
+                        <Route path="normalization/unprocessed" element={<UnprocessedDataPage />} />
+                        <Route path="normalization/analysis" element={<ProblematicDataAnalysisPage />} />
                         {/* Маршруты для статей */}
                         <Route path="articles" element={<ArticlesPage />} />
                         <Route path="articles/new" element={<CreateArticlePage />} />
