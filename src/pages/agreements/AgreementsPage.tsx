@@ -191,20 +191,20 @@ const AgreementsPage: React.FC = () => {
                 <TableCell>
                   <Box>
                     <Typography variant="body2" fontWeight="medium">
-                      {agreement.partner_info.company_name}
+                      {agreement.partner_info?.company_name || 'Партнер не найден'}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {agreement.partner_info.contact_person}
+                      {agreement.partner_info?.contact_person || 'Контакт не указан'}
                     </Typography>
                   </Box>
                 </TableCell>
                 <TableCell>
                   <Box>
                     <Typography variant="body2" fontWeight="medium">
-                      {agreement.supplier_info.name}
+                      {agreement.supplier_info?.name || 'Поставщик не найден'}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      ID: {agreement.supplier_info.firm_id}
+                      ID: {agreement.supplier_info?.firm_id || 'Не указан'}
                     </Typography>
                   </Box>
                 </TableCell>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест исправления ошибки AgreementsPage</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            max-height: 400px;
+        }
+        .agreement-card {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        .missing-data {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .valid-data {
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Тест исправления ошибки AgreementsPage</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Диагностика ошибки</h3>
+            <p><strong>Ошибка:</strong> Cannot read properties of undefined (reading 'company_name')</p>
+            <p><strong>Причина:</strong> Некоторые договоренности имеют partner_info или supplier_info равными null/undefined</p>
+            <p><strong>Исправление:</strong> Добавлен optional chaining (?.) в frontend и защита в backend</p>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Тестирование API и отображения</h3>
+            
+            <button onclick="testAgreementsAPI()">📥 Тест API /agreements</button>
+            <button onclick="testPartnersAPI()">👥 Тест API /agreements/partners</button>
+            <button onclick="testSuppliersAPI()">🏭 Тест API /agreements/suppliers</button>
+            <button onclick="clearResults()">🧹 Очистить результаты</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+
+        function addResult(title, content, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-section ${type}`;
+            div.innerHTML = `<h3>${title}</h3><pre>${content}</pre>`;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testAgreementsAPI() {
+            try {
+                addResult('🚀 Запрос к /api/v1/agreements', 'Загрузка...', 'info');
+
+                const response = await fetch(`${API_BASE}/agreements`, {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const agreements = result.data;
+                    
+                    addResult('📊 Общая информация о договоренностях', 
+                        `Всего: ${agreements.length}\nСтраница: ${result.meta.page}\nВсего страниц: ${result.meta.total_pages}`, 
+                        'success');
+                    
+                    // Анализируем каждую договоренность на наличие partner_info и supplier_info
+                    let validCount = 0;
+                    let invalidCount = 0;
+                    let analysisResults = [];
+                    
+                    agreements.forEach(agreement => {
+                        const analysis = {
+                            id: agreement.id,
+                            partner_info: agreement.partner_info ? 'ОК' : '❌ ОТСУТСТВУЕТ',
+                            supplier_info: agreement.supplier_info ? 'ОК' : '❌ ОТСУТСТВУЕТ',
+                            partner_name: agreement.partner_info?.company_name || 'НЕ УКАЗАНО',
+                            supplier_name: agreement.supplier_info?.name || 'НЕ УКАЗАНО'
+                        };
+                        
+                        if (agreement.partner_info && agreement.supplier_info) {
+                            validCount++;
+                        } else {
+                            invalidCount++;
+                        }
+                        
+                        analysisResults.push(analysis);
+                    });
+                    
+                    addResult('🔍 Анализ данных договоренностей', 
+                        `✅ Корректных: ${validCount}\n❌ С проблемами: ${invalidCount}`, 
+                        invalidCount > 0 ? 'warning' : 'success');
+                    
+                    // Показываем детальный анализ
+                    if (analysisResults.length > 0) {
+                        const detailedAnalysis = analysisResults.map(a => 
+                            `ID: ${a.id} | Партнер: ${a.partner_info} (${a.partner_name}) | Поставщик: ${a.supplier_info} (${a.supplier_name})`
+                        ).join('\n');
+                        
+                        addResult('📋 Детальный анализ по ID', detailedAnalysis, 'info');
+                    }
+                    
+                    // Показываем проблемные записи
+                    const problematicAgreements = agreements.filter(a => !a.partner_info || !a.supplier_info);
+                    if (problematicAgreements.length > 0) {
+                        addResult('⚠️ Проблемные договоренности', 
+                            JSON.stringify(problematicAgreements, null, 2), 
+                            'error');
+                    }
+                    
+                } else {
+                    addResult('❌ Ошибка API', JSON.stringify(result, null, 2), 'error');
+                }
+            } catch (error) {
+                addResult('❌ Сетевая ошибка', error.message, 'error');
+            }
+        }
+
+        async function testPartnersAPI() {
+            try {
+                const response = await fetch(`${API_BASE}/agreements/partners`, {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const partners = result.data;
+                    addResult('👥 Партнеры для выбора', 
+                        `Количество: ${partners.length}\n\n${partners.map(p => 
+                            `ID: ${p.id} | ${p.company_name} (${p.contact_person}) | Активен: ${p.is_active}`
+                        ).join('\n')}`, 
+                        'success');
+                } else {
+                    addResult('❌ Ошибка получения партнеров', JSON.stringify(result, null, 2), 'error');
+                }
+            } catch (error) {
+                addResult('❌ Сетевая ошибка (партнеры)', error.message, 'error');
+            }
+        }
+
+        async function testSuppliersAPI() {
+            try {
+                const response = await fetch(`${API_BASE}/agreements/suppliers`, {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const suppliers = result.data;
+                    addResult('🏭 Поставщики для выбора', 
+                        `Количество: ${suppliers.length}\n\n${suppliers.map(s => 
+                            `ID: ${s.id} | ${s.name} (${s.firm_id}) | Активен: ${s.is_active} | Приоритет: ${s.priority}`
+                        ).join('\n')}`, 
+                        'success');
+                } else {
+                    addResult('❌ Ошибка получения поставщиков', JSON.stringify(result, null, 2), 'error');
+                }
+            } catch (error) {
+                addResult('❌ Сетевая ошибка (поставщики)', error.message, 'error');
+            }
+        }
+
+        // Автоматически запускаем тест при загрузке страницы
+        window.addEventListener('load', () => {
+            setTimeout(testAgreementsAPI, 500);
+        });
+    </script>
+</body>
+</html>

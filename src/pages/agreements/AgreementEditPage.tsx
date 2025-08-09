@@ -129,10 +129,62 @@ const AgreementEditPage: React.FC = () => {
           message: 'Договоренность успешно обновлена',
           severity: 'success',
         });
+
+        // Редирект на страницу списка договоренностей после успешного сохранения
+        setTimeout(() => {
+          navigate('/admin/agreements');
+        }, 1000); // Небольшая задержка чтобы пользователь увидел уведомление
       } catch (error: any) {
+        console.error('Ошибка при обновлении договоренности:', error);
+        
+        let errorMessage = 'Ошибка при обновлении договоренности';
+        
+        if (error?.data) {
+          if (error.data.errors && Array.isArray(error.data.errors)) {
+            // Если есть массив ошибок валидации
+            errorMessage = `Ошибки валидации:\n${error.data.errors.join('\n')}`;
+          } else if (error.data.message) {
+            // Если есть конкретное сообщение
+            errorMessage = error.data.message;
+          } else if (error.data.error) {
+            // Альтернативный формат ошибки
+            errorMessage = error.data.error;
+          } else if (typeof error.data === 'string') {
+            // Если ошибка в виде строки
+            errorMessage = error.data;
+          }
+        } else if (error?.message) {
+          // Сетевые или другие ошибки
+          errorMessage = `Сетевая ошибка: ${error.message}`;
+        } else if (error?.status) {
+          // HTTP статус коды
+          switch (error.status) {
+            case 400:
+              errorMessage = 'Некорректные данные. Проверьте заполнение полей';
+              break;
+            case 401:
+              errorMessage = 'Ошибка авторизации. Пожалуйста, войдите в систему заново';
+              break;
+            case 403:
+              errorMessage = 'Недостаточно прав для выполнения операции';
+              break;
+            case 404:
+              errorMessage = 'Договоренность не найдена';
+              break;
+            case 422:
+              errorMessage = 'Ошибка валидации данных. Проверьте правильность заполнения полей';
+              break;
+            case 500:
+              errorMessage = 'Внутренняя ошибка сервера. Обратитесь к администратору';
+              break;
+            default:
+              errorMessage = `HTTP ошибка ${error.status}: ${error.statusText || 'Неизвестная ошибка'}`;
+          }
+        }
+
         setNotification({
           open: true,
-          message: error?.data?.message || 'Ошибка при обновлении договоренности',
+          message: errorMessage,
           severity: 'error',
         });
       }
@@ -192,15 +244,40 @@ const AgreementEditPage: React.FC = () => {
             onBlur={formik.handleBlur}
             disabled={partnersLoading}
           >
+            {partnersLoading && (
+              <MenuItem value="" disabled>
+                Загрузка партнеров...
+              </MenuItem>
+            )}
+            {!partnersLoading && partners.length === 0 && (
+              <MenuItem value="" disabled>
+                Партнеры не найдены
+              </MenuItem>
+            )}
             {partners.map((partner) => (
-              <MenuItem key={partner.id} value={partner.id}>
+              <MenuItem 
+                key={partner.id} 
+                value={partner.id}
+                sx={{ 
+                  opacity: partner.is_active ? 1 : 0.6,
+                  fontStyle: partner.is_active ? 'normal' : 'italic'
+                }}
+              >
                 {partner.company_name} ({partner.contact_person})
+                {!partner.is_active && <span style={{ color: '#f44336', marginLeft: '8px' }}>[НЕАКТИВЕН]</span>}
               </MenuItem>
             ))}
           </Select>
           {formik.touched.partner_id && formik.errors.partner_id && (
             <Typography variant="caption" color="error" sx={{ mt: 1 }}>
               {formik.errors.partner_id}
+            </Typography>
+          )}
+          {/* Отладочная информация только в dev режиме */}
+          {process.env.NODE_ENV === 'development' && (
+            <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
+              DEBUG: partnersLoading={partnersLoading.toString()}, partners.length={partners.length}, 
+              current_value={formik.values.partner_id}
             </Typography>
           )}
         </FormControl>

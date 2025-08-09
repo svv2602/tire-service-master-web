@@ -85,9 +85,12 @@ const ExceptionsManagerNew: React.FC<ExceptionsManagerNewProps> = ({ agreementId
     message: '',
     severity: 'info',
   });
+  
+  // Состояние для предупреждений о дублировании
+  const [duplicateWarnings, setDuplicateWarnings] = useState<string[]>([]);
 
   // API hooks
-  const { data: exceptionsResponse, isLoading: exceptionsLoading } = useGetAgreementExceptionsQuery({ agreementId });
+  const { data: exceptionsResponse, isLoading: exceptionsLoading, refetch: refetchExceptions } = useGetAgreementExceptionsQuery({ agreementId });
   const { data: brandsResponse, isLoading: brandsLoading } = useGetExceptionTireBrandsQuery(agreementId);
   const { data: diametersResponse, isLoading: diametersLoading } = useGetExceptionTireDiametersQuery(agreementId);
   
@@ -98,6 +101,107 @@ const ExceptionsManagerNew: React.FC<ExceptionsManagerNewProps> = ({ agreementId
   const exceptions = exceptionsResponse?.data || [];
   const brands = brandsResponse?.data || [];
   const diameters = diametersResponse?.data || [];
+
+  // Функция для проверки дублирования комбинаций бренд+диаметр
+  const checkForDuplicates = (brandIds: number[], diameters: string[]): string[] => {
+    const warnings: string[] = [];
+    const currentExceptionId = editingException?.id;
+    
+    // Создаем комбинации для проверки
+    const combinationsToCheck: Array<{brandId: number | null, diameter: string | null}> = [];
+    
+    if (brandIds.length === 0 && diameters.length === 0) {
+      // Все бренды + все диаметры
+      combinationsToCheck.push({ brandId: null, diameter: null });
+    } else if (brandIds.length === 0) {
+      // Все бренды + конкретные диаметры
+      diameters.forEach(diameter => {
+        combinationsToCheck.push({ brandId: null, diameter: diameter || null });
+      });
+    } else if (diameters.length === 0) {
+      // Конкретные бренды + все диаметры
+      brandIds.forEach(brandId => {
+        combinationsToCheck.push({ brandId, diameter: null });
+      });
+    } else {
+      // Конкретные бренды + конкретные диаметры
+      brandIds.forEach(brandId => {
+        diameters.forEach(diameter => {
+          combinationsToCheck.push({ brandId, diameter: diameter || null });
+        });
+      });
+    }
+    
+    // Проверяем каждую комбинацию против существующих исключений
+    combinationsToCheck.forEach(({ brandId, diameter }) => {
+      const conflictingExceptions = exceptions.filter(exception => {
+        // Пропускаем текущее редактируемое исключение
+        if (currentExceptionId && exception.id === currentExceptionId) return false;
+        
+        // Пропускаем неактивные исключения
+        if (!exception.active) return false;
+        
+        // Дополнительная проверка - убеждаемся что исключение существует
+        if (!exception.id) return false;
+        
+        // Логика проверки конфликта
+        const brandConflict = checkBrandConflict(brandId, exception);
+        const diameterConflict = checkDiameterConflict(diameter, exception);
+        
+        return brandConflict && diameterConflict;
+      });
+      
+      conflictingExceptions.forEach(conflicting => {
+        const brandText = getBrandDisplayText(brandId);
+        const diameterText = getDiameterDisplayText(diameter);
+        const conflictingBrandText = getBrandDisplayText(conflicting.tire_brand_id ?? null);
+        const conflictingDiameterText = getDiameterDisplayText(conflicting.tire_diameter ?? null);
+        
+        warnings.push(
+          `Комбинация "${brandText} + ${diameterText}" конфликтует с исключением #${conflicting.id} (${conflictingBrandText} + ${conflictingDiameterText})`
+        );
+      });
+    });
+    
+    return Array.from(new Set(warnings)); // Убираем дубликаты
+  };
+  
+  // Вспомогательные функции для проверки конфликтов
+  const checkBrandConflict = (brandId: number | null, exception: AgreementException): boolean => {
+    // Если оба null (все бренды) - конфликт
+    if (brandId === null && exception.tire_brand_id === null) return true;
+    
+    // Если один null (все бренды), а другой конкретный - конфликт
+    if (brandId === null || exception.tire_brand_id === null) return true;
+    
+    // Если оба конкретные - проверяем равенство
+    return brandId === exception.tire_brand_id;
+  };
+  
+  const checkDiameterConflict = (diameter: string | null, exception: AgreementException): boolean => {
+    const normalizedDiameter = diameter?.trim() || null;
+    const normalizedExceptionDiameter = exception.tire_diameter?.trim() || null;
+    
+    // Если оба null (все диаметры) - конфликт
+    if (normalizedDiameter === null && normalizedExceptionDiameter === null) return true;
+    
+    // Если один null (все диаметры), а другой конкретный - конфликт
+    if (normalizedDiameter === null || normalizedExceptionDiameter === null) return true;
+    
+    // Если оба конкретные - проверяем равенство
+    return normalizedDiameter === normalizedExceptionDiameter;
+  };
+  
+  // Функции для отображения текста
+  const getBrandDisplayText = (brandId: number | null): string => {
+    if (brandId === null) return 'Все бренды';
+    const brand = brands.find(b => b.id === brandId);
+    return brand ? brand.name : `Бренд ID: ${brandId}`;
+  };
+  
+  const getDiameterDisplayText = (diameter: string | null): string => {
+    return diameter ? `R${diameter}` : 'Все диаметры';
+  };
 
   // Formik
   const formik = useFormik({
@@ -208,6 +312,9 @@ const ExceptionsManagerNew: React.FC<ExceptionsManagerNewProps> = ({ agreementId
         severity: 'success',
       });
 
+      // Принудительно обновляем данные для корректной валидации
+      await refetchExceptions();
+
       setDeleteDialogOpen(false);
       setExceptionToDelete(null);
     } catch (error: any) {
@@ -224,8 +331,34 @@ const ExceptionsManagerNew: React.FC<ExceptionsManagerNewProps> = ({ agreementId
     setEditingException(null);
     setSelectedBrandIds([]);
     setSelectedDiameters([]);
+    setDuplicateWarnings([]);
     formik.resetForm();
   };
+  
+  // useEffect для автоматической проверки дублирования
+  React.useEffect(() => {
+    // Отладочная информация в режиме разработки
+    if (process.env.NODE_ENV === 'development' && dialogOpen) {
+      console.log('🔍 Проверка дублирования:', {
+        exceptionsCount: exceptions.length,
+        exceptionsIds: exceptions.map(e => ({ id: e.id, active: e.active, brand: e.tire_brand_id, diameter: e.tire_diameter })),
+        selectedBrandIds,
+        selectedDiameters,
+        editingException: editingException?.id
+      });
+    }
+    
+    if (dialogOpen && (selectedBrandIds.length > 0 || selectedDiameters.length > 0)) {
+      const warnings = checkForDuplicates(selectedBrandIds, selectedDiameters);
+      setDuplicateWarnings(warnings);
+    } else if (dialogOpen && selectedBrandIds.length === 0 && selectedDiameters.length === 0) {
+      // Проверяем случай "все бренды + все диаметры"
+      const warnings = checkForDuplicates([], []);
+      setDuplicateWarnings(warnings);
+    } else {
+      setDuplicateWarnings([]);
+    }
+  }, [selectedBrandIds, selectedDiameters, dialogOpen, exceptions, editingException]);
 
   const getExceptionTypeColor = (type: string) => {
     return type === 'fixed_amount' ? 'primary' : 'secondary';
@@ -504,6 +637,27 @@ const ExceptionsManagerNew: React.FC<ExceptionsManagerNewProps> = ({ agreementId
                   diametersLoading={diametersLoading}
                 />
               </Grid>
+              
+              {/* Предупреждения о дублировании */}
+              {duplicateWarnings.length > 0 && (
+                <Grid item xs={12}>
+                  <Alert severity="warning" sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                      ⚠️ Обнаружены конфликты с существующими исключениями:
+                    </Typography>
+                    <Box component="ul" sx={{ pl: 2, mb: 0 }}>
+                      {duplicateWarnings.map((warning, index) => (
+                        <Box component="li" key={index} sx={{ mb: 0.5 }}>
+                          <Typography variant="body2">{warning}</Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                      Эти комбинации уже покрыты другими исключениями. Рекомендуется изменить параметры или деактивировать конфликтующие исключения.
+                    </Typography>
+                  </Alert>
+                </Grid>
+              )}
             </Grid>
           </DialogContent>
 

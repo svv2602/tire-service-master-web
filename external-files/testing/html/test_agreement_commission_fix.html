@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест исправления сохранения условий комиссии</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .field-group {
+            margin: 10px 0;
+        }
+        label {
+            display: inline-block;
+            width: 200px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 200px;
+            padding: 5px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Тест исправления сохранения условий комиссии</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Информация о тесте</h3>
+            <p><strong>Цель:</strong> Проверить, что PATCH запрос к /api/v1/agreements/:id корректно сохраняет поля commission_amount, commission_percentage, commission_unit</p>
+            <p><strong>Проблема:</strong> Поля не были включены в agreement_params контроллера</p>
+            <p><strong>Исправление:</strong> Добавлены поля в agreement_params и serialize_agreement</p>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Тест данные для agreement ID 2</h3>
+            
+            <div class="field-group">
+                <label>Тип комиссии:</label>
+                <select id="commission_type">
+                    <option value="fixed_amount">Фиксированная сумма</option>
+                    <option value="percentage">Процент</option>
+                    <option value="custom">Индивидуальные условия</option>
+                </select>
+            </div>
+            
+            <div class="field-group">
+                <label>Сумма комиссии:</label>
+                <input type="number" id="commission_amount" placeholder="100.00" step="0.01">
+            </div>
+            
+            <div class="field-group">
+                <label>Процент комиссии:</label>
+                <input type="number" id="commission_percentage" placeholder="5.5" step="0.1">
+            </div>
+            
+            <div class="field-group">
+                <label>Единица комиссии:</label>
+                <select id="commission_unit">
+                    <option value="per_order">За заказ</option>
+                    <option value="per_item">За единицу</option>
+                </select>
+            </div>
+            
+            <div class="field-group">
+                <label>Описание:</label>
+                <input type="text" id="description" placeholder="Тестовые условия комиссии">
+            </div>
+            
+            <button onclick="testUpdate()">🚀 Тест PATCH запроса</button>
+            <button onclick="testGet()">📥 Тест GET запроса</button>
+            <button onclick="clearResults()">🧹 Очистить результаты</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        const AGREEMENT_ID = 2;
+
+        // Устанавливаем значения по умолчанию
+        document.getElementById('commission_type').value = 'fixed_amount';
+        document.getElementById('commission_amount').value = '50.00';
+        document.getElementById('commission_percentage').value = '';
+        document.getElementById('commission_unit').value = 'per_order';
+        document.getElementById('description').value = 'Тестовые условия комиссии - исправление';
+
+        function addResult(title, content, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-section ${type}`;
+            div.innerHTML = `<h3>${title}</h3><pre>${content}</pre>`;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testUpdate() {
+            const commissType = document.getElementById('commission_type').value;
+            const commissionAmount = document.getElementById('commission_amount').value;
+            const commissionPercentage = document.getElementById('commission_percentage').value;
+            const commissionUnit = document.getElementById('commission_unit').value;
+            const description = document.getElementById('description').value;
+
+            const requestBody = {
+                agreement: {
+                    commission_type: commissType,
+                    commission_unit: commissionUnit,
+                    description: description
+                }
+            };
+
+            // Добавляем поля в зависимости от типа комиссии
+            if (commissType === 'fixed_amount' && commissionAmount) {
+                requestBody.agreement.commission_amount = parseFloat(commissionAmount);
+                requestBody.agreement.commission_percentage = null;
+            } else if (commissType === 'percentage' && commissionPercentage) {
+                requestBody.agreement.commission_percentage = parseFloat(commissionPercentage);
+                requestBody.agreement.commission_amount = null;
+            }
+
+            try {
+                addResult('🚀 PATCH запрос отправлен', JSON.stringify(requestBody, null, 2));
+
+                const response = await fetch(`${API_BASE}/agreements/${AGREEMENT_ID}`, {
+                    method: 'PATCH',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    addResult('✅ PATCH ответ успешный', JSON.stringify(result, null, 2), 'success');
+                    
+                    // Проверяем, что поля комиссии вернулись в ответе
+                    const data = result.data;
+                    const commissionFields = {
+                        commission_type: data.commission_type,
+                        commission_amount: data.commission_amount,
+                        commission_percentage: data.commission_percentage,
+                        commission_unit: data.commission_unit
+                    };
+                    
+                    addResult('🔍 Поля комиссии в ответе', JSON.stringify(commissionFields, null, 2), 'info');
+                } else {
+                    addResult('❌ PATCH ошибка', JSON.stringify(result, null, 2), 'error');
+                }
+            } catch (error) {
+                addResult('❌ Сетевая ошибка PATCH', error.message, 'error');
+            }
+        }
+
+        async function testGet() {
+            try {
+                const response = await fetch(`${API_BASE}/agreements/${AGREEMENT_ID}`, {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    addResult('📥 GET ответ успешный', JSON.stringify(result, null, 2), 'success');
+                    
+                    // Проверяем поля комиссии
+                    const data = result.data;
+                    const commissionSummary = {
+                        commission_type: data.commission_type,
+                        commission_amount: data.commission_amount,
+                        commission_percentage: data.commission_percentage,
+                        commission_unit: data.commission_unit,
+                        description: data.description
+                    };
+                    
+                    addResult('💰 Текущие условия комиссии', JSON.stringify(commissionSummary, null, 2), 'info');
+                } else {
+                    addResult('❌ GET ошибка', JSON.stringify(result, null, 2), 'error');
+                }
+            } catch (error) {
+                addResult('❌ Сетевая ошибка GET', error.message, 'error');
+            }
+        }
+
+        // Обновляем поля при смене типа комиссии
+        document.getElementById('commission_type').addEventListener('change', function() {
+            const type = this.value;
+            const amountField = document.getElementById('commission_amount');
+            const percentageField = document.getElementById('commission_percentage');
+            
+            if (type === 'fixed_amount') {
+                amountField.value = '50.00';
+                percentageField.value = '';
+            } else if (type === 'percentage') {
+                amountField.value = '';
+                percentageField.value = '5.5';
+            } else {
+                amountField.value = '';
+                percentageField.value = '';
+            }
+        });
+
+        // Автоматически загружаем текущие данные при открытии страницы
+        window.addEventListener('load', () => {
+            setTimeout(testGet, 500);
+        });
+    </script>
+</body>
+</html>

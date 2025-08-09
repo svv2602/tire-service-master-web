@@ -24,14 +24,14 @@ export interface Agreement {
     contact_person: string;
     phone: string;
     is_active: boolean;
-  };
+  } | null;
   supplier_info: {
     id: number;
     name: string;
     firm_id: string;
     is_active: boolean;
     priority: number;
-  };
+  } | null;
   order_types_text: string;
   active_text: string;
   formatted_start_date: string;
@@ -160,9 +160,15 @@ export const agreementsApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, id) => [{ type: 'Agreement', id }],
     }),
     
-    // Получение списка партнеров для селекта
+    // Получение списка партнеров для селекта (все партнеры для редактирования)
     getAgreementPartners: builder.query<ApiResponse<PartnerOption[]>, void>({
       query: () => 'agreements/partners',
+      providesTags: ['AgreementPartner'],
+    }),
+    
+    // Получение только активных партнеров для создания новых договоренностей
+    getActiveAgreementPartners: builder.query<ApiResponse<PartnerOption[]>, void>({
+      query: () => 'agreements/partners?only_active=true',
       providesTags: ['AgreementPartner'],
     }),
     
@@ -213,5 +219,6 @@ export const {
   useUpdateAgreementMutation,
   useDeleteAgreementMutation,
   useGetAgreementPartnersQuery,
+  useGetActiveAgreementPartnersQuery,
   useGetAgreementSuppliersQuery,
 } = agreementsApi;

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест редиректа после сохранения договоренности</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        button.danger { background-color: #dc3545; }
+        button.danger:hover { background-color: #c82333; }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .form-group {
+            margin: 10px 0;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .step {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Тест редиректа после сохранения договоренности</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Описание теста</h3>
+            <p><strong>Цель:</strong> Проверить, что после успешного сохранения изменений в договоренности происходит автоматический редирект на страницу списка договоренностей.</p>
+            <p><strong>Ожидаемое поведение:</strong></p>
+            <ul>
+                <li>При нажатии "Сохранить изменения" отправляется PATCH запрос</li>
+                <li>При успешном ответе показывается уведомление "Договоренность успешно обновлена"</li>
+                <li>Через 1 секунду происходит редирект на <code>/admin/agreements</code></li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Сценарии тестирования</h3>
+            
+            <div class="step">
+                <h4>1. Подготовка данных</h4>
+                <p>Укажите ID существующей договоренности для тестирования:</p>
+                <div class="form-group">
+                    <label>ID договоренности:</label>
+                    <input type="number" id="agreement_id" value="3" min="1">
+                </div>
+                <button onclick="loadAgreementData()">📋 Загрузить данные договоренности</button>
+            </div>
+
+            <div class="step">
+                <h4>2. Тестирование обновления</h4>
+                <p>Изменим описание договоренности и сохраним:</p>
+                <div class="form-group">
+                    <label>Новое описание:</label>
+                    <textarea id="new_description" rows="3" placeholder="Введите новое описание для тестирования...">Тестовое обновление: ${new Date().toLocaleString()}</textarea>
+                </div>
+                <button onclick="testAgreementUpdate()">💾 Тестировать сохранение и редирект</button>
+            </div>
+
+            <div class="step">
+                <h4>3. Мониторинг редиректа</h4>
+                <p>Этот тест симулирует поведение frontend приложения:</p>
+                <button onclick="simulateRedirect()">🔄 Симулировать редирект</button>
+                <button onclick="checkCurrentPage()">📍 Проверить текущую страницу</button>
+                <button onclick="clearResults()" class="danger">🧹 Очистить результаты</button>
+            </div>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        const FRONTEND_BASE = 'http://localhost:3008';
+        let currentAgreementData = null;
+
+        function addResult(title, content, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-section ${type}`;
+            div.innerHTML = `<h3>${title}</h3><pre>${content}</pre>`;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function loadAgreementData() {
+            const agreementId = document.getElementById('agreement_id').value;
+            
+            try {
+                addResult('📥 Загрузка данных договоренности', `Загружаем договоренность ID: ${agreementId}`, 'info');
+                
+                const response = await fetch(`${API_BASE}/agreements/${agreementId}`, {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    currentAgreementData = result.data;
+                    
+                    // Заполняем поле описания текущим значением
+                    const descriptionField = document.getElementById('new_description');
+                    descriptionField.value = currentAgreementData.description || 'Тестовое обновление: ' + new Date().toLocaleString();
+                    
+                    const summary = {
+                        id: currentAgreementData.id,
+                        partner_id: currentAgreementData.partner_id,
+                        supplier_id: currentAgreementData.supplier_id,
+                        commission_type: currentAgreementData.commission_type,
+                        order_types: currentAgreementData.order_types,
+                        active: currentAgreementData.active,
+                        description: currentAgreementData.description
+                    };
+                    
+                    addResult('✅ Данные загружены', JSON.stringify(summary, null, 2), 'success');
+                } else {
+                    addResult('❌ Ошибка загрузки', JSON.stringify(result, null, 2), 'error');
+                }
+            } catch (error) {
+                addResult('❌ Сетевая ошибка', error.message, 'error');
+            }
+        }
+
+        async function testAgreementUpdate() {
+            const agreementId = document.getElementById('agreement_id').value;
+            const newDescription = document.getElementById('new_description').value;
+            
+            if (!currentAgreementData) {
+                addResult('⚠️ Предупреждение', 'Сначала загрузите данные договоренности', 'warning');
+                return;
+            }
+
+            try {
+                addResult('💾 Начало тестирования', 'Отправляем PATCH запрос для обновления договоренности...', 'info');
+                
+                const updateData = {
+                    agreement: {
+                        ...currentAgreementData,
+                        description: newDescription
+                    }
+                };
+
+                const response = await fetch(`${API_BASE}/agreements/${agreementId}`, {
+                    method: 'PATCH',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    addResult('✅ Обновление успешно', JSON.stringify(result.data, null, 2), 'success');
+                    
+                    // Симулируем показ уведомления
+                    addResult('🔔 Уведомление', 'Договоренность успешно обновлена', 'success');
+                    
+                    // Симулируем редирект через 1 секунду
+                    addResult('⏱️ Запуск редиректа', 'Редирект запустится через 1 секунду...', 'info');
+                    
+                    setTimeout(() => {
+                        addResult('🔄 Редирект выполнен', `Переход на страницу: /admin/agreements\nВ реальном приложении вы бы сейчас перешли на список договоренностей`, 'success');
+                        
+                        // В реальном приложении это был бы:
+                        // navigate('/admin/agreements');
+                        
+                        // Для демонстрации покажем ссылку
+                        const linkDiv = document.createElement('div');
+                        linkDiv.className = 'test-section info';
+                        linkDiv.innerHTML = `
+                            <h3>🔗 Демонстрация редиректа</h3>
+                            <p>В реальном приложении сейчас произошел бы автоматический переход на:</p>
+                            <p><a href="${FRONTEND_BASE}/admin/agreements" target="_blank">${FRONTEND_BASE}/admin/agreements</a></p>
+                            <button onclick="window.open('${FRONTEND_BASE}/admin/agreements', '_blank')">🌐 Открыть страницу договоренностей</button>
+                        `;
+                        document.getElementById('results').appendChild(linkDiv);
+                        
+                    }, 1000);
+                    
+                } else {
+                    addResult('❌ Ошибка обновления', JSON.stringify(result, null, 2), 'error');
+                }
+            } catch (error) {
+                addResult('❌ Сетевая ошибка', error.message, 'error');
+            }
+        }
+
+        function simulateRedirect() {
+            addResult('🔄 Симуляция редиректа', 'Демонстрация поведения navigate("/admin/agreements")', 'info');
+            
+            const steps = [
+                '1. Пользователь нажимает "Сохранить изменения"',
+                '2. Отправляется PATCH запрос к API',
+                '3. API возвращает успешный ответ (200 OK)',
+                '4. Показывается уведомление "Договоренность успешно обновлена"',
+                '5. Запускается setTimeout на 1000ms',
+                '6. Выполняется navigate("/admin/agreements")',
+                '7. Пользователь видит обновленный список договоренностей'
+            ];
+            
+            steps.forEach((step, index) => {
+                setTimeout(() => {
+                    addResult(`Шаг ${index + 1}`, step, index === steps.length - 1 ? 'success' : 'info');
+                }, index * 500);
+            });
+        }
+
+        function checkCurrentPage() {
+            const currentUrl = window.location.href;
+            const expectedPattern = '/admin/agreements';
+            
+            const pageInfo = {
+                currentUrl: currentUrl,
+                expectedRedirect: FRONTEND_BASE + expectedPattern,
+                isCorrectPage: currentUrl.includes(expectedPattern),
+                testPage: 'This is a test page, not the actual frontend'
+            };
+            
+            addResult('📍 Информация о странице', JSON.stringify(pageInfo, null, 2), 'info');
+        }
+
+        // Автоматически загружаем данные при загрузке страницы
+        window.addEventListener('load', () => {
+            addResult('🚀 Тест готов', 'Загрузите данные договоренности для начала тестирования', 'info');
+        });
+    </script>
+</body>
+</html>

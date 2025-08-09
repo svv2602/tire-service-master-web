@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест валидации дублирования исключений</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        button.danger { background-color: #dc3545; }
+        button.danger:hover { background-color: #c82333; }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            max-height: 300px;
+        }
+        .form-group {
+            margin: 10px 0;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 200px;
+            padding: 5px;
+            margin: 5px;
+        }
+        .scenario {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Тест валидации дублирования исключений</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Правила валидации</h3>
+            <ul>
+                <li><strong>Основное правило:</strong> В рамках одной договоренности не может быть дублирующих комбинаций бренд+диаметр</li>
+                <li><strong>Конфликты:</strong> "Все бренды" конфликтует с любыми конкретными брендами</li>
+                <li><strong>Конфликты:</strong> "Все диаметры" конфликтует с любыми конкретными диаметрами</li>
+                <li><strong>Игнорируются:</strong> Неактивные исключения не участвуют в проверке</li>
+                <li><strong>Исключение:</strong> При редактировании текущее исключение не сравнивается с самим собой</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Создание тестовых исключений</h3>
+            
+            <div class="form-group">
+                <label>Договоренность ID:</label>
+                <input type="number" id="agreement_id" value="2" min="1">
+            </div>
+            
+            <div class="form-group">
+                <label>Бренд шин (ID):</label>
+                <input type="number" id="tire_brand_id" placeholder="Оставить пустым для 'Все бренды'">
+            </div>
+            
+            <div class="form-group">
+                <label>Диаметр шин:</label>
+                <input type="text" id="tire_diameter" placeholder="Оставить пустым для 'Все диаметры'">
+            </div>
+            
+            <div class="form-group">
+                <label>Тип исключения:</label>
+                <select id="exception_type">
+                    <option value="fixed_amount">Фиксированная сумма</option>
+                    <option value="percentage">Процент</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Значение:</label>
+                <input type="number" id="exception_value" value="100" step="0.01">
+            </div>
+            
+            <button onclick="createException()">➕ Создать исключение</button>
+            <button onclick="getExistingExceptions()">📋 Получить существующие</button>
+            <button onclick="runValidationScenarios()">🧪 Тестовые сценарии</button>
+            <button onclick="clearResults()" class="danger">🧹 Очистить результаты</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+
+        function addResult(title, content, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-section ${type}`;
+            div.innerHTML = `<h3>${title}</h3><pre>${content}</pre>`;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function createException() {
+            const agreementId = document.getElementById('agreement_id').value;
+            const tireBrandId = document.getElementById('tire_brand_id').value || null;
+            const tireDiameter = document.getElementById('tire_diameter').value || null;
+            const exceptionType = document.getElementById('exception_type').value;
+            const exceptionValue = parseFloat(document.getElementById('exception_value').value);
+
+            const requestBody = {
+                exception: {
+                    tire_brand_id: tireBrandId ? parseInt(tireBrandId) : null,
+                    tire_diameter: tireDiameter,
+                    exception_type: exceptionType,
+                    application_scope: 'per_order',
+                    priority: 1,
+                    active: true,
+                    description: `Тест: ${tireBrandId || 'Все бренды'} + ${tireDiameter || 'Все диаметры'}`
+                }
+            };
+
+            // Добавляем значение в зависимости от типа
+            if (exceptionType === 'fixed_amount') {
+                requestBody.exception.exception_amount = exceptionValue;
+            } else {
+                requestBody.exception.exception_percentage = exceptionValue;
+            }
+
+            try {
+                addResult('🚀 Создание исключения', JSON.stringify(requestBody, null, 2), 'info');
+
+                const response = await fetch(`${API_BASE}/agreements/${agreementId}/exceptions`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    addResult('✅ Исключение создано успешно', JSON.stringify(result, null, 2), 'success');
+                } else {
+                    const errorMessage = result.errors ? result.errors.join(', ') : JSON.stringify(result);
+                    if (response.status === 422 && result.errors) {
+                        addResult('🚫 Валидация сработала (ожидаемо)', `Ошибки валидации:\n${errorMessage}`, 'warning');
+                    } else {
+                        addResult('❌ Ошибка создания', errorMessage, 'error');
+                    }
+                }
+            } catch (error) {
+                addResult('❌ Сетевая ошибка', error.message, 'error');
+            }
+        }
+
+        async function getExistingExceptions() {
+            const agreementId = document.getElementById('agreement_id').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/agreements/${agreementId}/exceptions`, {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const exceptions = result.data;
+                    let summary = `Всего исключений: ${exceptions.length}\n\n`;
+                    
+                    exceptions.forEach((exception, index) => {
+                        const brandText = exception.tire_brand_id ? `Бренд ID: ${exception.tire_brand_id}` : 'Все бренды';
+                        const diameterText = exception.tire_diameter ? `R${exception.tire_diameter}` : 'Все диаметры';
+                        const typeText = exception.exception_type === 'fixed_amount' ? 'Фикс.' : 'Проц.';
+                        const valueText = exception.exception_type === 'fixed_amount' 
+                            ? `${exception.exception_amount} грн` 
+                            : `${exception.exception_percentage}%`;
+                        const statusText = exception.active ? '✅ Активно' : '❌ Неактивно';
+                        
+                        summary += `#${exception.id}: ${brandText} + ${diameterText} | ${typeText} ${valueText} | ${statusText}\n`;
+                    });
+                    
+                    addResult('📋 Существующие исключения', summary, 'info');
+                } else {
+                    addResult('❌ Ошибка получения исключений', JSON.stringify(result, null, 2), 'error');
+                }
+            } catch (error) {
+                addResult('❌ Сетевая ошибка', error.message, 'error');
+            }
+        }
+
+        async function runValidationScenarios() {
+            const agreementId = document.getElementById('agreement_id').value;
+            
+            addResult('🧪 Запуск тестовых сценариев', 'Тестируем различные комбинации для валидации дублирования...', 'info');
+
+            // Сценарий 1: Создаем базовое исключение "Все бренды + Все диаметры"
+            await testScenario('Все бренды + Все диаметры', agreementId, null, null, 'fixed_amount', 50);
+            
+            // Сценарий 2: Пытаемся создать конкретный бренд (должно быть заблокировано)
+            await testScenario('Конкретный бренд + Все диаметры (конфликт)', agreementId, 1, null, 'fixed_amount', 60);
+            
+            // Сценарий 3: Пытаемся создать конкретный диаметр (должно быть заблокировано)
+            await testScenario('Все бренды + Конкретный диаметр (конфликт)', agreementId, null, '15', 'fixed_amount', 70);
+            
+            // Сценарий 4: Деактивируем первое исключение
+            await deactivateFirstException(agreementId);
+            
+            // Сценарий 5: Теперь создание должно пройти
+            await testScenario('Конкретный бренд после деактивации (должно пройти)', agreementId, 1, '16', 'percentage', 5);
+        }
+
+        async function testScenario(description, agreementId, brandId, diameter, type, value) {
+            const requestBody = {
+                exception: {
+                    tire_brand_id: brandId,
+                    tire_diameter: diameter,
+                    exception_type: type,
+                    application_scope: 'per_order',
+                    priority: 1,
+                    active: true,
+                    description: `Тест: ${description}`
+                }
+            };
+
+            if (type === 'fixed_amount') {
+                requestBody.exception.exception_amount = value;
+            } else {
+                requestBody.exception.exception_percentage = value;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/agreements/${agreementId}/exceptions`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    addResult(`✅ ${description}`, `Исключение создано: ID ${result.data.id}`, 'success');
+                } else {
+                    if (result.errors && result.errors.length > 0) {
+                        const hasUniqueError = result.errors.some(error => 
+                            error.includes('уже используется') || error.includes('конфликтует')
+                        );
+                        if (hasUniqueError) {
+                            addResult(`🚫 ${description}`, `Валидация сработала: ${result.errors.join(', ')}`, 'warning');
+                        } else {
+                            addResult(`❌ ${description}`, `Другая ошибка: ${result.errors.join(', ')}`, 'error');
+                        }
+                    } else {
+                        addResult(`❌ ${description}`, JSON.stringify(result, null, 2), 'error');
+                    }
+                }
+            } catch (error) {
+                addResult(`❌ ${description}`, `Сетевая ошибка: ${error.message}`, 'error');
+            }
+
+            // Пауза между запросами
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        async function deactivateFirstException(agreementId) {
+            try {
+                // Получаем список исключений
+                const response = await fetch(`${API_BASE}/agreements/${agreementId}/exceptions`, {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+                
+                if (result.data && result.data.length > 0) {
+                    const firstException = result.data[0];
+                    
+                    // Деактивируем первое исключение
+                    const updateResponse = await fetch(`${API_BASE}/agreements/${agreementId}/exceptions/${firstException.id}`, {
+                        method: 'PATCH',
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            exception: {
+                                active: false
+                            }
+                        })
+                    });
+                    
+                    if (updateResponse.ok) {
+                        addResult('🔄 Деактивация исключения', `Исключение #${firstException.id} деактивировано`, 'info');
+                    }
+                }
+            } catch (error) {
+                addResult('❌ Ошибка деактивации', error.message, 'error');
+            }
+        }
+
+        // Автоматически загружаем существующие исключения
+        window.addEventListener('load', () => {
+            setTimeout(getExistingExceptions, 500);
+        });
+    </script>
+</body>
+</html>

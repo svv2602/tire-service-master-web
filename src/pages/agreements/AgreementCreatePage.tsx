@@ -30,8 +30,8 @@ import * as yup from 'yup';
 import { getTablePageStyles } from '../../styles/tablePageStyles';
 import Notification from '../../components/Notification';
 import { 
-  useCreateAgreementMutation, 
-  useGetAgreementPartnersQuery,
+  useCreateAgreementMutation,
+  useGetActiveAgreementPartnersQuery,
   useGetAgreementSuppliersQuery,
   Agreement,
   AgreementException 
@@ -83,7 +83,7 @@ const AgreementCreatePage: React.FC = () => {
 
   // API hooks
   const [createAgreement, { isLoading: isCreating }] = useCreateAgreementMutation();
-  const { data: partnersResponse, isLoading: partnersLoading } = useGetAgreementPartnersQuery();
+  const { data: partnersResponse, isLoading: partnersLoading } = useGetActiveAgreementPartnersQuery();
   const { data: suppliersResponse, isLoading: suppliersLoading } = useGetAgreementSuppliersQuery();
   
   const partners = partnersResponse?.data || [];
@@ -131,9 +131,53 @@ const AgreementCreatePage: React.FC = () => {
           navigate('/admin/agreements');
         }, 2000);
       } catch (error: any) {
+        console.error('Ошибка при создании договоренности:', error);
+        
+        let errorMessage = 'Ошибка при создании договоренности';
+        
+        if (error?.data) {
+          if (error.data.errors && Array.isArray(error.data.errors)) {
+            // Если есть массив ошибок валидации
+            errorMessage = `Ошибки валидации:\n${error.data.errors.join('\n')}`;
+          } else if (error.data.message) {
+            // Если есть конкретное сообщение
+            errorMessage = error.data.message;
+          } else if (error.data.error) {
+            // Альтернативный формат ошибки
+            errorMessage = error.data.error;
+          } else if (typeof error.data === 'string') {
+            // Если ошибка в виде строки
+            errorMessage = error.data;
+          }
+        } else if (error?.message) {
+          // Сетевые или другие ошибки
+          errorMessage = `Сетевая ошибка: ${error.message}`;
+        } else if (error?.status) {
+          // HTTP статус коды
+          switch (error.status) {
+            case 400:
+              errorMessage = 'Некорректные данные. Проверьте заполнение полей';
+              break;
+            case 401:
+              errorMessage = 'Ошибка авторизации. Пожалуйста, войдите в систему заново';
+              break;
+            case 403:
+              errorMessage = 'Недостаточно прав для выполнения операции';
+              break;
+            case 422:
+              errorMessage = 'Ошибка валидации данных. Проверьте правильность заполнения полей';
+              break;
+            case 500:
+              errorMessage = 'Внутренняя ошибка сервера. Обратитесь к администратору';
+              break;
+            default:
+              errorMessage = `HTTP ошибка ${error.status}: ${error.statusText || 'Неизвестная ошибка'}`;
+          }
+        }
+
         setNotification({
           open: true,
-          message: error?.data?.message || 'Ошибка при создании договоренности',
+          message: errorMessage,
           severity: 'error',
         });
       }
