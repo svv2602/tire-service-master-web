@@ -74,6 +74,7 @@ import {
   Block as BlockIcon,
   ShoppingCart as ShoppingCartIcon,
   Assignment,
+  LocalAtm,
   Analytics as DiagnosticsIcon,
   Public as CountryIcon,
   Circle as TireBrandIcon,
@@ -314,6 +315,20 @@ const MainLayout: React.FC = () => {
             path: '/admin/partner-applications',
             roles: [UserRole.ADMIN, UserRole.MANAGER],
             description: t('navigation.descriptions.partnerApplications'),
+          },
+          {
+            text: t('navigation.partnerRewards'),
+            icon: <LocalAtm />,
+            path: '/admin/partner-rewards',
+            roles: [UserRole.ADMIN, UserRole.PARTNER],
+            description: t('navigation.descriptions.partnerRewards'),
+          },
+          {
+            text: 'Договоренности',
+            icon: <Assignment />,
+            path: '/admin/agreements',
+            roles: [UserRole.ADMIN, UserRole.MANAGER],
+            description: 'Управление договоренностями партнеров с поставщиками',
           },
           {
             text: t('navigation.suppliers'),

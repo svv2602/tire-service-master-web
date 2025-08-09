@@ -101,6 +101,14 @@ const UserSuspensionsPage = lazy(() => import('./pages/users/UserSuspensionsPage
 const OperatorsPage = lazy(() => import('./pages/operators/OperatorsPage'));
 const UserForm = lazy(() => import('./pages/users/UserForm'));
 
+// Ленивая загрузка страниц системы вознаграждений партнеров
+const PartnerRewardsDashboard = lazy(() => import('./pages/partner-rewards/PartnerRewardsDashboard'));
+
+// Ленивая загрузка страницы управления договоренностями
+const AgreementsPage = lazy(() => import('./pages/agreements/AgreementsPage'));
+const AgreementCreatePage = lazy(() => import('./pages/agreements/AgreementCreatePage'));
+const AgreementEditPage = lazy(() => import('./pages/agreements/AgreementEditPage'));
+
 // Ленивая загрузка страниц аудита
 const AuditLogsPage = lazy(() => import('./pages/audit-logs/AuditLogsPage'));
 const SuspiciousActivityPage = lazy(() => import('./pages/audit-logs/SuspiciousActivityPage'));
@@ -329,8 +337,16 @@ const App: React.FC = () => {
                         {/* Управление заявками партнеров */}
                         <Route path="partner-applications" element={<PartnerApplicationsPage />} />
                         
-                        {/* Управление поставщиками */}
-                        <Route path="suppliers" element={<SuppliersPage />} />
+                                        {/* Система вознаграждений партнеров */}
+                <Route path="partner-rewards" element={<PartnerRewardsDashboard />} />
+                
+                {/* Управление договоренностями */}
+                                  <Route path="agreements" element={<AgreementsPage />} />
+                  <Route path="agreements/new" element={<AgreementCreatePage />} />
+                  <Route path="agreements/:id/edit" element={<AgreementEditPage />} />
+                
+                {/* Управление поставщиками */}
+                <Route path="suppliers" element={<SuppliersPage />} />
                         <Route path="suppliers/:id" element={<SupplierDetailsPage />} />
                         <Route path="suppliers/:id/upload" element={<SupplierUploadPage />} />
                         
