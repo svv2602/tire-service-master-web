@@ -1,0 +1,132 @@
+version: '3.8'
+
+services:
+  # 🚀 PRODUCTION React Frontend с nginx
+  web-prod:
+    build:
+      context: ./tire-service-master-web
+      dockerfile: Dockerfile.prod
+    container_name: tire_service_web_prod
+    restart: unless-stopped
+    ports:
+      - "3008:80"
+    environment:
+      # Production окружение
+      NODE_ENV: production
+    volumes:
+      # Персистентное хранение для статических файлов
+      - web_build_prod:/usr/share/nginx/html
+    networks:
+      - tire_service_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Ruby on Rails API Backend (без изменений)
+  api:
+    build:
+      context: ./tire-service-master-api
+      dockerfile: Dockerfile
+    container_name: tire_service_api_prod
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Production переменные
+      RAILS_ENV: production
+      RAILS_LOG_TO_STDOUT: "true"
+      
+      # База данных PostgreSQL
+      DATABASE_URL: "postgresql://tire_service_user:tire_service_password@postgres:5432/tire_service_production"
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: tire_service_production
+      DB_USER: tire_service_user
+      DB_PASSWORD: tire_service_password
+      
+      # Redis
+      REDIS_URL: "redis://redis:6379/0"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      
+      # Секретные ключи (ПОМЕНЯЙТЕ НА ПРОДАКШЕНЕ!)
+      SECRET_KEY_BASE: "CHANGE_THIS_IN_PRODUCTION_TO_SECURE_VALUE"
+      JWT_SECRET: "CHANGE_THIS_IN_PRODUCTION_TO_SECURE_VALUE"
+      
+      # CORS настройки для production
+      ALLOWED_ORIGINS: "https://service-station.tot.biz.ua,http://service-station.tot.biz.ua"
+      
+      # Production настройки
+      RAILS_SERVE_STATIC_FILES: "true"
+      RAILS_LOG_LEVEL: "info"
+      
+      # Active Storage настройки
+      API_HOST: "service-station.tot.biz.ua"
+      API_PORT: "8000"
+    volumes:
+      - ./tire-service-master-api:/app
+      - api_bundle_prod:/usr/local/bundle
+      - api_storage_prod:/app/storage
+    working_dir: /app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - tire_service_network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:17-alpine
+    container_name: tire_service_postgres_prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tire_service_production
+      POSTGRES_USER: tire_service_user
+      POSTGRES_PASSWORD: tire_service_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tire_service_user -d tire_service_production"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - tire_service_network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: tire_service_redis_prod
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_prod:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - tire_service_network
+
+volumes:
+  web_build_prod:
+  api_bundle_prod:
+  api_storage_prod:
+  postgres_data_prod:
+  redis_data_prod:
+
+networks:
+  tire_service_network:
+    driver: bridge
