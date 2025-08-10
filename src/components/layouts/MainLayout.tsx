@@ -391,6 +391,13 @@ const MainLayout: React.FC = () => {
             description: t('navigation.descriptions.partnerRewards'),
           },
           {
+            text: 'Все вознаграждения',
+            icon: <LocalAtm />,
+            path: '/admin/admin-rewards',
+            roles: [UserRole.ADMIN],
+            description: 'Администрирование всех вознаграждений партнеров',
+          },
+          {
             text: 'Договоренности',
             icon: <Assignment />,
             path: '/admin/agreements',

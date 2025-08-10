@@ -103,6 +103,7 @@ const UserForm = lazy(() => import('./pages/users/UserForm'));
 
 // Ленивая загрузка страниц системы вознаграждений партнеров
 const PartnerRewardsDashboard = lazy(() => import('./pages/partner-rewards/PartnerRewardsDashboard'));
+const AdminPartnerRewardsPage = lazy(() => import('./pages/admin/AdminPartnerRewardsPage'));
 
 // Ленивая загрузка страницы управления договоренностями
 const AgreementsPage = lazy(() => import('./pages/agreements/AgreementsPage'));
@@ -339,6 +340,9 @@ const App: React.FC = () => {
                         
                                         {/* Система вознаграждений партнеров */}
                 <Route path="partner-rewards" element={<PartnerRewardsDashboard />} />
+                
+                        {/* Админская страница вознаграждений (для всех партнеров) */}
+                <Route path="admin-rewards" element={<AdminPartnerRewardsPage />} />
                 
                 {/* Управление договоренностями */}
                                   <Route path="agreements" element={<AgreementsPage />} />

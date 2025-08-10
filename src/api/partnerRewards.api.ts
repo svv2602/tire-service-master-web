@@ -39,6 +39,50 @@ export interface RewardRule {
   updated_at: string;
 }
 
+export interface PartnerInfo {
+  id: number;
+  company_name: string;
+  contact_person: string;
+  phone: string;
+  email: string;
+}
+
+export interface SupplierInfo {
+  id: number;
+  name: string;
+  firm_id: string;
+  is_active: boolean;
+}
+
+export interface OrderDetails {
+  type: 'tire_order' | 'order';
+  id: number;
+  status?: string;
+  status_display?: string;
+  total_amount: number;
+  items_count?: number;
+  total_quantity?: number;
+  client_name?: string;
+  customer_name?: string;
+  client_phone?: string;
+  customer_phone?: string;
+  created_at?: string;
+  updated_at?: string;
+  order_date?: string;
+  service_point_name?: string;
+  ttn?: string;
+}
+
+export interface RuleInfo {
+  id: number;
+  rule_type: string;
+  rule_type_display: string;
+  amount: number;
+  amount_display: string;
+  conditions_description: string;
+  priority: number;
+}
+
 export interface PartnerReward {
   id: number;
   partner_id: number;
@@ -66,6 +110,17 @@ export interface PartnerReward {
   is_cancelled: boolean;
   created_at: string;
   updated_at: string;
+  
+  // Новые поля с детальной информацией
+  partner_info?: PartnerInfo;
+  supplier_info?: SupplierInfo;
+  order_details?: OrderDetails;
+  rule_info?: RuleInfo;
+  ui_color_scheme?: {
+    primary: string;
+    secondary: string;
+    text: string;
+  };
 }
 
 export interface Supplier {
@@ -90,8 +145,10 @@ export interface RewardStatistics {
   total_paid: number;
   total_cancelled: number;
   current_month: number;
-  total_agreements: number;
-  active_suppliers: number;
+  total_agreements?: number;
+  active_suppliers?: number;
+  total_partners?: number;
+  total_suppliers?: number;
 }
 
 export interface RewardPreview {
