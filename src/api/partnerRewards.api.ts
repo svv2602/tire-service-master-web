@@ -328,11 +328,38 @@ export const partnerRewardsApi = baseApi.injectEndpoints({
         url: 'partner_rewards',
         params,
       }),
+      transformResponse: (response: any) => {
+        // Трансформируем JSONAPI формат в простые объекты
+        if (response.partner_rewards?.data) {
+          const transformedData = response.partner_rewards.data.map((item: any) => ({
+            id: item.id,
+            ...item.attributes
+          }));
+          
+          return {
+            ...response,
+            partner_rewards: { data: transformedData }
+          };
+        }
+        return response;
+      },
       providesTags: ['PartnerReward'],
     }),
 
     getReward: builder.query<{ data: PartnerReward }, number>({
       query: (id) => `partner_rewards/${id}`,
+      transformResponse: (response: any) => {
+        // Трансформируем JSONAPI формат в простой объект
+        if (response.data?.attributes) {
+          return {
+            data: {
+              id: response.data.id,
+              ...response.data.attributes
+            }
+          };
+        }
+        return response;
+      },
       providesTags: (result, error, id) => [{ type: 'PartnerReward', id }],
     }),
 
