@@ -833,33 +833,48 @@ const SupplierDetailsPage: React.FC = () => {
                     }}
                   >
 {`{
-  "products": [
-    {
-      "external_id": "00000056036",
-      "category_id": "1",
-      "brand": "Altenzo",
-      "model": "Sports Navigator", 
-      "name": "ALTENZO Sports Navigator (275/60R20 115V)",
-      "width": 275,
-      "height": 60,
-      "diameter": "20",
-      "load_index": "115",
-      "speed_index": "V",
-      "season": "summer",
-      "tire_type": "Летние шины",
-      "purpose": "легковые",
-      "construction": "радиальная",
-      "price_uah": "4008.0",
-      "stock_status": "В наявності",
-      "in_stock": true,
-      "description": "Описание товара",
-      "image_url": "https://example.com/image.jpg",
-      "product_url": "https://example.com/product.html",
-      "country": "Китай",
-      "year_week": "2022",
-      "condition": "0"
-    }
-  ]
+  "price": {
+    "date": "2025-08-01 22:00",
+    "firmName": "Название поставщика",
+    "firmId": "23951",
+    "categories": [
+      {
+        "id": "1",
+        "name": "Автошины"
+      },
+      {
+        "id": "2", 
+        "name": "Колісні диски"
+      }
+    ],
+    "products": [
+      {
+        "external_id": "00000056036",
+        "category_id": "1",
+        "brand": "Altenzo",
+        "model": "Sports Navigator", 
+        "name": "ALTENZO Sports Navigator (275/60R20 115V)",
+        "width": 275,
+        "height": 60,
+        "diameter": "20",
+        "load_index": "115",
+        "speed_index": "V",
+        "season": "summer",
+        "tire_type": "Летние шины",
+        "purpose": "легковые",
+        "construction": "радиальная",
+        "price_uah": "4008.0",
+        "stock_status": "В наявності",
+        "in_stock": true,
+        "description": "Описание товара",
+        "image_url": "https://example.com/image.jpg",
+        "product_url": "https://example.com/product.html",
+        "country": "Китай",
+        "year_week": "2022",
+        "condition": "0"
+      }
+    ]
+  }
 }`}
                   </Box>
                 </Box>
@@ -928,7 +943,32 @@ const SupplierDetailsPage: React.FC = () => {
               </Typography>
               <Box component="ul" sx={{ pl: 2 }}>
                 {fileFormatTab === 0 ? (
-                  // JSON поля
+                  // JSON корневые поля
+                  <>
+                    <li><strong>price.date</strong> - дата и время создания прайс-листа</li>
+                    <li><strong>price.firmName</strong> - название компании поставщика</li>
+                    <li><strong>price.firmId</strong> - ID поставщика</li>
+                    <li><strong>price.categories[]</strong> - массив категорий товаров</li>
+                    <li><strong>price.products[]</strong> - массив товаров</li>
+                  </>
+                ) : (
+                  // XML корневые элементы
+                  <>
+                    <li><strong>price/date</strong> - дата и время создания прайс-листа</li>
+                    <li><strong>price/firmName</strong> - название компании поставщика</li>
+                    <li><strong>price/firmId</strong> - ID поставщика</li>
+                    <li><strong>price/categories/category</strong> - категории товаров</li>
+                    <li><strong>price/items/item</strong> - товары</li>
+                  </>
+                )}
+              </Box>
+
+              <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                {fileFormatTab === 0 ? 'Поля товара (JSON)' : 'Элементы товара (XML)'}
+              </Typography>
+              <Box component="ul" sx={{ pl: 2 }}>
+                {fileFormatTab === 0 ? (
+                  // JSON поля товара
                   <>
                     <li><strong>external_id</strong> - уникальный ID товара в системе поставщика</li>
                     <li><strong>category_id</strong> - ID категории товара</li>
@@ -959,7 +999,26 @@ const SupplierDetailsPage: React.FC = () => {
               </Box>
 
               <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-                {fileFormatTab === 0 ? 'Дополнительные поля (JSON)' : 'Дополнительные элементы (XML)'}
+                {fileFormatTab === 0 ? 'Поля категории (JSON)' : 'Элементы категории (XML)'}
+              </Typography>
+              <Box component="ul" sx={{ pl: 2 }}>
+                {fileFormatTab === 0 ? (
+                  // JSON поля категории
+                  <>
+                    <li><strong>id</strong> - уникальный ID категории</li>
+                    <li><strong>name</strong> - название категории</li>
+                  </>
+                ) : (
+                  // XML элементы категории
+                  <>
+                    <li><strong>category/id</strong> - уникальный ID категории</li>
+                    <li><strong>category/name</strong> - название категории</li>
+                  </>
+                )}
+              </Box>
+
+              <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                {fileFormatTab === 0 ? 'Дополнительные поля товара (JSON)' : 'Дополнительные элементы товара (XML)'}
               </Typography>
               <Box component="ul" sx={{ pl: 2 }}>
                 {fileFormatTab === 0 ? (
