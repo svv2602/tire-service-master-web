@@ -584,7 +584,18 @@ const SupplierDetailsPage: React.FC = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {products.map((product: SupplierProduct) => (
+                    {products.length === 0 && !isLoadingProducts ? (
+                      <TableRow>
+                        <TableCell colSpan={11} align="center" sx={{ py: 4 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            У данного поставщика нет товаров
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                            Товары появятся после загрузки прайс-листа поставщика
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ) : products.map((product: SupplierProduct) => (
                       <TableRow key={product.id}>
                         {/* Фото */}
                         <TableCell>
@@ -691,7 +702,7 @@ const SupplierDetailsPage: React.FC = () => {
                         {/* Страна */}
                         <TableCell>
                           <Typography variant="body2">
-                            {product.country || '—'}
+                            {product.country?.name || '—'}
                           </Typography>
                         </TableCell>
                         

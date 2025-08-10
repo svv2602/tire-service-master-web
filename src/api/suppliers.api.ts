@@ -49,6 +49,18 @@ export interface SupplierPriceVersion {
   status: 'processing' | 'completed' | 'failed';
 }
 
+export interface Country {
+  id: number;
+  name: string;
+  normalized_name: string;
+  iso_code: string;
+  rating_score: number;
+  aliases: string[];
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface SupplierProduct {
   id: number;
   external_id: string;
@@ -69,7 +81,7 @@ export interface SupplierProduct {
   description: string | null;
   image_url: string | null;
   product_url: string | null;
-  country: string | null;
+  country: Country | null;
   year_week: string | null;
   updated_at: string;
   supplier?: {
