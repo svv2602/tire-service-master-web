@@ -99,6 +99,7 @@ const SupplierDetailsPage: React.FC = () => {
   const [sortBy, setSortBy] = useState('default');
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<{ url: string; alt: string } | null>(null);
+  const [fileFormatTab, setFileFormatTab] = useState(0);
   
   // Состояние диалога редактирования
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -477,7 +478,7 @@ const SupplierDetailsPage: React.FC = () => {
 
           {/* Вкладка товаров */}
           <TabPanel value={currentTab} index={0}>
-            <Box>
+            <Box sx={tablePageStyles.pageContainer}>
               {/* Фильтры товаров */}
               <Box sx={{ mb: 2 }}>
                 {/* Первая строка фильтров */}
@@ -771,7 +772,7 @@ const SupplierDetailsPage: React.FC = () => {
 
           {/* Вкладка API ключа */}
           <TabPanel value={currentTab} index={1}>
-            <Box>
+            <Box sx={tablePageStyles.pageContainer}>
               <Typography variant="h6" gutterBottom>
                 API ключ для загрузки прайсов
               </Typography>
@@ -794,15 +795,212 @@ const SupplierDetailsPage: React.FC = () => {
                 }}
                 sx={{ mb: 2 }}
               />
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 Endpoint для загрузки: POST /api/v1/suppliers/upload_price
               </Typography>
+
+              {/* Шаблон структуры файла */}
+              <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                Структура файла для загрузки
+              </Typography>
+              <Alert severity="warning" sx={{ mb: 2 }}>
+                Поддерживаются форматы JSON и XML. Выберите подходящий формат из вкладок ниже.
+              </Alert>
+
+              <Tabs value={fileFormatTab} onChange={(e, newValue) => setFileFormatTab(newValue)} sx={{ mb: 2 }}>
+                <Tab label="JSON формат" />
+                <Tab label="XML формат" />
+              </Tabs>
+
+              {/* JSON формат */}
+              {fileFormatTab === 0 && (
+                <Box>
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    JSON файл должен содержать массив товаров с указанными полями
+                  </Alert>
+                  <Box 
+                    component="pre" 
+                    sx={{ 
+                      backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.900' : 'grey.100',
+                      color: (theme) => theme.palette.mode === 'dark' ? 'grey.100' : 'grey.900',
+                      p: 2,
+                      borderRadius: 1,
+                      overflow: 'auto',
+                      fontSize: '0.875rem',
+                      fontFamily: 'monospace',
+                      border: '1px solid',
+                      borderColor: (theme) => theme.palette.mode === 'dark' ? 'grey.700' : 'grey.300'
+                    }}
+                  >
+{`{
+  "products": [
+    {
+      "external_id": "00000056036",
+      "category_id": "1",
+      "brand": "Altenzo",
+      "model": "Sports Navigator", 
+      "name": "ALTENZO Sports Navigator (275/60R20 115V)",
+      "width": 275,
+      "height": 60,
+      "diameter": "20",
+      "load_index": "115",
+      "speed_index": "V",
+      "season": "summer",
+      "tire_type": "Летние шины",
+      "purpose": "легковые",
+      "construction": "радиальная",
+      "price_uah": "4008.0",
+      "stock_status": "В наявності",
+      "in_stock": true,
+      "description": "Описание товара",
+      "image_url": "https://example.com/image.jpg",
+      "product_url": "https://example.com/product.html",
+      "country": "Китай",
+      "year_week": "2022",
+      "condition": "0"
+    }
+  ]
+}`}
+                  </Box>
+                </Box>
+              )}
+
+              {/* XML формат */}
+              {fileFormatTab === 1 && (
+                <Box>
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    XML файл должен соответствовать структуре ниже
+                  </Alert>
+                  <Box 
+                    component="pre" 
+                    sx={{ 
+                      backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.900' : 'grey.100',
+                      color: (theme) => theme.palette.mode === 'dark' ? 'grey.100' : 'grey.900',
+                      p: 2,
+                      borderRadius: 1,
+                      overflow: 'auto',
+                      fontSize: '0.875rem',
+                      fontFamily: 'monospace',
+                      border: '1px solid',
+                      borderColor: (theme) => theme.palette.mode === 'dark' ? 'grey.700' : 'grey.300'
+                    }}
+                  >
+{`<?xml version="1.0" encoding="UTF-8"?>
+<price>
+  <date>2025-08-01 22:00</date>
+  <firmName>Название поставщика</firmName>
+  <firmId>23951</firmId>
+  <categories>
+    <category>
+      <id>1</id>
+      <name>Автошины</name>
+    </category>
+  </categories>
+  <items>
+    <item>
+      <id>00000056036</id>
+      <categoryId>1</categoryId>
+      <vendor>Altenzo</vendor>
+      <name>ALTENZO Sports Navigator (275/60R20 115V)</name>
+      <description>Описание товара</description>
+      <url>https://example.com/product.html</url>
+      <image>https://example.com/image.jpg</image>
+      <priceRUAH>4008</priceRUAH>
+      <stock>В наявності</stock>
+      <param name="Тип">Літні шини</param>
+      <param name="Ширина профілю шини, мм">275</param>
+      <param name="Висота профілю шини, %">60</param>
+      <param name="Внутрішній діаметр покришки, дюйми">20</param>
+      <param name="Вантажопідйомність, кг">115</param>
+      <param name="Швидкість максимальна, км/г">V</param>
+      <param name="Країна виготовлення">Китай</param>
+      <param name="Рік виготовлення">2022</param>
+      <condition>0</condition>
+    </item>
+  </items>
+</price>`}
+                  </Box>
+                </Box>
+              )}
+
+              <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                {fileFormatTab === 0 ? 'Обязательные поля (JSON)' : 'Обязательные элементы (XML)'}
+              </Typography>
+              <Box component="ul" sx={{ pl: 2 }}>
+                {fileFormatTab === 0 ? (
+                  // JSON поля
+                  <>
+                    <li><strong>external_id</strong> - уникальный ID товара в системе поставщика</li>
+                    <li><strong>category_id</strong> - ID категории товара</li>
+                    <li><strong>brand</strong> - бренд шины</li>
+                    <li><strong>model</strong> - модель шины</li>
+                    <li><strong>name</strong> - полное название товара</li>
+                    <li><strong>width</strong> - ширина шины (число)</li>
+                    <li><strong>height</strong> - высота профиля (число)</li>
+                    <li><strong>diameter</strong> - диаметр диска (строка)</li>
+                    <li><strong>season</strong> - сезон: "summer", "winter", "all_season"</li>
+                    <li><strong>in_stock</strong> - наличие товара (true/false)</li>
+                  </>
+                ) : (
+                  // XML элементы
+                  <>
+                    <li><strong>id</strong> - уникальный ID товара в системе поставщика</li>
+                    <li><strong>categoryId</strong> - ID категории товара</li>
+                    <li><strong>vendor</strong> - бренд шины</li>
+                    <li><strong>name</strong> - полное название товара</li>
+                    <li><strong>priceRUAH</strong> - цена в гривнах</li>
+                    <li><strong>stock</strong> - статус наличия</li>
+                    <li><strong>param "Ширина профілю шини, мм"</strong> - ширина шины</li>
+                    <li><strong>param "Висота профілю шини, %"</strong> - высота профиля</li>
+                    <li><strong>param "Внутрішній діаметр покришки, дюйми"</strong> - диаметр</li>
+                    <li><strong>condition</strong> - состояние товара (0 - новый)</li>
+                  </>
+                )}
+              </Box>
+
+              <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                {fileFormatTab === 0 ? 'Дополнительные поля (JSON)' : 'Дополнительные элементы (XML)'}
+              </Typography>
+              <Box component="ul" sx={{ pl: 2 }}>
+                {fileFormatTab === 0 ? (
+                  // JSON дополнительные поля
+                  <>
+                    <li><strong>tire_type</strong> - тип шин (Летние шины, Зимние шины, и т.д.)</li>
+                    <li><strong>purpose</strong> - назначение (легковые, грузовые, и т.д.)</li>
+                    <li><strong>construction</strong> - конструкция шины (радиальная, диагональная)</li>
+                    <li><strong>load_index</strong> - индекс нагрузки</li>
+                    <li><strong>speed_index</strong> - скоростной индекс</li>
+                    <li><strong>price_uah</strong> - цена в гривнах</li>
+                    <li><strong>stock_status</strong> - статус наличия (текст)</li>
+                    <li><strong>description</strong> - описание товара</li>
+                    <li><strong>condition</strong> - состояние товара (0 - новый)</li>
+                    <li><strong>image_url</strong> - ссылка на изображение</li>
+                    <li><strong>product_url</strong> - ссылка на товар</li>
+                    <li><strong>country</strong> - страна производства</li>
+                    <li><strong>year_week</strong> - год/неделя производства</li>
+                  </>
+                ) : (
+                  // XML дополнительные элементы
+                  <>
+                    <li><strong>description</strong> - описание товара</li>
+                    <li><strong>url</strong> - ссылка на товар</li>
+                    <li><strong>image</strong> - ссылка на изображение</li>
+                    <li><strong>param "Тип"</strong> - тип шины (Зимові шини, Літні шини, и т.д.)</li>
+                    <li><strong>param "Призначення"</strong> - назначение (легкові, грузові, и т.д.)</li>
+                    <li><strong>param "Конструкція шини"</strong> - конструкция шины (радіальна, діагональна)</li>
+                    <li><strong>param "Вантажопідйомність, кг"</strong> - индекс нагрузки</li>
+                    <li><strong>param "Швидкість максимальна, км/г"</strong> - скоростной индекс</li>
+                    <li><strong>param "Країна виготовлення"</strong> - страна производства</li>
+                    <li><strong>param "Рік виготовлення"</strong> - год/неделя производства</li>
+                  </>
+                )}
+              </Box>
             </Box>
           </TabPanel>
 
           {/* Вкладка истории прайсов */}
           <TabPanel value={currentTab} index={2}>
-            <Box>
+            <Box sx={tablePageStyles.pageContainer}>
               <Box display="flex" justify-content="between" alignItems="center" mb={2}>
                 <Typography variant="h6">
                   История загрузок прайсов
