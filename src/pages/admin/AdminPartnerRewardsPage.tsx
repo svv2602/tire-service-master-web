@@ -198,12 +198,8 @@ const AdminPartnerRewardsPage: React.FC = () => {
   };
 
   const getOrderTypeLabel = (reward: PartnerReward) => {
-    if (reward.tire_order_id) {
-      return 'Заказ из корзины';
-    } else if (reward.order_id) {
-      return 'Заказ выдачи';
-    }
-    return 'Неизвестно';
+    // Используем готовое поле order_type из API
+    return reward.order_type || 'Неизвестно';
   };
 
   if (error) {
@@ -423,16 +419,16 @@ const AdminPartnerRewardsPage: React.FC = () => {
                         <TableCell>
                           <Box>
                             <Typography variant="body2" fontWeight="bold">
-                              {reward.partner_info?.company_name || `Партнер #${reward.partner_id}`}
+                              {reward.partner_info?.company_name || `Партнер #${reward.partner_id || 'undefined'}`}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
-                              {reward.partner_info?.contact_person || `ID: ${reward.partner_id}`}
+                              {reward.partner_info?.contact_person ? `ID: ${reward.partner_info.id}` : `ID: ${reward.partner_id || 'undefined'}`}
                             </Typography>
                           </Box>
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2">
-                            {reward.supplier_info?.name || `Поставщик #${reward.supplier_id}`}
+                            {reward.supplier_info?.name || `Поставщик #${reward.supplier_id || 'undefined'}`}
                           </Typography>
                         </TableCell>
                         <TableCell>
@@ -452,7 +448,7 @@ const AdminPartnerRewardsPage: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2" fontWeight="bold">
-                            {reward.calculated_amount?.toLocaleString()} грн
+                            {reward.formatted_amount || `${reward.calculated_amount || 0} грн`}
                           </Typography>
                         </TableCell>
                         <TableCell>
@@ -464,10 +460,7 @@ const AdminPartnerRewardsPage: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2">
-                            {reward.calculated_at ? 
-                              new Date(reward.calculated_at).toLocaleDateString('uk-UA') : 
-                              'Неизвестно'
-                            }
+                            {reward.formatted_calculated_at || 'Неизвестно'}
                           </Typography>
                         </TableCell>
                         <TableCell>
