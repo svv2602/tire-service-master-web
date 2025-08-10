@@ -41,7 +41,25 @@ import {
 const validationSchema = yup.object({
   partner_id: yup.number().required('Партнер обязателен для выбора'),
   supplier_id: yup.number().required('Поставщик обязателен для выбора'),
-  start_date: yup.string().required('Дата начала обязательна'),
+  start_date: yup.string()
+    .required('Дата начала обязательна')
+    .test('valid-date', 'Некорректная дата начала', function(value) {
+      if (!value) return false;
+      const date = new Date(value);
+      return !isNaN(date.getTime());
+    }),
+  end_date: yup.string()
+    .nullable()
+    .test('valid-date', 'Некорректная дата окончания', function(value) {
+      if (!value) return true; // Дата окончания опциональна
+      const date = new Date(value);
+      return !isNaN(date.getTime());
+    })
+    .test('end-after-start', 'Дата окончания должна быть после даты начала', function(value) {
+      const { start_date } = this.parent;
+      if (!value || !start_date) return true;
+      return new Date(value) > new Date(start_date);
+    }),
   commission_type: yup.string().required('Тип комиссии обязателен'),
   order_types: yup.string().required('Тип заказов обязателен'),
   commission_amount: yup.number().when('commission_type', {
@@ -136,24 +154,30 @@ const AgreementCreatePage: React.FC = () => {
         let errorMessage = 'Ошибка при создании договоренности';
         
         if (error?.data) {
-          if (error.data.errors && Array.isArray(error.data.errors)) {
-            // Если есть массив ошибок валидации
-            errorMessage = `Ошибки валидации:\n${error.data.errors.join('\n')}`;
+          // Обработка ошибок валидации Rails
+          if (error.data.errors) {
+            if (Array.isArray(error.data.errors)) {
+              // Массив ошибок
+              errorMessage = error.data.errors.join('\n');
+            } else if (typeof error.data.errors === 'object') {
+              // Объект ошибок валидации Rails {field: [errors]}
+              const errorLines = Object.entries(error.data.errors)
+                .map(([field, fieldErrors]: [string, any]) => {
+                  const errorsArray = Array.isArray(fieldErrors) ? fieldErrors : [fieldErrors];
+                  return `${field}: ${errorsArray.join(', ')}`;
+                });
+              errorMessage = errorLines.join('\n');
+            }
           } else if (error.data.message) {
-            // Если есть конкретное сообщение
             errorMessage = error.data.message;
           } else if (error.data.error) {
-            // Альтернативный формат ошибки
             errorMessage = error.data.error;
           } else if (typeof error.data === 'string') {
-            // Если ошибка в виде строки
             errorMessage = error.data;
           }
         } else if (error?.message) {
-          // Сетевые или другие ошибки
           errorMessage = `Сетевая ошибка: ${error.message}`;
         } else if (error?.status) {
-          // HTTP статус коды
           switch (error.status) {
             case 400:
               errorMessage = 'Некорректные данные. Проверьте заполнение полей';
@@ -165,7 +189,9 @@ const AgreementCreatePage: React.FC = () => {
               errorMessage = 'Недостаточно прав для выполнения операции';
               break;
             case 422:
-              errorMessage = 'Ошибка валидации данных. Проверьте правильность заполнения полей';
+              if (!error.data) {
+                errorMessage = 'Уже существует активная договоренность для выбранной комбинации партнера, поставщика и типа заказов. Проверьте существующие договоренности или измените параметры.';
+              }
               break;
             case 500:
               errorMessage = 'Внутренняя ошибка сервера. Обратитесь к администратору';
@@ -280,7 +306,13 @@ const AgreementCreatePage: React.FC = () => {
         <DatePicker
           label="Дата начала *"
           value={formik.values.start_date ? new Date(formik.values.start_date) : null}
-          onChange={(date) => formik.setFieldValue('start_date', date ? date.toISOString().split('T')[0] : '')}
+          onChange={(date) => {
+            if (date && !isNaN(date.getTime())) {
+              formik.setFieldValue('start_date', date.toISOString().split('T')[0]);
+            } else {
+              formik.setFieldValue('start_date', '');
+            }
+          }}
           slotProps={{
             textField: {
               fullWidth: true,
@@ -295,10 +327,18 @@ const AgreementCreatePage: React.FC = () => {
         <DatePicker
           label="Дата окончания"
           value={formik.values.end_date ? new Date(formik.values.end_date) : null}
-          onChange={(date) => formik.setFieldValue('end_date', date ? date.toISOString().split('T')[0] : '')}
+          onChange={(date) => {
+            if (date && !isNaN(date.getTime())) {
+              formik.setFieldValue('end_date', date.toISOString().split('T')[0]);
+            } else {
+              formik.setFieldValue('end_date', '');
+            }
+          }}
           slotProps={{
             textField: {
               fullWidth: true,
+              error: formik.touched.end_date && Boolean(formik.errors.end_date),
+              helperText: formik.touched.end_date && formik.errors.end_date,
             },
           }}
         />
