@@ -804,12 +804,13 @@ const SupplierDetailsPage: React.FC = () => {
                 Структура файла для загрузки
               </Typography>
               <Alert severity="warning" sx={{ mb: 2 }}>
-                Поддерживаются форматы JSON и XML. Выберите подходящий формат из вкладок ниже.
+                Поддерживаются форматы прайс-листов (JSON/XML) и заказов (JSON). Выберите подходящий формат из вкладок ниже.
               </Alert>
 
               <Tabs value={fileFormatTab} onChange={(e, newValue) => setFileFormatTab(newValue)} sx={{ mb: 2 }}>
-                <Tab label="JSON формат" />
-                <Tab label="XML формат" />
+                <Tab label="Прайс-лист JSON" />
+                <Tab label="Прайс-лист XML" />
+                <Tab label="Заказы JSON" />
               </Tabs>
 
               {/* JSON формат */}
@@ -938,9 +939,12 @@ const SupplierDetailsPage: React.FC = () => {
                 </Box>
               )}
 
-              <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-                {fileFormatTab === 0 ? 'Обязательные поля (JSON)' : 'Обязательные элементы (XML)'}
-              </Typography>
+              {/* Документация полей только для прайс-листов (не для заказов) */}
+              {fileFormatTab < 2 && (
+                <>
+                  <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                    {fileFormatTab === 0 ? 'Обязательные поля (JSON)' : 'Обязательные элементы (XML)'}
+                  </Typography>
               <Box component="ul" sx={{ pl: 2 }}>
                 {fileFormatTab === 0 ? (
                   // JSON корневые поля
@@ -1054,6 +1058,125 @@ const SupplierDetailsPage: React.FC = () => {
                   </>
                 )}
               </Box>
+                </>
+              )}
+
+              {/* Заказы JSON формат */}
+              {fileFormatTab === 2 && (
+                <Box>
+                  <Alert severity="success" sx={{ mb: 2 }}>
+                    JSON файл должен содержать массив заказов для точек выдачи
+                  </Alert>
+                  <Box 
+                    component="pre" 
+                    sx={{ 
+                      backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.900' : 'grey.100',
+                      color: (theme) => theme.palette.mode === 'dark' ? 'grey.100' : 'grey.900',
+                      p: 2,
+                      borderRadius: 1,
+                      overflow: 'auto',
+                      fontSize: '0.875rem',
+                      fontFamily: 'monospace',
+                      border: '1px solid',
+                      borderColor: (theme) => theme.palette.mode === 'dark' ? 'grey.700' : 'grey.300'
+                    }}
+                  >
+{`{
+  "orders": {
+    "date": "2025-08-01 22:00",
+    "firmName": "Название поставщика",
+    "firmId": "23951",
+    "data": [
+      {
+        "status": "Прийнято",
+        "date": "29.05.2025 13:27:43",
+        "ttn": "20400458972773",
+        "number": "ORD-001",
+        "phone": "380667324633",
+        "klient": "Палій Андрій Андрій",
+        "status_kod": "000000001",
+        "bas_id": "ТО00-000170",
+        "separate": 1,
+        "ttn_status": "",
+        "ttn_status_kod": "",
+        "point": "Киев шиномонтаж Вася",
+        "point_id": "000000035",
+        "third_party_point": "Да",
+        "goods": [
+          {
+            "artikul": "00000047875",
+            "quantity": 4,
+            "price": 1872,
+            "sum": 7488,
+            "bas_id": "ТО00-000170",
+            "image_url": "https://example.com/image.jpg"
+          }
+        ]
+      }
+    ]
+  }
+}`}
+                  </Box>
+
+                  <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                    Корневые поля файла заказов (JSON)
+                  </Typography>
+                  <Box component="ul" sx={{ pl: 2 }}>
+                    <li><strong>orders.date</strong> - дата и время создания файла заказов</li>
+                    <li><strong>orders.firmName</strong> - название компании поставщика</li>
+                    <li><strong>orders.firmId</strong> - ID поставщика</li>
+                    <li><strong>orders.data[]</strong> - массив заказов</li>
+                  </Box>
+
+                  <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                    Обязательные поля заказа
+                  </Typography>
+                  <Box component="ul" sx={{ pl: 2 }}>
+                    <li><strong>status</strong> - статус заказа (Прийнято, Обробляється, Відправлено)</li>
+                    <li><strong>date</strong> - дата и время создания заказа</li>
+                    <li><strong>ttn</strong> - номер транспортной накладной</li>
+                    <li><strong>phone</strong> - телефон клиента</li>
+                    <li><strong>klient</strong> - ФИО клиента</li>
+                    <li><strong>point</strong> - название точки выдачи</li>
+                    <li><strong>point_id</strong> - ID точки выдачи</li>
+                    <li><strong>goods[]</strong> - массив товаров в заказе</li>
+                  </Box>
+
+                  <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                    Поля товара в заказе
+                  </Typography>
+                  <Box component="ul" sx={{ pl: 2 }}>
+                    <li><strong>artikul</strong> - артикул товара</li>
+                    <li><strong>quantity</strong> - количество товара</li>
+                    <li><strong>price</strong> - цена за единицу</li>
+                    <li><strong>sum</strong> - общая сумма за товар</li>
+                  </Box>
+
+                  <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                    Дополнительные поля заказа
+                  </Typography>
+                  <Box component="ul" sx={{ pl: 2 }}>
+                    <li><strong>number</strong> - номер заказа в системе поставщика</li>
+                    <li><strong>status_kod</strong> - код статуса заказа</li>
+                    <li><strong>bas_id</strong> - ID в бухгалтерской системе</li>
+                    <li><strong>separate</strong> - разделение заказа (0/1)</li>
+                    <li><strong>ttn_status</strong> - статус ТТН</li>
+                    <li><strong>ttn_status_kod</strong> - код статуса ТТН</li>
+                    <li><strong>third_party_point</strong> - сторонняя точка выдачи (Да/Нет)</li>
+                  </Box>
+
+                  <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                    Дополнительные поля товара
+                  </Typography>
+                  <Box component="ul" sx={{ pl: 2 }}>
+                    <li><strong>bas_id</strong> - ID товара в бухгалтерской системе</li>
+                    <li><strong>name</strong> - название товара (опционально)</li>
+                    <li><strong>brand</strong> - бренд товара (опционально)</li>
+                    <li><strong>model</strong> - модель товара (опционально)</li>
+                    <li><strong>image_url</strong> - ссылка на изображение товара (опционально)</li>
+                  </Box>
+                </Box>
+              )}
             </Box>
           </TabPanel>
 
