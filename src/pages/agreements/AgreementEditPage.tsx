@@ -39,11 +39,29 @@ import {
   AgreementException 
 } from '../../api/agreements.api';
 
-// Схема валидации (такая же как в создании)
+// Схема валидации (улучшенная версия как в создании)
 const validationSchema = yup.object({
   partner_id: yup.number().required('Партнер обязателен для выбора'),
   supplier_id: yup.number().required('Поставщик обязателен для выбора'),
-  start_date: yup.string().required('Дата начала обязательна'),
+  start_date: yup.string()
+    .required('Дата начала обязательна')
+    .test('valid-date', 'Некорректная дата начала', function(value) {
+      if (!value) return false;
+      const date = new Date(value);
+      return !isNaN(date.getTime());
+    }),
+  end_date: yup.string()
+    .nullable()
+    .test('valid-date', 'Некорректная дата окончания', function(value) {
+      if (!value) return true; // Дата окончания опциональна
+      const date = new Date(value);
+      return !isNaN(date.getTime());
+    })
+    .test('end-after-start', 'Дата окончания должна быть после даты начала', function(value) {
+      const { start_date } = this.parent;
+      if (!value || !start_date) return true;
+      return new Date(value) > new Date(start_date);
+    }),
   commission_type: yup.string().required('Тип комиссии обязателен'),
   order_types: yup.string().required('Тип заказов обязателен'),
   commission_amount: yup.number().when('commission_type', {
@@ -311,7 +329,13 @@ const AgreementEditPage: React.FC = () => {
         <DatePicker
           label="Дата начала *"
           value={formik.values.start_date ? new Date(formik.values.start_date) : null}
-          onChange={(date) => formik.setFieldValue('start_date', date ? date.toISOString().split('T')[0] : '')}
+          onChange={(date) => {
+            if (date && !isNaN(date.getTime())) {
+              formik.setFieldValue('start_date', date.toISOString().split('T')[0]);
+            } else {
+              formik.setFieldValue('start_date', '');
+            }
+          }}
           slotProps={{
             textField: {
               fullWidth: true,
@@ -326,10 +350,18 @@ const AgreementEditPage: React.FC = () => {
         <DatePicker
           label="Дата окончания"
           value={formik.values.end_date ? new Date(formik.values.end_date) : null}
-          onChange={(date) => formik.setFieldValue('end_date', date ? date.toISOString().split('T')[0] : '')}
+          onChange={(date) => {
+            if (date && !isNaN(date.getTime())) {
+              formik.setFieldValue('end_date', date.toISOString().split('T')[0]);
+            } else {
+              formik.setFieldValue('end_date', '');
+            }
+          }}
           slotProps={{
             textField: {
               fullWidth: true,
+              error: formik.touched.end_date && Boolean(formik.errors.end_date),
+              helperText: formik.touched.end_date && formik.errors.end_date,
             },
           }}
         />
