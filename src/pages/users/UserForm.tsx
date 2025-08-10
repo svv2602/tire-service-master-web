@@ -505,8 +505,8 @@ const UserForm: React.FC = () => {
                 >
                   <MenuItem value={1}>{t('forms.user.roles.admin')}</MenuItem>
                   <MenuItem value={2}>{t('forms.user.roles.manager')}</MenuItem>
-                  <MenuItem value={3}>{t('forms.user.roles.partner')}</MenuItem>
-                  <MenuItem value={4}>{t('forms.user.roles.operator')}</MenuItem>
+                  <MenuItem value={3}>{t('forms.user.roles.operator')}</MenuItem>
+                  <MenuItem value={4}>{t('forms.user.roles.partner')}</MenuItem>
                   <MenuItem value={5}>{t('forms.user.roles.client')}</MenuItem>
                 </Select>
                 {(formik.touched.role_id || showValidationErrors) && formik.errors.role_id && (
