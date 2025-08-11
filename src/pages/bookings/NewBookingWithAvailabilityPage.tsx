@@ -55,6 +55,7 @@ import { useGetMyClientCarsQuery } from '../../api/clients.api';
 
 // Импорт утилит
 import { shouldOfferToAddCar, prepareCarDataForDialog } from '../../utils/carUtils';
+import { useScrollToTop } from '../../hooks/useScrollToTop';
 
 // Импорт стилей
 import { getCardStyles } from '../../styles/components';
@@ -105,6 +106,14 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   
   // Определяем тип пользователя для фильтрации слотов
   const isServiceUser = currentUser && ['admin', 'partner', 'manager', 'operator'].includes(currentUser.role);
+  
+  // Хук для автоматической прокрутки к верху при переходах между шагами
+  const scrollToTop = useScrollToTop({
+    behavior: 'smooth',
+    delay: 100,
+    mobileOnly: true,
+    mobileBreakpoint: 768
+  });
   
   // Состояние формы
   const [activeStep, setActiveStep] = useState(0);
@@ -295,12 +304,16 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
   const handleNext = () => {
     if (activeStep < STEPS.length - 1) {
       setActiveStep(prev => prev + 1);
+      // Автоматическая прокрутка к верху при переходе на следующий шаг
+      scrollToTop();
     }
   };
   
   const handleBack = () => {
     if (activeStep > 0) {
       setActiveStep(prev => prev - 1);
+      // Автоматическая прокрутка к верху при возврате на предыдущий шаг
+      scrollToTop();
     }
   };
   
@@ -308,6 +321,8 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
     // Разрешаем переход только на предыдущие шаги или следующий шаг
     if (stepIndex <= activeStep + 1 && stepIndex >= 0) {
       setActiveStep(stepIndex);
+      // Автоматическая прокрутка к верху при клике на степпер
+      scrollToTop();
     }
   };
   

@@ -11,6 +11,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
 import { logoutUser } from '../../store/slices/authSlice';
+import { useScrollToTopOnRouteChange } from '../../hooks/useScrollToTop';
 import { UserRole } from '../../types';
 import {
   Article as ArticleIcon,
@@ -42,6 +43,14 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const isAdmin = user?.role === UserRole.ADMIN || user?.role === UserRole.MANAGER;
   const { t } = useTranslation();
+
+  // Автоматическая прокрутка к верху при переходах между страницами (только на мобильных)
+  useScrollToTopOnRouteChange({
+    behavior: 'smooth',
+    delay: 100,
+    mobileOnly: true,
+    mobileBreakpoint: 768
+  });
 
   const profileActions = getProfileActions({
     user,

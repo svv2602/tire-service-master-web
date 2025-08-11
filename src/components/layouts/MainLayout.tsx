@@ -84,6 +84,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { AppDispatch } from '../../store';
+import { useScrollToTopOnRouteChange } from '../../hooks/useScrollToTop';
 import { getCurrentUser, logoutUser } from '../../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
 import { UserRole } from '../../types';
@@ -113,6 +114,14 @@ interface MenuItemType {
 
 const MainLayout: React.FC = () => {
   const { t } = useTranslation();
+  
+  // Автоматическая прокрутка к верху при переходах между страницами (только на мобильных)
+  useScrollToTopOnRouteChange({
+    behavior: 'smooth',
+    delay: 100,
+    mobileOnly: true,
+    mobileBreakpoint: 768
+  });
   // Хуки для централизованной системы стилей - обеспечивают консистентность дизайна
   const theme = useTheme();
   const navigationStyles = getNavigationStyles(theme); // Стили для навигационных элементов
