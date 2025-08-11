@@ -132,7 +132,7 @@ const TireDataManagement: React.FC = () => {
   // Опции импорта
   const [importOptions, setImportOptions] = useState({
     skip_invalid_rows: false,
-    fix_suspicious_sizes: false,
+    fix_suspicious_sizes: true, // Включаем по умолчанию - исправляет критические ошибки типа height=0
     encoding_fallback: 'utf-8'
   });
   
@@ -690,7 +690,7 @@ const TireDataManagement: React.FC = () => {
                                 <Card>
                                   <CardContent>
                                     <Typography variant="subtitle2" gutterBottom>
-                                      Обработка размеров шин
+                                      Обработка размеров шин ⚙️
                                     </Typography>
                                     <FormControlLabel
                                       control={
@@ -700,18 +700,28 @@ const TireDataManagement: React.FC = () => {
                                             ...prev,
                                             fix_suspicious_sizes: e.target.checked
                                           }))}
+                                          color="success"
                                         />
                                       }
-                                      label="Исправлять размеры шин"
+                                      label={
+                                        <Box>
+                                          <Typography variant="body2">
+                                            Исправлять размеры шин 
+                                            <Chip label="Рекомендуется" color="success" size="small" sx={{ ml: 1 }} />
+                                          </Typography>
+                                        </Box>
+                                      }
                                     />
-                                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-                                      Автоматическое исправление проблем в размерах:
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary" display="block" sx={{ fontSize: '0.7rem' }}>
-                                      • 165/0R13 → 165/80R13 (нулевая высота → 80%)<br/>
-                                      • 28/9R15 → сохраняется (американские дюймовые)<br/>
-                                      • Экстремальные значения нормализуются
-                                    </Typography>
+                                    <Alert severity="info" sx={{ mt: 1, mb: 1 }}>
+                                      <Typography variant="caption">
+                                        <strong>Критические ошибки исправляются автоматически:</strong><br/>
+                                        • height=0 → height=80 (всегда)<br/>
+                                        • Отрицательные значения → разумные минимумы<br/><br/>
+                                        <strong>Дополнительные исправления (при включенной опции):</strong><br/>
+                                        • Американские дюймовые размеры нормализуются<br/>
+                                        • Экстремальные значения приводятся к стандартным
+                                      </Typography>
+                                    </Alert>
                                   </CardContent>
                                 </Card>
                               </Grid>
