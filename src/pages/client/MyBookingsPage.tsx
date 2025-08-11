@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Box, Paper, Tabs, Tab, CircularProgress, Alert, useTheme, Button } from '@mui/material';
+import { Container, Typography, Box, Paper, Tabs, Tab, CircularProgress, Alert, useTheme, Button, useMediaQuery } from '@mui/material';
 import { useGetBookingsByClientQuery } from '../../api/bookings.api';
 import { useGetCurrentUserQuery } from '../../api/auth.api';
 import { useGetClientMeQuery } from '../../api/clientAuth.api';
@@ -70,6 +70,9 @@ const MyBookingsPage: React.FC = () => {
   const primaryButtonStyles = getButtonStyles(theme, 'primary');
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Определяем мобильное устройство для адаптивных табов
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   const currentUser = useSelector(selectCurrentUser);
   const { isAuthenticated, isInitialized, loading } = useSelector((state: RootState) => state.auth);
@@ -307,19 +310,58 @@ const MyBookingsPage: React.FC = () => {
             </Button>
           </Box>
           
-          {/* Вкладки статусов */}
+          {/* Вкладки статусов - адаптивные для мобильных */}
           <Paper sx={{ mb: 3 }}>
             <Tabs 
               value={tabValue} 
               onChange={handleTabChange}
               indicatorColor="primary"
               textColor="primary"
-              variant="fullWidth"
+              variant={isMobile ? "scrollable" : "fullWidth"}
+              scrollButtons={isMobile ? "auto" : false}
+              allowScrollButtonsMobile={isMobile}
+              sx={{
+                // Улучшенные стили для мобильных табов
+                '& .MuiTab-root': {
+                  minWidth: isMobile ? 80 : 'auto',
+                  fontSize: isMobile ? '0.8rem' : '0.875rem',
+                  fontWeight: 500,
+                  textTransform: 'none',
+                  px: isMobile ? 1 : 2,
+                },
+                // Стиль для прокрутки табов на мобильных
+                '& .MuiTabs-scrollButtons': {
+                  color: theme.palette.primary.main,
+                  '&.Mui-disabled': {
+                    opacity: 0.3,
+                  },
+                },
+              }}
             >
-              <Tab label={t('forms.clientPages.myBookings.upcoming')} />
-              <Tab label={t('forms.clientPages.myBookings.confirmed')} />
-              <Tab label={t('forms.clientPages.myBookings.completed')} />
-              <Tab label={t('forms.clientPages.myBookings.cancelled')} />
+              <Tab 
+                label={isMobile 
+                  ? t('forms.clientPages.myBookings.upcomingShort') || 'Предст.' 
+                  : t('forms.clientPages.myBookings.upcoming')
+                } 
+              />
+              <Tab 
+                label={isMobile 
+                  ? t('forms.clientPages.myBookings.confirmedShort') || 'Подтв.' 
+                  : t('forms.clientPages.myBookings.confirmed')
+                } 
+              />
+              <Tab 
+                label={isMobile 
+                  ? t('forms.clientPages.myBookings.completedShort') || 'Завер.' 
+                  : t('forms.clientPages.myBookings.completed')
+                } 
+              />
+              <Tab 
+                label={isMobile 
+                  ? t('forms.clientPages.myBookings.cancelledShort') || 'Отмен.' 
+                  : t('forms.clientPages.myBookings.cancelled')
+                } 
+              />
             </Tabs>
           </Paper>
           
