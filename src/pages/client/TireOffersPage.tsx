@@ -26,7 +26,14 @@ import {
   Avatar,
   Dialog,
   DialogContent,
-  Container
+  Container,
+  Card,
+  CardContent,
+  CardActions,
+  CardMedia,
+  Grid,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -53,6 +60,9 @@ const TireOffersPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
 
   // Функция для получения локализованного названия сезона
   const getSeasonLabel = (season: string): string => {
@@ -437,26 +447,45 @@ const TireOffersPage: React.FC = () => {
   // Рендер заголовка страницы
   const renderHeader = () => (
     <Box sx={{ mb: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
-          <LocalOfferIcon sx={{ mr: 2, fontSize: 'inherit', verticalAlign: 'middle' }} />
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: isMobile ? 'flex-start' : 'center', 
+        justifyContent: 'space-between', 
+        mb: 1,
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? 2 : 0
+      }}>
+        <Typography variant={isMobile ? "h5" : "h4"} component="h1" sx={{ 
+          fontWeight: 700,
+          display: 'flex',
+          alignItems: 'center',
+          fontSize: isMobile ? '1.5rem' : '2.125rem'
+        }}>
+          <LocalOfferIcon sx={{ 
+            mr: isMobile ? 1 : 2, 
+            fontSize: isMobile ? '1.5rem' : 'inherit', 
+            verticalAlign: 'middle' 
+          }} />
           {t('forms.clientPages.tireOffers.title', 'Предложения шин')}
         </Typography>
         
-        {/* Кнопка чата в правом верхнем углу */}
+        {/* Кнопка чата - адаптивная для мобильных */}
         <Button
           variant="contained"
-          startIcon={<ChatIcon />}
+          startIcon={!isMobile && <ChatIcon />}
           onClick={() => setChatOpen(true)}
+          size={isMobile ? "small" : "medium"}
           sx={{
             bgcolor: '#4CAF50',
             color: 'white',
             borderRadius: 2,
-            px: 3,
-            py: 1,
+            px: isMobile ? 2 : 3,
+            py: isMobile ? 0.5 : 1,
             fontWeight: 600,
             textTransform: 'none',
+            fontSize: isMobile ? '0.875rem' : '1rem',
             boxShadow: '0 4px 8px rgba(76, 175, 80, 0.3)',
+            alignSelf: isMobile ? 'flex-start' : 'auto',
             '&:hover': {
               bgcolor: '#45A049',
               boxShadow: '0 6px 12px rgba(76, 175, 80, 0.4)',
@@ -465,7 +494,8 @@ const TireOffersPage: React.FC = () => {
             transition: 'all 0.2s ease'
           }}
         >
-          {t('tireChat.button', 'Онлайн-консультант')}
+          {isMobile && <ChatIcon sx={{ mr: 1, fontSize: '1rem' }} />}
+          {isMobile ? t('tireChat.buttonShort', 'Консультант') : t('tireChat.button', 'Онлайн-консультант')}
         </Button>
       </Box>
       
@@ -613,67 +643,211 @@ const TireOffersPage: React.FC = () => {
 
   // Рендер фильтров
   const renderFilters = () => (
-    <Paper sx={{ p: 2, mb: 3 }}>
-      {/* Основная строка фильтров */}
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center" sx={{ mb: 2 }}>
+    <Paper sx={{ p: isMobile ? 1.5 : 2, mb: 3 }}>
+      {/* Основная строка фильтров - адаптивная */}
+      <Stack direction="column" spacing={2} sx={{ mb: 2 }}>
+        {/* Поисковая строка на всю ширину */}
         <TextField
           placeholder={t('forms.clientPages.tireOffers.search.placeholder', 'Поиск шин по размеру, бренду, модели...')}
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
           size="small"
-          sx={{ flexGrow: 1, minWidth: 400 }}
+          fullWidth
           InputProps={{
             startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
           }}
-                      helperText={t('forms.clientPages.tireOffers.filters.searchHelper', 'Используйте пробелы или слеши (/) для поиска по нескольким словам')}
+          helperText={!isMobile ? t('forms.clientPages.tireOffers.filters.searchHelper', 'Используйте пробелы или слеши (/) для поиска по нескольким словам') : null}
         />
         
-        <FormControlLabel
-          control={
-            <Switch
-              checked={inStockOnly}
-              onChange={(e) => setInStockOnly(e.target.checked)}
-            />
-          }
-          label={t('forms.clientPages.tireOffers.filters.inStock', 'Только в наличии')}
-        />
-        
-        <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel>{t('forms.clientPages.tireOffers.filters.sortBy', 'Сортировка')}</InputLabel>
-          <Select
-            value={sortBy}
-            label={t('forms.clientPages.tireOffers.filters.sortBy', 'Сортировка')}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <MenuItem value="price_asc">{t('forms.clientPages.tireOffers.sorting.price_asc', 'Цена: по возрастанию')}</MenuItem>
-            <MenuItem value="price_desc">{t('forms.clientPages.tireOffers.sorting.price_desc', 'Цена: по убыванию')}</MenuItem>
-            <MenuItem value="updated_at">{t('forms.clientPages.tireOffers.sorting.updated_at', 'По дате обновления')}</MenuItem>
-            <MenuItem value="supplier_name">{t('forms.clientPages.tireOffers.sorting.supplier_name', 'По поставщику')}</MenuItem>
-          </Select>
-        </FormControl>
-        
-        <Button
-          variant="outlined"
-          onClick={() => {
-            setSearch('');
-            setPage(1);
-          }}
-          size="small"
-          disabled={!search.trim()}
+        {/* Вторая строка с переключателями и сортировкой */}
+        <Stack 
+          direction={isMobile ? 'column' : 'row'} 
+          spacing={2} 
+          alignItems={isMobile ? 'stretch' : 'center'}
         >
-          {t('forms.clientPages.tireOffers.chips.removeFilter', 'Очистить')}
-        </Button>
-        
-        <Tooltip title={t('forms.clientPages.tireOffers.search.loading', 'Обновить данные')}>
-          <IconButton onClick={handleRefresh} color="primary">
-            <RefreshIcon />
-          </IconButton>
-        </Tooltip>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={inStockOnly}
+                onChange={(e) => setInStockOnly(e.target.checked)}
+                size={isMobile ? "small" : "medium"}
+              />
+            }
+            label={t('forms.clientPages.tireOffers.filters.inStock', 'Только в наличии')}
+            sx={{ 
+              alignSelf: isMobile ? 'flex-start' : 'auto',
+              fontSize: isMobile ? '0.875rem' : '1rem'
+            }}
+          />
+          
+          <FormControl size="small" sx={{ minWidth: isMobile ? '100%' : 160 }}>
+            <InputLabel>{t('forms.clientPages.tireOffers.filters.sortBy', 'Сортировка')}</InputLabel>
+            <Select
+              value={sortBy}
+              label={t('forms.clientPages.tireOffers.filters.sortBy', 'Сортировка')}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <MenuItem value="price_asc">{t('forms.clientPages.tireOffers.sorting.price_asc', 'Цена: по возрастанию')}</MenuItem>
+              <MenuItem value="price_desc">{t('forms.clientPages.tireOffers.sorting.price_desc', 'Цена: по убыванию')}</MenuItem>
+              <MenuItem value="updated_at">{t('forms.clientPages.tireOffers.sorting.updated_at', 'По дате обновления')}</MenuItem>
+              <MenuItem value="supplier_name">{t('forms.clientPages.tireOffers.sorting.supplier_name', 'По поставщику')}</MenuItem>
+            </Select>
+          </FormControl>
+          
+          {/* Кнопки управления */}
+          <Stack direction="row" spacing={1} sx={{ ml: isMobile ? 0 : 'auto' }}>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setSearch('');
+                setPage(1);
+              }}
+              size="small"
+              disabled={!search.trim()}
+            >
+              {t('forms.clientPages.tireOffers.chips.removeFilter', 'Очистить')}
+            </Button>
+            
+            <Tooltip title={t('forms.clientPages.tireOffers.search.loading', 'Обновить данные')}>
+              <IconButton onClick={handleRefresh} color="primary" size={isMobile ? "small" : "medium"}>
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
+          </Stack>
+        </Stack>
       </Stack>
 
       {/* Дополнительные фильтры скрыты - поиск улучшен в основной строке */}
     </Paper>
   );
+
+  // Рендер карточек для мобильных устройств
+  const renderOfferCards = () => {
+    if (!offersResponse?.data?.length) {
+      return (
+        <Alert severity="info" sx={{ mt: 2 }}>
+          <Typography>
+            {t('forms.clientPages.tireOffers.table.noResults', 'По заданным критериям предложения не найдены.')} 
+            {t('forms.clientPages.tireOffers.filters.tryChangeFilters', 'Попробуйте изменить фильтры или обратитесь к менеджеру.')}
+          </Typography>
+        </Alert>
+      );
+    }
+
+    return (
+      <Grid container spacing={2}>
+        {offersResponse.data.map((product: SupplierProduct) => (
+          <Grid item xs={12} sm={6} key={product.id}>
+            <Card 
+              sx={{ 
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                ...(highlightedTireId === product.id && {
+                  bgcolor: 'rgba(76, 175, 80, 0.1)',
+                  border: '2px solid #4CAF50',
+                  animation: 'pulse 2s infinite',
+                  '@keyframes pulse': {
+                    '0%': { boxShadow: '0 0 0 0 rgba(76, 175, 80, 0.4)' },
+                    '70%': { boxShadow: '0 0 0 10px rgba(76, 175, 80, 0)' },
+                    '100%': { boxShadow: '0 0 0 0 rgba(76, 175, 80, 0)' }
+                  }
+                })
+              }}
+            >
+              {/* Изображение товара */}
+              {product.image_url && (
+                <CardMedia
+                  component="img"
+                  height="160"
+                  image={product.image_url}
+                  alt={`${product.brand} ${product.model}`}
+                  sx={{ 
+                    objectFit: 'contain',
+                    cursor: 'pointer',
+                    bgcolor: 'grey.50'
+                  }}
+                  onClick={() => handleImageClick(product.image_url!, `${product.brand} ${product.model}`)}
+                />
+              )}
+              
+              <CardContent sx={{ flexGrow: 1, p: 2 }}>
+                {/* Поставщик */}
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <StoreIcon sx={{ fontSize: 16, color: 'text.secondary', mr: 0.5 }} />
+                  <Typography variant="caption" color="text.secondary">
+                    {product.supplier?.name || 'Поставщик не указан'}
+                  </Typography>
+                </Box>
+                
+                {/* Название товара */}
+                <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 600, mb: 1 }}>
+                  {product.brand} {product.model}
+                </Typography>
+                
+                {/* Размер */}
+                <Typography variant="body2" sx={{ mb: 1 }}>
+                  <strong>{t('forms.clientPages.tireOffers.table.size', 'Размер')}:</strong> {product.width}/{product.height} R{product.diameter}
+                </Typography>
+                
+                {/* Сезон */}
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <CategoryIcon sx={{ fontSize: 16, color: 'text.secondary', mr: 0.5 }} />
+                  <Chip 
+                    label={getSeasonLabel(product.season)}
+                    size="small"
+                    variant="outlined"
+                    color={product.season === 'winter' ? 'info' : product.season === 'summer' ? 'warning' : 'default'}
+                  />
+                </Box>
+                
+                {/* Цена */}
+                <Typography variant="h6" color="primary" sx={{ fontWeight: 700, mb: 1 }}>
+                  {product.price_uah ? `${product.price_uah} грн` : t('forms.clientPages.tireOffers.table.priceOnRequest', 'Цена по запросу')}
+                </Typography>
+                
+                {/* Наличие */}
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <Chip 
+                    label={
+                      product.in_stock 
+                        ? `${t('forms.clientPages.tireOffers.table.inStock', 'В наличии')}`
+                        : t('forms.clientPages.tireOffers.table.outOfStock', 'Нет в наличии')
+                    }
+                    color={product.in_stock ? 'success' : 'error'}
+                    size="small"
+                    variant="filled"
+                  />
+                </Box>
+                
+                {/* Дата обновления */}
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                  {t('forms.clientPages.tireOffers.tableHeaders.updated', 'Обновлено')}: {
+                    product.updated_at 
+                      ? new Date(product.updated_at).toLocaleDateString('ru-RU') 
+                      : t('forms.clientPages.tireOffers.table.noDate', 'Дата неизвестна')
+                  }
+                </Typography>
+              </CardContent>
+              
+              <CardActions sx={{ p: 2, pt: 0 }}>
+                <Button
+                  variant="contained"
+                  startIcon={<ShoppingCartIcon />}
+                  onClick={() => handleOrderClick(product)}
+                  disabled={!product.in_stock}
+                  fullWidth
+                  size="small"
+                >
+                  {t('forms.clientPages.tireOffers.table.order', 'Заказать')}
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    );
+  };
 
   // Рендер таблицы предложений
   const renderOffersTable = () => {
@@ -909,7 +1083,9 @@ const TireOffersPage: React.FC = () => {
           page={current_page}
           onChange={(newPage) => setPage(newPage)}
           color="primary"
-          size="large"
+          size={isMobile ? "medium" : "large"}
+          siblingCount={isMobile ? 0 : 1}
+          boundaryCount={isMobile ? 1 : 2}
         />
       </Box>
     );
@@ -929,7 +1105,8 @@ const TireOffersPage: React.FC = () => {
           </Alert>
         )}
         
-        {renderOffersTable()}
+        {/* Адаптивный рендер: карточки для мобильных, таблица для десктопа */}
+        {isMobile ? renderOfferCards() : renderOffersTable()}
         {renderPagination()}
       </Container>
 
