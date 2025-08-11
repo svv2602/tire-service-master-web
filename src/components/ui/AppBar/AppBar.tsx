@@ -51,6 +51,8 @@ export interface AppBarProps {
   profileActions?: AppBarAction[];
   /** Действия для меню уведомлений */
   notificationActions?: AppBarAction[];
+  /** Навигационные ссылки для мобильного меню */
+  navigationActions?: AppBarAction[];
   /** Количество непрочитанных уведомлений */
   notificationCount?: number;
   /** URL аватара пользователя */
@@ -81,6 +83,7 @@ export const AppBar: React.FC<AppBarProps> = ({
   onTitleClick,
   profileActions = [],
   notificationActions = [],
+  navigationActions = [],
   notificationCount = 0,
   avatarUrl,
   username,
@@ -269,6 +272,32 @@ export const AppBar: React.FC<AppBarProps> = ({
         open={Boolean(mobileMenuAnchorEl)}
         onClose={handleMenuClose}
       >
+        {/* Навигационные ссылки (только на мобильных) */}
+        {navigationActions.length > 0 && (
+          <>
+            {navigationActions.map((action, index) => (
+              <MenuItem
+                key={index}
+                onClick={() => {
+                  handleMenuClose();
+                  action.onClick();
+                }}
+                disabled={action.disabled}
+              >
+                {action.icon && (
+                  <Box component="span" sx={{ mr: 2, display: 'flex', alignItems: 'center' }}>
+                    {React.createElement(action.icon, { fontSize: 'medium' })}
+                  </Box>
+                )}
+                {action.label}
+              </MenuItem>
+            ))}
+            {(notificationActions.length > 0 || profileActions.length > 0) && (
+              <Divider sx={{ my: 1 }} />
+            )}
+          </>
+        )}
+        
         {/* Уведомления */}
         {notificationActions.length > 0 && (
           <MenuItem onClick={handleNotificationsMenuOpen}>

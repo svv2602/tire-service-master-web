@@ -56,8 +56,9 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   });
 
   // Публичные ссылки для AppBar
+  // Навигационные ссылки для десктопа
   const publicLinks = (
-    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+    <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2, alignItems: 'center' }}>
       <Button
         color="inherit"
         component={Link}
@@ -115,6 +116,40 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
     </Box>
   );
 
+  // Навигационные действия для мобильного меню
+  const navigationActions = [
+    {
+      label: t('navigation.knowledgeBase'),
+      icon: ArticleIcon,
+      onClick: () => navigate('/knowledge-base')
+    },
+    {
+      label: t('navigation.services'),
+      icon: BuildIcon,
+      onClick: () => navigate('/client/services')
+    },
+    {
+      label: t('navigation.booking'),
+      icon: BookOnlineIcon,
+      onClick: () => navigate('/client/booking')
+    },
+    {
+      label: t('navigation.tireCalculator'),
+      icon: CalculateIcon,
+      onClick: () => navigate('/client/tire-calculator')
+    },
+    {
+      label: t('navigation.tireSearch'),
+      icon: SearchIcon,
+      onClick: () => navigate('/client/tire-search')
+    },
+    {
+      label: 'Предложения шин',
+      icon: LocalOfferIcon,
+      onClick: () => navigate('/client/tire-offers')
+    }
+  ];
+
   return (
     <Box sx={{ 
       minHeight: '100vh', 
@@ -134,6 +169,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
           </Box>
         }
         profileActions={profileActions}
+        navigationActions={navigationActions}
         username={user ? `${user.first_name} ${user.last_name}` : ''}
       />
       <Box 
