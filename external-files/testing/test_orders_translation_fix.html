@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест исправления переводов заказов</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1976d2;
+            text-align: center;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #1976d2;
+            padding-bottom: 10px;
+        }
+        .translation-key {
+            background: #f8f8f8;
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 4px solid #1976d2;
+            font-family: monospace;
+        }
+        .expected {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+        .current {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .fixed {
+            background: #e8f5e8;
+            border-left-color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Тест исправления переводов заказов</h1>
+    
+    <div class="test-section">
+        <h2>Проблема</h2>
+        <p>На странице <strong>/admin/store-orders</strong> отображались ключи переводов вместо текста:</p>
+        <div class="translation-key current">admin.orders.title</div>
+        <div class="translation-key current">admin.orders.searchPlaceholder</div>
+        <div class="translation-key current">admin.orders.columns.*</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Исправления</h2>
+        <p>Внесены следующие изменения в <code>OrdersPage.tsx</code>:</p>
+        
+        <div class="translation-key fixed">
+            <strong>1.</strong> Использование useTranslation() без namespace
+        </div>
+        
+        <div class="translation-key fixed">
+            <strong>2.</strong> Корректные ключи переводов:
+            <ul>
+                <li>t('admin.orders.title') → "Заказы интернет-магазинов"</li>
+                <li>t('admin.orders.columns.ttn') → "ТТН"</li>
+                <li>t('admin.orders.columns.status') → "Статус"</li>
+                <li>t('admin.orders.thirdParty') → "Сторонняя"</li>
+            </ul>
+        </div>
+        
+        <div class="translation-key fixed">
+            <strong>3.</strong> Общие ключи:
+            <ul>
+                <li>t('total') → "Всего"</li>
+                <li>t('notSpecified') → "Не указано"</li>
+                <li>t('units.pieces') → "шт."</li>
+                <li>t('common.cancel') → "Отменить"</li>
+                <li>t('common.confirm') → "Подтвердить"</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Ожидаемый результат</h2>
+        <div class="translation-key expected">
+            Заголовок: "Заказы интернет-магазинов"
+        </div>
+        <div class="translation-key expected">
+            Плейсхолдер поиска: "Поиск по ТТН, имени клиента или телефону..."
+        </div>
+        <div class="translation-key expected">
+            Колонки таблицы: "ТТН", "Статус", "Клиент", "Точка выдачи", etc.
+        </div>
+        <div class="translation-key expected">
+            Счетчик: "Всего: 20"
+        </div>
+    </div>
+
+    <div class="instructions">
+        <h2>Инструкции для проверки</h2>
+        <ol>
+            <li>Открыть страницу: <a href="http://localhost:3008/admin/store-orders" target="_blank">http://localhost:3008/admin/store-orders</a></li>
+            <li>Убедиться, что заголовок отображается как "Заказы интернет-магазинов"</li>
+            <li>Проверить, что все колонки таблицы имеют переводы на русском языке</li>
+            <li>Переключить язык на украинский и проверить переводы</li>
+            <li>Проверить функциональность фильтров и поиска</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>Структура переводов</h2>
+        <p>Переводы находятся в файлах:</p>
+        <ul>
+            <li><code>src/i18n/locales/ru.json</code> - русские переводы</li>
+            <li><code>src/i18n/locales/uk.json</code> - украинские переводы</li>
+        </ul>
+        <p>Секция orders находится в admin.orders.*</p>
+    </div>
+
+    <script>
+        console.log('🔧 Тест исправления переводов заказов загружен');
+        console.log('Проверьте страницу /admin/store-orders');
+    </script>
+</body>
+</html>
