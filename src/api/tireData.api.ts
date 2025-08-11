@@ -50,6 +50,7 @@ export interface ImportOptions {
   fix_suspicious_sizes?: boolean;
   encoding_fallback?: string;
   force_reload?: boolean;
+  clear_only?: boolean;
 }
 
 export interface ValidationError {

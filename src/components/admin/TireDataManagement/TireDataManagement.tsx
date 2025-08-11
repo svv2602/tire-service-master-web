@@ -250,7 +250,28 @@ const TireDataManagement: React.FC = () => {
     setSuccessMessage(null);
   };
 
+  // Функции управления версиями для главного компонента
+  const handleVersionRollback = async (version: string) => {
+    try {
+      await rollbackVersionMutation(version).unwrap();
+      alert(`✅ Успешно выполнен откат к версии ${version}`);
+      refetchStats();
+    } catch (error: any) {
+      console.error('Ошибка отката:', error);
+      alert(`❌ Ошибка отката к версии ${version}: ${error?.data?.message || error.message}`);
+    }
+  };
 
+  const handleVersionDelete = async (version: string) => {
+    try {
+      await deleteVersionMutation(version).unwrap();
+      alert(`✅ Версия ${version} успешно удалена`);
+      refetchStats();
+    } catch (error: any) {
+      console.error('Ошибка удаления версии:', error);
+      alert(`❌ Ошибка удаления версии ${version}: ${error?.data?.message || error.message}`);
+    }
+  };
 
   const goToStep = (step: number) => {
     clearMessages();
@@ -1243,7 +1264,8 @@ const TireDataEditingPanel: React.FC<TireDataEditingPanelProps> = ({ statsData, 
       await importData({
         csv_path: '/dev/null', // Заглушка
         options: {
-          force_reload: true
+          force_reload: true,
+          clear_only: true  // Указываем что это только очистка, без импорта CSV
         }
       }).unwrap();
       
