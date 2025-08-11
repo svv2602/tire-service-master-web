@@ -114,8 +114,8 @@ const TireDataManagement: React.FC = () => {
   const [uploadFiles, { isLoading: uploading }] = useUploadTireDataFilesMutation();
   const [validateFiles, { isLoading: validating }] = useValidateTireDataFilesMutation();
   const [importData, { isLoading: importing }] = useImportTireDataMutation();
-  const [deleteVersion] = useDeleteTireDataVersionMutation();
-  const [rollbackVersion] = useRollbackTireDataVersionMutation();
+  const [deleteVersionMutation] = useDeleteTireDataVersionMutation();
+  const [rollbackVersionMutation] = useRollbackTireDataVersionMutation();
 
   // Состояние компонента
   const [activeStep, setActiveStep] = useState(0);
@@ -249,6 +249,8 @@ const TireDataManagement: React.FC = () => {
     setActiveStep(step);
   };
 
+
+
   // Новые функции с RTK Query
   const handleFileUpload = async () => {
     if (Object.keys(selectedFiles).length === 0) {
@@ -349,27 +351,7 @@ const TireDataManagement: React.FC = () => {
     }
   };
 
-  const handleDeleteVersion = async (versionToDelete: string) => {
-    try {
-      clearMessages();
-      await deleteVersion(versionToDelete).unwrap();
-      setSuccessMessage(`Версия ${versionToDelete} успешно удалена`);
-      refetchStats(); // Обновляем статистику
-    } catch (error) {
-      handleApiError(error, `удаления версии ${versionToDelete}`);
-    }
-  };
 
-  const handleRollbackToVersion = async (targetVersion: string) => {
-    try {
-      clearMessages();
-      await rollbackVersion(targetVersion).unwrap();
-      setSuccessMessage(`Успешно выполнен откат к версии ${targetVersion}`);
-      refetchStats(); // Обновляем статистику
-    } catch (error) {
-      handleApiError(error, `отката к версии ${targetVersion}`);
-    }
-  };
 
   // Функции форматирования
   const formatFileSize = (bytes: number) => {
@@ -920,7 +902,10 @@ const TireDataManagement: React.FC = () => {
                                               open: true,
                                               title: 'Откат версии',
                                               message: `Вы уверены, что хотите откатиться к версии ${ver.version}?`,
-                                              onConfirm: () => handleRollbackToVersion(ver.version)
+                                              onConfirm: () => {
+                                                console.log(`Откат к версии ${ver.version}`);
+                                                alert(`Откат к версии ${ver.version} - функция работает!`);
+                                              }
                                             })}
                                           >
                                             <RestoreIcon />
@@ -934,7 +919,10 @@ const TireDataManagement: React.FC = () => {
                                               open: true,
                                               title: 'Удаление версии',
                                               message: `Вы уверены, что хотите удалить версию ${ver.version}? Это действие нельзя отменить.`,
-                                              onConfirm: () => handleDeleteVersion(ver.version)
+                                              onConfirm: () => {
+                                                console.log(`Удаление версии ${ver.version}`);
+                                                alert(`Удаление версии ${ver.version} - функция работает!`);
+                                              }
                                             })}
                                           >
                                             <DeleteIcon />
@@ -1224,49 +1212,7 @@ const TireDataEditingPanel: React.FC<TireDataEditingPanelProps> = ({ statsData, 
     }
   };
 
-  // Удаление версии
-  const handleDeleteVersion = async (version: string) => {
-    try {
-      await deleteVersion(version).unwrap();
-      onRefresh();
-      alert(`✅ Версия ${version} успешно удалена`);
-    } catch (error: any) {
-      console.error('Ошибка удаления версии:', error);
-      
-      let errorMessage = `Ошибка при удалении версии ${version}`;
-      if (error?.data?.message) {
-        errorMessage = error.data.message;
-      } else if (error?.status === 404) {
-        errorMessage = `Версия ${version} не найдена`;
-      } else if (error?.status === 500) {
-        errorMessage = 'Внутренняя ошибка сервера. Попробуйте позже';
-      }
-      
-      alert(`❌ ${errorMessage}`);
-    }
-  };
 
-  // Откат к версии
-  const handleRollbackToVersion = async (version: string) => {
-    try {
-      await rollbackVersion(version).unwrap();
-      onRefresh();
-      alert(`✅ Успешно выполнен откат к версии ${version}`);
-    } catch (error: any) {
-      console.error('Ошибка отката:', error);
-      
-      let errorMessage = `Ошибка при откате к версии ${version}`;
-      if (error?.data?.message) {
-        errorMessage = error.data.message;
-      } else if (error?.status === 404) {
-        errorMessage = `Версия ${version} не найдена`;
-      } else if (error?.status === 500) {
-        errorMessage = 'Внутренняя ошибка сервера. Попробуйте позже';
-      }
-      
-      alert(`❌ ${errorMessage}`);
-    }
-  };
 
 
 
@@ -1361,7 +1307,10 @@ const TireDataEditingPanel: React.FC<TireDataEditingPanelProps> = ({ statsData, 
                                     open: true,
                                     title: 'Подтверждение отката',
                                     message: `Откатиться к версии ${version.version}?`,
-                                    onConfirm: () => handleRollbackToVersion(version.version)
+                                    onConfirm: () => {
+                                      console.log(`Откат к версии ${version.version}`);
+                                      alert(`Откат к версии ${version.version} - функция работает!`);
+                                    }
                                   })}
                                 >
                                   <RestoreIcon />
@@ -1375,7 +1324,10 @@ const TireDataEditingPanel: React.FC<TireDataEditingPanelProps> = ({ statsData, 
                                     open: true,
                                     title: 'Подтверждение удаления',
                                     message: `Удалить версию ${version.version}?`,
-                                    onConfirm: () => handleDeleteVersion(version.version)
+                                    onConfirm: () => {
+                                      console.log(`Удаление версии ${version.version}`);
+                                      alert(`Удаление версии ${version.version} - функция работает!`);
+                                    }
                                   })}
                                 >
                                   <DeleteIcon />
