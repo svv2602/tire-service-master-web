@@ -585,21 +585,41 @@ const SupplierUploadPage: React.FC = () => {
                   overflowWrap: 'break-word'
                 }}
               >
-                {`curl -X POST http://localhost:8000/api/v1/suppliers/upload_price \\
-  -H "X-API-Key: ${supplier.api_key}" \\
+                {`# Загрузка прайса администратором:
+curl -X POST http://localhost:8000/api/v1/suppliers/${supplier.id}/admin_upload_price \\
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \\
   -F "file=@your_price_file.xml"
 
 # Или с XML в теле запроса:
+curl -X POST http://localhost:8000/api/v1/suppliers/${supplier.id}/admin_upload_price \\
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -d '{"xml_content": "<hotline>...</hotline>"}'
+
+# Для поставщиков (с API ключом):
 curl -X POST http://localhost:8000/api/v1/suppliers/upload_price \\
   -H "X-API-Key: ${supplier.api_key}" \\
-  -H "Content-Type: application/json" \\
-  -d '{"xml_content": "<hotline>...</hotline>"}'`}
+  -F "file=@your_price_file.xml"`}
               </Typography>
             </Paper>
             <Alert severity="info" sx={{ mt: 2 }}>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                <strong>Для администраторов:</strong> Используйте первый пример с JWT токеном. 
+                Замените <code>YOUR_JWT_TOKEN</code> на ваш токен авторизации и 
+                <code>your_price_file.xml</code> на путь к файлу.
+              </Typography>
+              <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem', p: 1, backgroundColor: 'action.hover', borderRadius: 1 }}>
+                {`# Получение токена:
+curl -X POST http://localhost:8000/api/v1/auth/login \\
+  -H "Content-Type: application/json" \\
+  -d '{"auth":{"email":"admin@test.com","password":"admin123"}}'`}
+              </Typography>
+            </Alert>
+            <Alert severity="warning" sx={{ mt: 1 }}>
               <Typography variant="body2">
-                Измените только имя файла <code>your_price_file.xml</code> на ваш файл. 
-                API ключ уже подставлен автоматически.
+                <strong>Для поставщиков:</strong> Второй пример с API ключом предназначен 
+                для поставщиков, загружающих прайсы самостоятельно через endpoint 
+                <code>/api/v1/suppliers/upload_price</code>.
               </Typography>
             </Alert>
           </CardContent>
