@@ -323,23 +323,30 @@ export const AppBar: React.FC<AppBarProps> = ({
             </MenuItem>
           )}
           
-          {/* Профиль */}
-          {(profileActions.length > 0 || username) && (
-            <MenuItem onClick={handleProfileMenuOpen}>
-              <IconButton
-                aria-label="account of current user"
-                aria-haspopup="true"
-                color="inherit"
-                size="large"
-              >
-                {avatarUrl ? (
-                  <Avatar src={avatarUrl} alt={username} sx={{ width: 40, height: 40 }} />
-                ) : (
-                  <AccountCircleIcon sx={{ fontSize: 40 }} />
-                )}
-              </IconButton>
-              <p>Профиль</p>
-            </MenuItem>
+          {/* Профиль - отображаем как отдельные пункты меню на мобильных */}
+          {profileActions.length > 0 && (
+            <>
+              {(notificationActions.length > 0 || navigationActions.length > 0) && (
+                <Divider sx={{ my: 1 }} />
+              )}
+              {profileActions.map((action, index) => (
+                <MenuItem
+                  key={index}
+                  onClick={() => {
+                    handleMenuClose();
+                    action.onClick();
+                  }}
+                  disabled={action.disabled}
+                >
+                  {action.icon && (
+                    <Box component="span" sx={{ mr: 2, display: 'flex', alignItems: 'center' }}>
+                      {React.createElement(action.icon, { fontSize: 'medium' })}
+                    </Box>
+                  )}
+                  {action.label}
+                </MenuItem>
+              ))}
+            </>
           )}
         </Menu>
       )}

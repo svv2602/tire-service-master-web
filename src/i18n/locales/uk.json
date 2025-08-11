@@ -1647,6 +1647,7 @@
   "userMenu": {
     "profile": "Профіль",
     "myBookings": "Мої бронювання",
+    "myOrders": "Мої замовлення",
     "myReviews": "Мої відгуки",
     "toWebsite": "На сайт",
     "adminPanel": "Адмін-панель",

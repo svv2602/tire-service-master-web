@@ -62,7 +62,7 @@ export function getProfileActions({
       onClick: () => navigate('/client/bookings'),
     },
     {
-      label: 'Мои заказы',
+      label: t('userMenu.myOrders'),
       icon: OrdersIcon,
       onClick: () => navigate('/client/orders'),
     },
