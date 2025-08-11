@@ -57,7 +57,9 @@ import {
   History as HistoryIcon,
   HelpOutline as HelpIcon,
   Edit as EditIcon,
-  DeleteSweep as ClearAllIcon
+  DeleteSweep as ClearAllIcon,
+  DeleteSweep as DeleteSweepIcon,
+  VisibilityOff as VisibilityOffIcon
 } from '@mui/icons-material';
 
 // Импорт новых API хуков
@@ -68,6 +70,8 @@ import {
   useImportTireDataMutation,
   useDeleteTireDataVersionMutation,
   useRollbackTireDataVersionMutation,
+  useCleanupOldVersionsMutation,
+  useCleanupHiddenVersionsMutation,
   type TireDataStats,
   type ValidationResult,
   type ImportResult,
@@ -116,6 +120,8 @@ const TireDataManagement: React.FC = () => {
   const [importData, { isLoading: importing }] = useImportTireDataMutation();
   const [deleteVersionMutation] = useDeleteTireDataVersionMutation();
   const [rollbackVersionMutation] = useRollbackTireDataVersionMutation();
+  const [cleanupOldVersions] = useCleanupOldVersionsMutation();
+  const [cleanupHiddenVersions] = useCleanupHiddenVersionsMutation();
 
   // Состояние компонента
   const [activeStep, setActiveStep] = useState(0);
@@ -1135,9 +1141,17 @@ const TireDataManagement: React.FC = () => {
 
       {/* TabPanel для редактирования */}
       <TabPanel value={currentTab} index={1}>
-                <TireDataEditingPanel
+                        <TireDataEditingPanel 
           statsData={statsData?.data || null}
           onRefresh={refetchStats}
+          cleanupOldVersions={async () => {
+            const result = await cleanupOldVersions().unwrap();
+            return result;
+          }}
+          cleanupHiddenVersions={async () => {
+            const result = await cleanupHiddenVersions().unwrap();
+            return result;
+          }}
         />
       </TabPanel>
     </Box>
@@ -1148,9 +1162,11 @@ const TireDataManagement: React.FC = () => {
 interface TireDataEditingPanelProps {
   statsData: TireDataStats | null;
   onRefresh: () => void;
+  cleanupOldVersions: () => Promise<{ message: string }>;
+  cleanupHiddenVersions: () => Promise<{ message: string }>;
 }
 
-const TireDataEditingPanel: React.FC<TireDataEditingPanelProps> = ({ statsData, onRefresh }) => {
+const TireDataEditingPanel: React.FC<TireDataEditingPanelProps> = ({ statsData, onRefresh, cleanupOldVersions, cleanupHiddenVersions }) => {
   // RTK Query хуки для панели редактирования
   const [deleteVersion] = useDeleteTireDataVersionMutation();
   const [rollbackVersion] = useRollbackTireDataVersionMutation();
@@ -1310,8 +1326,74 @@ const TireDataEditingPanel: React.FC<TireDataEditingPanelProps> = ({ statsData, 
           </Card>
         </Grid>
 
-        {/* Управление версиями */}
+        {/* Очистка устаревших версий */}
         <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                <DeleteSweepIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Очистка устаревших версий
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Удаляет версии старше 30 дней, которые не активны и не содержат конфигураций.
+              </Typography>
+            </CardContent>
+            <CardActions>
+              <Button
+                variant="contained"
+                color="warning"
+                startIcon={<DeleteSweepIcon />}
+                onClick={async () => {
+                  try {
+                    const result = await cleanupOldVersions();
+                    alert(`✅ ${result.message}`);
+                    onRefresh();
+                  } catch (error: any) {
+                    alert(`❌ Ошибка: ${error?.data?.message || error.message}`);
+                  }
+                }}
+              >
+                Очистить устаревшие
+              </Button>
+            </CardActions>
+          </Card>
+        </Grid>
+
+        {/* Очистка скрытых версий */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                <VisibilityOffIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Очистка скрытых версий
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Удаляет версии, которые скрыты после отката (более новые чем активная версия).
+              </Typography>
+            </CardContent>
+            <CardActions>
+              <Button
+                variant="contained"
+                color="secondary"
+                startIcon={<VisibilityOffIcon />}
+                onClick={async () => {
+                  try {
+                    const result = await cleanupHiddenVersions();
+                    alert(`✅ ${result.message}`);
+                    onRefresh();
+                  } catch (error: any) {
+                    alert(`❌ Ошибка: ${error?.data?.message || error.message}`);
+                  }
+                }}
+              >
+                Очистить скрытые
+              </Button>
+            </CardActions>
+          </Card>
+        </Grid>
+
+        {/* Управление версиями */}
+        <Grid item xs={12} md={12}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>

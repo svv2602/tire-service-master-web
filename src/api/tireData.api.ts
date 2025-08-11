@@ -142,6 +142,24 @@ export const tireDataApi = baseApi.injectEndpoints({
         credentials: 'include',
       }),
     }),
+
+    // Очистка устаревших версий (старше 30 дней)
+    cleanupOldVersions: builder.mutation<{ status: string; message: string }, void>({
+      query: () => ({
+        url: 'admin/tire_data/cleanup_old_versions',
+        method: 'POST',
+        credentials: 'include',
+      }),
+    }),
+
+    // Очистка скрытых версий (более новых чем активная)
+    cleanupHiddenVersions: builder.mutation<{ status: string; message: string }, void>({
+      query: () => ({
+        url: 'admin/tire_data/cleanup_hidden_versions',
+        method: 'POST',
+        credentials: 'include',
+      }),
+    }),
   }),
 });
 
@@ -152,4 +170,6 @@ export const {
   useImportTireDataMutation,
   useDeleteTireDataVersionMutation,
   useRollbackTireDataVersionMutation,
+  useCleanupOldVersionsMutation,
+  useCleanupHiddenVersionsMutation,
 } = tireDataApi;
