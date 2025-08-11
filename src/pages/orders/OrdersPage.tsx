@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   TextField,
@@ -38,6 +39,7 @@ import {
 import { Order, OrderFilters } from '../../types/order';
 
 const OrdersPage: React.FC = () => {
+  const { t } = useTranslation(['admin', 'common']);
   const theme = useTheme();
 
   // Стили страницы
@@ -126,44 +128,44 @@ const OrdersPage: React.FC = () => {
   const orderActions: ActionItem<Order>[] = useMemo(() => [
     {
       id: 'view',
-      label: 'Просмотр',
+      label: t('orders.actions.view'),
       icon: <ViewIcon />,
       onClick: (order: Order) => handleViewOrder(order),
       color: 'primary',
-      tooltip: 'Просмотр заказа'
+      tooltip: t('orders.actions.view')
     },
     {
       id: 'mark_ready',
-      label: 'Готов',
+      label: t('orders.actions.markAsReady'),
       icon: <ReadyIcon />,
       onClick: (order: Order) => handleMarkAsReady(order.id),
       color: 'success',
-      tooltip: 'Отметить как готов',
+      tooltip: t('orders.actions.markAsReady'),
       visible: (order: Order) => order.can_mark_as_ready
     },
     {
       id: 'mark_delivered',
-      label: 'Выдать',
+      label: t('orders.actions.markAsDelivered'),
       icon: <DeliveredIcon />,
       onClick: (order: Order) => handleMarkAsDelivered(order.id),
       color: 'primary',
-      tooltip: 'Отметить как выдан',
+      tooltip: t('orders.actions.markAsDelivered'),
       visible: (order: Order) => order.can_mark_as_delivered
     },
     {
       id: 'cancel',
-      label: 'Отмена',
+      label: t('orders.actions.cancel'),
       icon: <CancelIcon />,
       onClick: (order: Order) => handleCancelOrder(order.id),
       color: 'error',
-      tooltip: 'Отменить заказ',
+      tooltip: t('orders.actions.cancel'),
       visible: (order: Order) => order.can_cancel,
       requireConfirmation: true,
       confirmationConfig: {
-        title: 'Подтвердите действие',
-        message: 'Вы уверены, что хотите отменить этот заказ?',
-        confirmLabel: 'Отменить заказ',
-        cancelLabel: 'Отмена',
+        title: t('common:confirmAction'),
+        message: t('common:confirmCancelOrder'),
+        confirmLabel: t('orders.actions.cancel'),
+        cancelLabel: t('common:cancel'),
       }
     }
   ], []);
@@ -172,12 +174,19 @@ const OrdersPage: React.FC = () => {
   const columns = [
     {
       id: 'ttn',
-      label: 'ТТН',
-      minWidth: 120,
-      maxWidth: 180,
+      label: t('orders.columns.ttn'),
+      minWidth: 80,
+      maxWidth: 150,
       wrap: true,
       format: (value: any, order: Order) => (
-        <Box sx={{ wordBreak: 'break-word' }}>
+        <Box sx={{ 
+          wordBreak: 'break-word', 
+          overflowWrap: 'break-word', 
+          hyphens: 'auto',
+          whiteSpace: 'normal',
+          lineHeight: 1.2,
+          maxWidth: '100%'
+        }}>
           <Box sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
             {order.ttn}
           </Box>
@@ -191,9 +200,9 @@ const OrdersPage: React.FC = () => {
     },
     {
       id: 'status',
-      label: 'Статус',
-      minWidth: 100,
-      maxWidth: 140,
+      label: t('orders.columns.status'),
+      minWidth: 80,
+      maxWidth: 120,
       align: 'center' as const,
       format: (value: any, order: Order) => (
         <Chip
@@ -209,36 +218,56 @@ const OrdersPage: React.FC = () => {
     },
     {
       id: 'customer',
-      label: 'Клиент',
-      minWidth: 180,
-      maxWidth: 250,
+      label: t('orders.columns.customer'),
+      minWidth: 140,
+      maxWidth: 200,
       wrap: true,
       format: (value: any, order: Order) => (
-        <Box sx={{ wordBreak: 'break-word' }}>
+        <Box sx={{ 
+          wordBreak: 'break-word', 
+          overflowWrap: 'break-word', 
+          hyphens: 'auto',
+          whiteSpace: 'normal',
+          lineHeight: 1.2,
+          maxWidth: '100%'
+        }}>
           <Box sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
             {order.customer_name}
           </Box>
-          <Typography variant="body2" sx={{ wordBreak: 'break-word', color: 'text.secondary' }}>
-            {order.formatted_phone || 'Не указан'}
+          <Typography variant="body2" sx={{ 
+            wordBreak: 'break-word', 
+            overflowWrap: 'break-word', 
+            color: 'text.secondary',
+            whiteSpace: 'normal',
+            lineHeight: 1.2
+          }}>
+            {order.formatted_phone || t('common:notSpecified')}
           </Typography>
         </Box>
       ),
     },
     {
       id: 'service_point',
-      label: 'Точка выдачи',
-      minWidth: 160,
-      maxWidth: 220,
+      label: t('orders.columns.servicePoint'),
+      minWidth: 120,
+      maxWidth: 180,
       wrap: true,
       hideOnMobile: true,
       format: (value: any, order: Order) => (
-        <Box sx={{ wordBreak: 'break-word' }}>
+        <Box sx={{ 
+          wordBreak: 'break-word', 
+          overflowWrap: 'break-word', 
+          hyphens: 'auto',
+          whiteSpace: 'normal',
+          lineHeight: 1.2,
+          maxWidth: '100%'
+        }}>
           <Box sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
             {order.point_name}
           </Box>
           {order.third_party_point && (
             <Chip
-              label="Сторонняя"
+              label={t('orders.thirdParty')}
               size="small"
               color="warning"
               variant="outlined"
@@ -250,14 +279,20 @@ const OrdersPage: React.FC = () => {
     },
     {
       id: 'order_info',
-      label: 'Заказ',
-      minWidth: 100,
-      maxWidth: 120,
+      label: t('orders.columns.orderInfo'),
+      minWidth: 80,
+      maxWidth: 110,
       align: 'right' as const,
       format: (value: any, order: Order) => (
-        <Box sx={{ wordBreak: 'break-word' }}>
+        <Box sx={{ 
+          wordBreak: 'break-word', 
+          textAlign: 'right',
+          overflowWrap: 'break-word',
+          whiteSpace: 'normal',
+          lineHeight: 1.2
+        }}>
           <Box sx={{ fontSize: '0.9rem' }}>
-            {order.total_quantity} шт.
+            {order.total_quantity} {t('common:units.pieces')}
           </Box>
           <Box sx={{ fontWeight: 'bold', color: 'primary.main' }}>
             {order.total_amount} ₴
@@ -267,21 +302,61 @@ const OrdersPage: React.FC = () => {
     },
     {
       id: 'order_date',
-      label: 'Дата заказа',
-      minWidth: 120,
-      maxWidth: 150,
+      label: t('orders.columns.orderDate'),
+      minWidth: 90,
+      maxWidth: 130,
       hideOnMobile: true,
       format: (value: any, order: Order) => (
-        <Box sx={{ fontSize: '0.9rem', wordBreak: 'break-word' }}>
+        <Box sx={{ 
+          fontSize: '0.9rem', 
+          wordBreak: 'break-word', 
+          overflowWrap: 'break-word',
+          whiteSpace: 'normal',
+          lineHeight: 1.2
+        }}>
           {order.formatted_order_date}
         </Box>
       ),
     },
     {
-      id: 'actions',
-      label: 'Действия',
-      minWidth: 120,
+      id: 'supplier',
+      label: t('orders.columns.supplier'),
+      minWidth: 100,
       maxWidth: 150,
+      hideOnMobile: true,
+      format: (value: any, order: Order) => (
+        <Box sx={{ 
+          wordBreak: 'break-word', 
+          overflowWrap: 'break-word', 
+          hyphens: 'auto',
+          whiteSpace: 'normal',
+          lineHeight: 1.2,
+          maxWidth: '100%'
+        }}>
+          {order.supplier_name ? (
+            <Box>
+              <Box sx={{ fontWeight: 'bold', fontSize: '0.9rem' }}>
+                {order.supplier_name}
+              </Box>
+              {order.supplier_firm_id && (
+                <Box sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>
+                  ID: {order.supplier_firm_id}
+                </Box>
+              )}
+            </Box>
+          ) : (
+            <Box sx={{ fontSize: '0.9rem', color: 'text.secondary', fontStyle: 'italic' }}>
+              {t('orders.supplier.notSpecified')}
+            </Box>
+          )}
+        </Box>
+      ),
+    },
+    {
+      id: 'actions',
+      label: t('orders.columns.actions'),
+      minWidth: 80,
+      maxWidth: 120,
       align: 'center' as const,
       format: (value: any, order: Order) => (
         <ActionsMenu 
@@ -305,12 +380,12 @@ const OrdersPage: React.FC = () => {
       await markAsReady(orderId).unwrap();
       setNotification({
         open: true,
-        message: 'Заказ отмечен как готовый к выдаче',
+        message: t('orders.messages.markedAsReady'),
         severity: 'success',
       });
       refetch();
     } catch (error: any) {
-      const errorMessage = error?.data?.error || error?.message || 'Ошибка при изменении статуса заказа';
+      const errorMessage = error?.data?.error || error?.message || t('orders.messages.actionError');
       setNotification({
         open: true,
         message: errorMessage,
@@ -324,12 +399,12 @@ const OrdersPage: React.FC = () => {
       await markAsDelivered(orderId).unwrap();
       setNotification({
         open: true,
-        message: 'Заказ отмечен как выданный',
+        message: t('orders.messages.markedAsDelivered'),
         severity: 'success',
       });
       refetch();
     } catch (error: any) {
-      const errorMessage = error?.data?.error || error?.message || 'Ошибка при изменении статуса заказа';
+      const errorMessage = error?.data?.error || error?.message || t('orders.messages.actionError');
       setNotification({
         open: true,
         message: errorMessage,
@@ -340,15 +415,15 @@ const OrdersPage: React.FC = () => {
 
   const handleCancelOrder = async (orderId: number) => {
     try {
-      await cancelOrder({ id: orderId, reason: 'Отменен оператором' }).unwrap();
+      await cancelOrder({ id: orderId, reason: t('orders.cancelReason') }).unwrap();
       setNotification({
         open: true,
-        message: 'Заказ отменен',
+        message: t('orders.messages.orderCanceled'),
         severity: 'success',
       });
       refetch();
     } catch (error: any) {
-      const errorMessage = error?.data?.error || error?.message || 'Ошибка при отмене заказа';
+      const errorMessage = error?.data?.error || error?.message || t('orders.messages.actionError');
       setNotification({
         open: true,
         message: errorMessage,
@@ -358,12 +433,12 @@ const OrdersPage: React.FC = () => {
   };
 
   const statusOptions = [
-    { value: '', label: 'Все статусы' },
-    { value: 'received', label: 'Получен' },
-    { value: 'processing', label: 'В обработке' },
-    { value: 'ready', label: 'Готов к выдаче' },
-    { value: 'delivered', label: 'Выдан' },
-    { value: 'canceled', label: 'Отменен' },
+    { value: '', label: t('orders.status.all') },
+    { value: 'received', label: t('orders.status.received') },
+    { value: 'processing', label: t('orders.status.processing') },
+    { value: 'ready', label: t('orders.status.ready') },
+    { value: 'delivered', label: t('orders.status.delivered') },
+    { value: 'canceled', label: t('orders.status.canceled') },
   ];
 
   if (isLoading) {
@@ -384,10 +459,10 @@ const OrdersPage: React.FC = () => {
           <OrderIcon sx={pageStyles.titleIcon} />
           <Box>
             <Typography variant="h4" component="h1">
-              Заказы интернет-магазинов
+              {t('orders.title')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {totalCount > 0 && `Всего заказов: ${totalCount}`}
+              {totalCount > 0 && `${t('common:total')}: ${totalCount}`}
             </Typography>
           </Box>
         </Box>
@@ -396,7 +471,7 @@ const OrdersPage: React.FC = () => {
       {/* Фильтры */}
       <Box sx={pageStyles.filtersContainer}>
         <TextField
-          placeholder="Поиск по ТТН, имени клиента или телефону..."
+          placeholder={t('orders.searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           variant="outlined"
@@ -413,7 +488,7 @@ const OrdersPage: React.FC = () => {
         
         <TextField
           select
-          label="Статус"
+          label={t('orders.columns.status')}
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           variant="outlined"
@@ -436,6 +511,16 @@ const OrdersPage: React.FC = () => {
             rows={orders}
             loading={isLoading}
             onRowClick={(order) => handleViewOrder(order)}
+            sx={{
+              '& .MuiTableCell-root': {
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word',
+                whiteSpace: 'normal',
+                lineHeight: 1.3,
+                padding: '8px 12px',
+                verticalAlign: 'top'
+              }
+            }}
           />
         ) : (
           <Box sx={{ textAlign: 'center', py: 4 }}>

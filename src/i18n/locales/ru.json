@@ -177,7 +177,13 @@
     "services": "Услуги",
     "booking": "Запись",
     "tireCalculator": "Калькулятор шин",
-    "tireSearch": "Поиск шин"
+    "tireSearch": "Поиск шин",
+    "notSpecified": "Не указано",
+    "total": "Всего",
+    "confirmCancelOrder": "Вы уверены, что хотите отменить этот заказ?",
+    "units": {
+      "pieces": "шт."
+    }
   },
   "auth": {
     "errors": {
@@ -1516,6 +1522,60 @@
         "changeSearch": "Попробуйте изменить поисковый запрос",
         "addFirst": "Добавьте первый город для начала работы"
       }
+    },
+    "orders": {
+      "title": "Заказы интернет-магазинов",
+      "pageTitle": "Управление заказами",
+      "searchPlaceholder": "Поиск по ТТН, имени клиента или телефону...",
+      "columns": {
+        "ttn": "ТТН",
+        "customer": "Клиент",
+        "status": "Статус",
+        "servicePoint": "Точка выдачи",
+        "supplier": "Поставщик",
+        "orderInfo": "Заказ",
+        "orderDate": "Дата заказа",
+        "actions": "Действия"
+      },
+      "status": {
+        "all": "Все статусы",
+        "received": "Получен",
+        "processing": "В обработке",
+        "ready": "Готов к выдаче",
+        "delivered": "Выдан",
+        "canceled": "Отменен"
+      },
+      "supplier": {
+        "notSpecified": "Не указан"
+      },
+      "actions": {
+        "view": "Просмотреть",
+        "markAsReady": "Отметить готовым",
+        "markAsDelivered": "Отметить выданным",
+        "cancel": "Отменить заказ"
+      },
+      "dialog": {
+        "viewTitle": "Информация о заказе",
+        "orderDetails": "Детали заказа",
+        "customerDetails": "Данные клиента",
+        "servicePointDetails": "Точка выдачи",
+        "supplierDetails": "Поставщик",
+        "items": "Товары",
+        "close": "Закрыть"
+      },
+      "messages": {
+        "markedAsReady": "Заказ отмечен как готовый к выдаче",
+        "markedAsDelivered": "Заказ отмечен как выданный",
+        "orderCanceled": "Заказ отменен",
+        "actionError": "Ошибка при выполнении действия"
+      },
+      "empty": {
+        "title": "Заказы не найдены",
+        "description": "Нет заказов, соответствующих критериям поиска",
+        "changeFilters": "Попробуйте изменить фильтры поиска"
+      },
+      "thirdParty": "Сторонняя",
+      "cancelReason": "Отменен оператором"
     },
     "bookings": {
       "form": {

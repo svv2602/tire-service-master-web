@@ -172,7 +172,13 @@
     "services": "Послуги",
     "booking": "Запис",
     "tireCalculator": "Калькулятор шин",
-    "tireSearch": "Пошук шин"
+    "tireSearch": "Пошук шин",
+    "notSpecified": "Не вказано",
+    "total": "Всього",
+    "confirmCancelOrder": "Ви впевнені, що хочете скасувати це замовлення?",
+    "units": {
+      "pieces": "шт."
+    }
   },
   "auth": {
     "errors": {
@@ -1502,6 +1508,60 @@
         "changeSearch": "Спробуйте змінити пошуковий запит",
         "addFirst": "Додайте перше місто для початку роботи"
       }
+    },
+    "orders": {
+      "title": "Замовлення інтернет-магазинів",
+      "pageTitle": "Управління замовленнями",
+      "searchPlaceholder": "Пошук за ТТН, ім'ям клієнта або телефоном...",
+      "columns": {
+        "ttn": "ТТН",
+        "customer": "Клієнт",
+        "status": "Статус",
+        "servicePoint": "Точка видачі",
+        "supplier": "Постачальник",
+        "orderInfo": "Замовлення",
+        "orderDate": "Дата замовлення",
+        "actions": "Дії"
+      },
+      "status": {
+        "all": "Всі статуси",
+        "received": "Отримано",
+        "processing": "В обробці",
+        "ready": "Готово до видачі",
+        "delivered": "Видано",
+        "canceled": "Скасовано"
+      },
+      "supplier": {
+        "notSpecified": "Не вказано"
+      },
+      "actions": {
+        "view": "Переглянути",
+        "markAsReady": "Позначити готовим",
+        "markAsDelivered": "Позначити виданим",
+        "cancel": "Скасувати замовлення"
+      },
+      "dialog": {
+        "viewTitle": "Інформація про замовлення",
+        "orderDetails": "Деталі замовлення",
+        "customerDetails": "Дані клієнта",
+        "servicePointDetails": "Точка видачі",
+        "supplierDetails": "Постачальник",
+        "items": "Товари",
+        "close": "Закрити"
+      },
+      "messages": {
+        "markedAsReady": "Замовлення позначено як готове до видачі",
+        "markedAsDelivered": "Замовлення позначено як видане",
+        "orderCanceled": "Замовлення скасовано",
+        "actionError": "Помилка при виконанні дії"
+      },
+      "empty": {
+        "title": "Замовлення не знайдено",
+        "description": "Немає замовлень, що відповідають критеріям пошуку",
+        "changeFilters": "Спробуйте змінити фільтри пошуку"
+      },
+      "thirdParty": "Стороння",
+      "cancelReason": "Скасовано оператором"
     },
     "bookings": {
       "form": {

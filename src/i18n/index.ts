@@ -150,11 +150,15 @@ const ruTranslationModules = [
 const resources = {
   uk: {
     translation: ukTranslationModules.reduce((acc, curr) => deepMerge(acc, curr), {}),
+    admin: ukTranslations,
+    common: ukTranslations.common || {},
     components: componentsUkTranslations,
     tireSearch: tireSearchUkTranslations,
   },
   ru: {
     translation: ruTranslationModules.reduce((acc, curr) => deepMerge(acc, curr), {}),
+    admin: ruTranslations,
+    common: ruTranslations.common || {},
     components: componentsRuTranslations,
     tireSearch: tireSearchRuTranslations,
   },
