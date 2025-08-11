@@ -244,6 +244,8 @@ const TireDataManagement: React.FC = () => {
     setSuccessMessage(null);
   };
 
+
+
   const goToStep = (step: number) => {
     clearMessages();
     setActiveStep(step);
@@ -902,10 +904,7 @@ const TireDataManagement: React.FC = () => {
                                               open: true,
                                               title: 'Откат версии',
                                               message: `Вы уверены, что хотите откатиться к версии ${ver.version}?`,
-                                              onConfirm: () => {
-                                                console.log(`Откат к версии ${ver.version}`);
-                                                alert(`Откат к версии ${ver.version} - функция работает!`);
-                                              }
+                                              onConfirm: () => handleVersionRollback(ver.version)
                                             })}
                                           >
                                             <RestoreIcon />
@@ -919,10 +918,7 @@ const TireDataManagement: React.FC = () => {
                                               open: true,
                                               title: 'Удаление версии',
                                               message: `Вы уверены, что хотите удалить версию ${ver.version}? Это действие нельзя отменить.`,
-                                              onConfirm: () => {
-                                                console.log(`Удаление версии ${ver.version}`);
-                                                alert(`Удаление версии ${ver.version} - функция работает!`);
-                                              }
+                                              onConfirm: () => handleVersionDelete(ver.version)
                                             })}
                                           >
                                             <DeleteIcon />
@@ -1174,12 +1170,55 @@ const TireDataEditingPanel: React.FC<TireDataEditingPanelProps> = ({ statsData, 
     onConfirm: () => {}
   });
 
+  // Функции управления версиями (определяем в начале для доступности)
+  const handleVersionRollback = async (version: string) => {
+    try {
+      await rollbackVersion(version).unwrap();
+      
+      // Закрываем диалог подтверждения
+      setConfirmDialog(prev => ({ ...prev, open: false }));
+      
+      // Обновляем данные
+      onRefresh();
+      
+      alert(`✅ Успешно выполнен откат к версии ${version}`);
+    } catch (error: any) {
+      // Закрываем диалог подтверждения даже при ошибке
+      setConfirmDialog(prev => ({ ...prev, open: false }));
+      
+      console.error('Ошибка отката:', error);
+      alert(`❌ Ошибка отката к версии ${version}: ${error?.data?.message || error.message}`);
+    }
+  };
+
+  const handleVersionDelete = async (version: string) => {
+    try {
+      await deleteVersion(version).unwrap();
+      
+      // Закрываем диалог подтверждения
+      setConfirmDialog(prev => ({ ...prev, open: false }));
+      
+      // Обновляем данные
+      onRefresh();
+      
+      alert(`✅ Версия ${version} успешно удалена`);
+    } catch (error: any) {
+      // Закрываем диалог подтверждения даже при ошибке
+      setConfirmDialog(prev => ({ ...prev, open: false }));
+      
+      console.error('Ошибка удаления версии:', error);
+      alert(`❌ Ошибка удаления версии ${version}: ${error?.data?.message || error.message}`);
+    }
+  };
+
   // Обновляем список версий из statsData
   React.useEffect(() => {
     if (statsData?.available_versions) {
       setVersions(statsData.available_versions);
     }
   }, [statsData]);
+
+
 
   // Полная очистка данных
   const handleClearAllData = async () => {
@@ -1307,10 +1346,7 @@ const TireDataEditingPanel: React.FC<TireDataEditingPanelProps> = ({ statsData, 
                                     open: true,
                                     title: 'Подтверждение отката',
                                     message: `Откатиться к версии ${version.version}?`,
-                                    onConfirm: () => {
-                                      console.log(`Откат к версии ${version.version}`);
-                                      alert(`Откат к версии ${version.version} - функция работает!`);
-                                    }
+                                    onConfirm: () => handleVersionRollback(version.version)
                                   })}
                                 >
                                   <RestoreIcon />
@@ -1324,10 +1360,7 @@ const TireDataEditingPanel: React.FC<TireDataEditingPanelProps> = ({ statsData, 
                                     open: true,
                                     title: 'Подтверждение удаления',
                                     message: `Удалить версию ${version.version}?`,
-                                    onConfirm: () => {
-                                      console.log(`Удаление версии ${version.version}`);
-                                      alert(`Удаление версии ${version.version} - функция работает!`);
-                                    }
+                                    onConfirm: () => handleVersionDelete(version.version)
                                   })}
                                 >
                                   <DeleteIcon />
