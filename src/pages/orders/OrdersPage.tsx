@@ -39,7 +39,7 @@ import {
 import { Order, OrderFilters } from '../../types/order';
 
 const OrdersPage: React.FC = () => {
-  const { t } = useTranslation(['admin', 'common']);
+  const { t } = useTranslation();
   const theme = useTheme();
 
   // Стили страницы
@@ -128,43 +128,43 @@ const OrdersPage: React.FC = () => {
   const orderActions: ActionItem<Order>[] = useMemo(() => [
     {
       id: 'view',
-      label: t('orders.actions.view'),
+      label: t('admin.orders.actions.view'),
       icon: <ViewIcon />,
       onClick: (order: Order) => handleViewOrder(order),
       color: 'primary',
-      tooltip: t('orders.actions.view')
+      tooltip: t('admin.orders.actions.view')
     },
     {
       id: 'mark_ready',
-      label: t('orders.actions.markAsReady'),
+      label: t('admin.orders.actions.markAsReady'),
       icon: <ReadyIcon />,
       onClick: (order: Order) => handleMarkAsReady(order.id),
       color: 'success',
-      tooltip: t('orders.actions.markAsReady'),
+      tooltip: t('admin.orders.actions.markAsReady'),
       visible: (order: Order) => order.can_mark_as_ready
     },
     {
       id: 'mark_delivered',
-      label: t('orders.actions.markAsDelivered'),
+      label: t('admin.orders.actions.markAsDelivered'),
       icon: <DeliveredIcon />,
       onClick: (order: Order) => handleMarkAsDelivered(order.id),
       color: 'primary',
-      tooltip: t('orders.actions.markAsDelivered'),
+      tooltip: t('admin.orders.actions.markAsDelivered'),
       visible: (order: Order) => order.can_mark_as_delivered
     },
     {
       id: 'cancel',
-      label: t('orders.actions.cancel'),
+      label: t('admin.orders.actions.cancel'),
       icon: <CancelIcon />,
       onClick: (order: Order) => handleCancelOrder(order.id),
       color: 'error',
-      tooltip: t('orders.actions.cancel'),
+      tooltip: t('admin.orders.actions.cancel'),
       visible: (order: Order) => order.can_cancel,
       requireConfirmation: true,
       confirmationConfig: {
         title: t('common:confirmAction'),
         message: t('common:confirmCancelOrder'),
-        confirmLabel: t('orders.actions.cancel'),
+        confirmLabel: t('admin.orders.actions.cancel'),
         cancelLabel: t('common:cancel'),
       }
     }
@@ -174,7 +174,7 @@ const OrdersPage: React.FC = () => {
   const columns = [
     {
       id: 'ttn',
-      label: t('orders.columns.ttn'),
+      label: t('admin.orders.columns.ttn'),
       minWidth: 80,
       maxWidth: 150,
       wrap: true,
@@ -200,7 +200,7 @@ const OrdersPage: React.FC = () => {
     },
     {
       id: 'status',
-      label: t('orders.columns.status'),
+      label: t('admin.orders.columns.status'),
       minWidth: 80,
       maxWidth: 120,
       align: 'center' as const,
@@ -218,7 +218,7 @@ const OrdersPage: React.FC = () => {
     },
     {
       id: 'customer',
-      label: t('orders.columns.customer'),
+      label: t('admin.orders.columns.customer'),
       minWidth: 140,
       maxWidth: 200,
       wrap: true,
@@ -248,7 +248,7 @@ const OrdersPage: React.FC = () => {
     },
     {
       id: 'service_point',
-      label: t('orders.columns.servicePoint'),
+      label: t('admin.orders.columns.servicePoint'),
       minWidth: 120,
       maxWidth: 180,
       wrap: true,
@@ -267,7 +267,7 @@ const OrdersPage: React.FC = () => {
           </Box>
           {order.third_party_point && (
             <Chip
-              label={t('orders.thirdParty')}
+              label={t('admin.orders.thirdParty')}
               size="small"
               color="warning"
               variant="outlined"
@@ -279,7 +279,7 @@ const OrdersPage: React.FC = () => {
     },
     {
       id: 'order_info',
-      label: t('orders.columns.orderInfo'),
+      label: t('admin.orders.columns.orderInfo'),
       minWidth: 80,
       maxWidth: 110,
       align: 'right' as const,
@@ -302,7 +302,7 @@ const OrdersPage: React.FC = () => {
     },
     {
       id: 'order_date',
-      label: t('orders.columns.orderDate'),
+      label: t('admin.orders.columns.orderDate'),
       minWidth: 90,
       maxWidth: 130,
       hideOnMobile: true,
@@ -320,7 +320,7 @@ const OrdersPage: React.FC = () => {
     },
     {
       id: 'supplier',
-      label: t('orders.columns.supplier'),
+      label: t('admin.orders.columns.supplier'),
       minWidth: 100,
       maxWidth: 150,
       hideOnMobile: true,
@@ -346,7 +346,7 @@ const OrdersPage: React.FC = () => {
             </Box>
           ) : (
             <Box sx={{ fontSize: '0.9rem', color: 'text.secondary', fontStyle: 'italic' }}>
-              {t('orders.supplier.notSpecified')}
+              {t('admin.orders.supplier.notSpecified')}
             </Box>
           )}
         </Box>
@@ -354,7 +354,7 @@ const OrdersPage: React.FC = () => {
     },
     {
       id: 'actions',
-      label: t('orders.columns.actions'),
+      label: t('admin.orders.columns.actions'),
       minWidth: 80,
       maxWidth: 120,
       align: 'center' as const,
@@ -380,12 +380,12 @@ const OrdersPage: React.FC = () => {
       await markAsReady(orderId).unwrap();
       setNotification({
         open: true,
-        message: t('orders.messages.markedAsReady'),
+        message: t('admin.orders.messages.markedAsReady'),
         severity: 'success',
       });
       refetch();
     } catch (error: any) {
-      const errorMessage = error?.data?.error || error?.message || t('orders.messages.actionError');
+      const errorMessage = error?.data?.error || error?.message || t('admin.orders.messages.actionError');
       setNotification({
         open: true,
         message: errorMessage,
@@ -399,12 +399,12 @@ const OrdersPage: React.FC = () => {
       await markAsDelivered(orderId).unwrap();
       setNotification({
         open: true,
-        message: t('orders.messages.markedAsDelivered'),
+        message: t('admin.orders.messages.markedAsDelivered'),
         severity: 'success',
       });
       refetch();
     } catch (error: any) {
-      const errorMessage = error?.data?.error || error?.message || t('orders.messages.actionError');
+      const errorMessage = error?.data?.error || error?.message || t('admin.orders.messages.actionError');
       setNotification({
         open: true,
         message: errorMessage,
@@ -415,15 +415,15 @@ const OrdersPage: React.FC = () => {
 
   const handleCancelOrder = async (orderId: number) => {
     try {
-      await cancelOrder({ id: orderId, reason: t('orders.cancelReason') }).unwrap();
+      await cancelOrder({ id: orderId, reason: t('admin.orders.cancelReason') }).unwrap();
       setNotification({
         open: true,
-        message: t('orders.messages.orderCanceled'),
+        message: t('admin.orders.messages.orderCanceled'),
         severity: 'success',
       });
       refetch();
     } catch (error: any) {
-      const errorMessage = error?.data?.error || error?.message || t('orders.messages.actionError');
+      const errorMessage = error?.data?.error || error?.message || t('admin.orders.messages.actionError');
       setNotification({
         open: true,
         message: errorMessage,
@@ -433,12 +433,12 @@ const OrdersPage: React.FC = () => {
   };
 
   const statusOptions = [
-    { value: '', label: t('orders.status.all') },
-    { value: 'received', label: t('orders.status.received') },
-    { value: 'processing', label: t('orders.status.processing') },
-    { value: 'ready', label: t('orders.status.ready') },
-    { value: 'delivered', label: t('orders.status.delivered') },
-    { value: 'canceled', label: t('orders.status.canceled') },
+    { value: '', label: t('admin.orders.status.all') },
+    { value: 'received', label: t('admin.orders.status.received') },
+    { value: 'processing', label: t('admin.orders.status.processing') },
+    { value: 'ready', label: t('admin.orders.status.ready') },
+    { value: 'delivered', label: t('admin.orders.status.delivered') },
+    { value: 'canceled', label: t('admin.orders.status.canceled') },
   ];
 
   if (isLoading) {
@@ -459,7 +459,7 @@ const OrdersPage: React.FC = () => {
           <OrderIcon sx={pageStyles.titleIcon} />
           <Box>
             <Typography variant="h4" component="h1">
-              {t('orders.title')}
+              {t('admin.orders.title')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {totalCount > 0 && `${t('common:total')}: ${totalCount}`}
@@ -471,7 +471,7 @@ const OrdersPage: React.FC = () => {
       {/* Фильтры */}
       <Box sx={pageStyles.filtersContainer}>
         <TextField
-          placeholder={t('orders.searchPlaceholder')}
+          placeholder={t('admin.orders.searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           variant="outlined"
@@ -488,7 +488,7 @@ const OrdersPage: React.FC = () => {
         
         <TextField
           select
-          label={t('orders.columns.status')}
+          label={t('admin.orders.columns.status')}
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           variant="outlined"

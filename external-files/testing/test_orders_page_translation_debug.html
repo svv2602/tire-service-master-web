@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест переводов страницы заказов</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .test-key { background: #f5f5f5; padding: 5px; margin: 5px 0; }
+        .word-wrap-test {
+            width: 100px;
+            border: 1px solid red;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+            padding: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Тест переводов страницы заказов</h1>
+    
+    <div class="test-section">
+        <h2>Тест переноса слов</h2>
+        <p>Тест с длинным текстом в узком контейнере:</p>
+        <div class="word-wrap-test">
+            ШиноСервис Экспресс на Оболоні очень длинное название сервисной точки
+        </div>
+        <div class="word-wrap-test">
+            Коваленко Олег Васильевич длинное имя клиента
+        </div>
+        <div class="word-wrap-test">
+            +38 (661) 234-56-78 телефон
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Проверка ключей переводов</h2>
+        <p>Ключи, которые должны переводиться:</p>
+        <div class="test-key">admin:orders.title → "Заказы интернет-магазинов"</div>
+        <div class="test-key">admin:orders.searchPlaceholder → "Поиск по ТТН, имени клиента или телефону..."</div>
+        <div class="test-key">admin:orders.columns.status → "Статус"</div>
+        <div class="test-key">admin:orders.columns.customer → "Клиент"</div>
+        <div class="test-key">admin:orders.thirdParty → "Сторонняя"</div>
+        <div class="test-key">common:total → "Всего"</div>
+        <div class="test-key">common:notSpecified → "Не указано"</div>
+        <div class="test-key">common:units.pieces → "шт."</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Инструкции для проверки</h2>
+        <ol>
+            <li>Открыть страницу /admin/store-orders в браузере</li>
+            <li>Открыть консоль разработчика (F12)</li>
+            <li>Проверить наличие ошибок в консоли</li>
+            <li>В консоли выполнить: <code>localStorage.getItem('i18nextLng')</code> для проверки языка</li>
+            <li>Проверить загрузку файлов переводов в Network tab</li>
+            <li>Переключить язык и проверить изменения</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>Возможные причины проблем</h2>
+        <ul>
+            <li>Файлы переводов не перезагрузились в браузере (нужна очистка кэша)</li>
+            <li>Сервер разработки не перезапущен после изменения файлов переводов</li>
+            <li>Ошибка в структуре JSON файлов переводов</li>
+            <li>Неправильная конфигурация i18next</li>
+            <li>CSS стили не применяются из-за специфичности селекторов</li>
+        </ul>
+    </div>
+</body>
+</html>

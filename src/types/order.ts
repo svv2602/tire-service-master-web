@@ -12,6 +12,7 @@ export interface OrderItem {
   category?: string;
   brand?: string;
   model?: string;
+  image_url?: string;
   attributes?: Record<string, any>;
   formatted_price: string;
   formatted_sum: string;
@@ -57,6 +58,9 @@ export interface Order {
   
   // Связи
   service_point?: any;
+  supplier?: any;
+  supplier_name?: string;
+  supplier_firm_id?: string;
   order_items: OrderItem[];
   
   created_at: string;
@@ -84,7 +88,18 @@ export interface OrderCreateData {
     price: number;
     sum: number;
     bas_id: string;
+    image_url?: string;
   }[];
+}
+
+// Интерфейс для нового формата загрузки заказов (соответствует шаблону)
+export interface OrderBulkCreateData {
+  orders: {
+    date: string;
+    firmName: string;
+    firmId: string;
+    data: OrderCreateData[];
+  };
 }
 
 export interface OrderFilters {
