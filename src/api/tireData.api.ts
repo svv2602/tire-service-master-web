@@ -1,5 +1,4 @@
 import { baseApi } from './baseApi';
-import config from '../config';
 
 // Типы для работы с данными шин
 export interface TireDataStats {
@@ -85,7 +84,7 @@ export const tireDataApi = baseApi.injectEndpoints({
     // Получение статистики
     getTireDataStats: builder.query<{ status: string; data: TireDataStats }, void>({
       query: () => ({
-        url: `${config.API_URL}${config.API_PREFIX}/admin/tire_data/status`,
+        url: '/admin/tire_data/status',
         credentials: 'include',
       }),
     }),
@@ -93,7 +92,7 @@ export const tireDataApi = baseApi.injectEndpoints({
     // Загрузка CSV файлов
     uploadTireDataFiles: builder.mutation<{ status: string; data: UploadResult }, FormData>({
       query: (formData) => ({
-        url: `${config.API_URL}${config.API_PREFIX}/admin/tire_data/upload_files`,
+        url: '/admin/tire_data/upload_files',
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -103,7 +102,7 @@ export const tireDataApi = baseApi.injectEndpoints({
     // Валидация файлов
     validateTireDataFiles: builder.mutation<{ status: string; data: ValidationResult }, { csv_path: string }>({
       query: (data) => ({
-        url: `${config.API_URL}${config.API_PREFIX}/admin/tire_data/validate_files`,
+        url: '/admin/tire_data/validate_files',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -116,7 +115,7 @@ export const tireDataApi = baseApi.injectEndpoints({
     // Импорт данных
     importTireData: builder.mutation<ImportResult, { csv_path: string; version?: string; options?: ImportOptions }>({
       query: (data) => ({
-        url: `${config.API_URL}${config.API_PREFIX}/admin/tire_data/import`,
+        url: '/admin/tire_data/import',
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -129,7 +128,7 @@ export const tireDataApi = baseApi.injectEndpoints({
     // Удаление версии
     deleteTireDataVersion: builder.mutation<{ status: string; message: string }, string>({
       query: (version) => ({
-        url: `${config.API_URL}${config.API_PREFIX}/admin/tire_data/version/${version}`,
+        url: `/admin/tire_data/version/${version}`,
         method: 'DELETE',
         credentials: 'include',
       }),
@@ -138,7 +137,7 @@ export const tireDataApi = baseApi.injectEndpoints({
     // Откат к версии
     rollbackTireDataVersion: builder.mutation<{ status: string; message: string }, string>({
       query: (version) => ({
-        url: `${config.API_URL}${config.API_PREFIX}/admin/tire_data/rollback/${version}`,
+        url: `/admin/tire_data/rollback/${version}`,
         method: 'POST',
         credentials: 'include',
       }),
