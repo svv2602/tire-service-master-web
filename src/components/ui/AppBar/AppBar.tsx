@@ -98,15 +98,27 @@ export const AppBar: React.FC<AppBarProps> = ({
   const [mobileMenuAnchorEl, setMobileMenuAnchorEl] = useState<null | HTMLElement>(null);
   
   const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setProfileAnchorEl(event.currentTarget);
+    // Проверяем, что элемент существует и присутствует в DOM
+    const target = event.currentTarget;
+    if (target && target.parentElement) {
+      setProfileAnchorEl(target);
+    }
   };
   
   const handleNotificationsMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setNotificationsAnchorEl(event.currentTarget);
+    // Проверяем, что элемент существует и присутствует в DOM
+    const target = event.currentTarget;
+    if (target && target.parentElement) {
+      setNotificationsAnchorEl(target);
+    }
   };
   
   const handleMobileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setMobileMenuAnchorEl(event.currentTarget);
+    // Проверяем, что элемент существует и присутствует в DOM
+    const target = event.currentTarget;
+    if (target && target.parentElement) {
+      setMobileMenuAnchorEl(target);
+    }
   };
   
   const handleMenuClose = () => {
@@ -197,51 +209,23 @@ export const AppBar: React.FC<AppBarProps> = ({
         </Box>
       </Toolbar>
       
-      {/* Меню профиля */}
-      <Menu
-        anchorEl={profileAnchorEl}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        keepMounted
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        open={Boolean(profileAnchorEl)}
-        onClose={handleMenuClose}
-      >
-        {username && (
-          <Box sx={{ px: 2, py: 1 }}>
-            <Typography variant="subtitle1">{username}</Typography>
-            <Divider sx={{ my: 1 }} />
-          </Box>
-        )}
-        {profileActions.map((action, index) => (
-          <MenuItem 
-            key={index} 
-            onClick={() => {
-              handleMenuClose();
-              action.onClick();
-            }}
-            disabled={action.disabled}
-          >
-            {action.icon && (
-              <Box component="span" sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
-                {React.createElement(action.icon, { fontSize: 'small' })}
-              </Box>
-            )}
-            {action.label}
-          </MenuItem>
-        ))}
-      </Menu>
-      
-      {/* Меню уведомлений */}
-      <Menu
-        anchorEl={notificationsAnchorEl}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        keepMounted
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        open={Boolean(notificationsAnchorEl)}
-        onClose={handleMenuClose}
-      >
-        {notificationActions.length > 0 ? (
-          notificationActions.map((action, index) => (
+      {/* Меню профиля - отображаем только если есть действия или имя пользователя */}
+      {(profileActions.length > 0 || username) && (
+        <Menu
+          anchorEl={profileAnchorEl}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          keepMounted
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          open={Boolean(profileAnchorEl) && Boolean(profileAnchorEl?.parentElement)}
+          onClose={handleMenuClose}
+        >
+          {username && (
+            <Box sx={{ px: 2, py: 1 }}>
+              <Typography variant="subtitle1">{username}</Typography>
+              <Divider sx={{ my: 1 }} />
+            </Box>
+          )}
+          {profileActions.map((action, index) => (
             <MenuItem 
               key={index} 
               onClick={() => {
@@ -257,76 +241,108 @@ export const AppBar: React.FC<AppBarProps> = ({
               )}
               {action.label}
             </MenuItem>
-          ))
-        ) : (
-          <MenuItem disabled>Нет уведомлений</MenuItem>
-        )}
-      </Menu>
+          ))}
+        </Menu>
+      )}
       
-      {/* Мобильное меню */}
-      <Menu
-        anchorEl={mobileMenuAnchorEl}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        keepMounted
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        open={Boolean(mobileMenuAnchorEl)}
-        onClose={handleMenuClose}
-      >
-        {/* Навигационные ссылки (только на мобильных) */}
-        {navigationActions.length > 0 && (
-          <>
-            {navigationActions.map((action, index) => (
-              <MenuItem
-                key={index}
-                onClick={() => {
-                  handleMenuClose();
-                  action.onClick();
-                }}
-                disabled={action.disabled}
+      {/* Меню уведомлений - отображаем только если есть действия */}
+      {notificationActions.length > 0 && (
+        <Menu
+          anchorEl={notificationsAnchorEl}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          keepMounted
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          open={Boolean(notificationsAnchorEl) && Boolean(notificationsAnchorEl?.parentElement)}
+          onClose={handleMenuClose}
+        >
+          {notificationActions.map((action, index) => (
+            <MenuItem 
+              key={index} 
+              onClick={() => {
+                handleMenuClose();
+                action.onClick();
+              }}
+              disabled={action.disabled}
+            >
+              {action.icon && (
+                <Box component="span" sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
+                  {React.createElement(action.icon, { fontSize: 'small' })}
+                </Box>
+              )}
+              {action.label}
+            </MenuItem>
+          ))}
+        </Menu>
+      )}
+      
+      {/* Мобильное меню - отображаем только если есть контент */}
+      {(navigationActions.length > 0 || notificationActions.length > 0 || profileActions.length > 0 || username) && (
+        <Menu
+          anchorEl={mobileMenuAnchorEl}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          keepMounted
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+          open={Boolean(mobileMenuAnchorEl) && Boolean(mobileMenuAnchorEl?.parentElement)}
+          onClose={handleMenuClose}
+        >
+          {/* Навигационные ссылки (только на мобильных) */}
+          {navigationActions.length > 0 && (
+            <>
+              {navigationActions.map((action, index) => (
+                <MenuItem
+                  key={index}
+                  onClick={() => {
+                    handleMenuClose();
+                    action.onClick();
+                  }}
+                  disabled={action.disabled}
+                >
+                  {action.icon && (
+                    <Box component="span" sx={{ mr: 2, display: 'flex', alignItems: 'center' }}>
+                      {React.createElement(action.icon, { fontSize: 'medium' })}
+                    </Box>
+                  )}
+                  {action.label}
+                </MenuItem>
+              ))}
+              {(notificationActions.length > 0 || profileActions.length > 0 || username) && (
+                <Divider sx={{ my: 1 }} />
+              )}
+            </>
+          )}
+          
+          {/* Уведомления */}
+          {notificationActions.length > 0 && (
+            <MenuItem onClick={handleNotificationsMenuOpen}>
+              <IconButton color="inherit" aria-label="show notifications" size="large">
+                <Badge badgeContent={notificationCount} color="error">
+                  <NotificationsIcon />
+                </Badge>
+              </IconButton>
+              <p>Уведомления</p>
+            </MenuItem>
+          )}
+          
+          {/* Профиль */}
+          {(profileActions.length > 0 || username) && (
+            <MenuItem onClick={handleProfileMenuOpen}>
+              <IconButton
+                aria-label="account of current user"
+                aria-haspopup="true"
+                color="inherit"
+                size="large"
               >
-                {action.icon && (
-                  <Box component="span" sx={{ mr: 2, display: 'flex', alignItems: 'center' }}>
-                    {React.createElement(action.icon, { fontSize: 'medium' })}
-                  </Box>
+                {avatarUrl ? (
+                  <Avatar src={avatarUrl} alt={username} sx={{ width: 40, height: 40 }} />
+                ) : (
+                  <AccountCircleIcon sx={{ fontSize: 40 }} />
                 )}
-                {action.label}
-              </MenuItem>
-            ))}
-            {(notificationActions.length > 0 || profileActions.length > 0) && (
-              <Divider sx={{ my: 1 }} />
-            )}
-          </>
-        )}
-        
-        {/* Уведомления */}
-        {notificationActions.length > 0 && (
-          <MenuItem onClick={handleNotificationsMenuOpen}>
-            <IconButton color="inherit" aria-label="show notifications" size="large">
-              <Badge badgeContent={notificationCount} color="error">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
-            <p>Уведомления</p>
-          </MenuItem>
-        )}
-        
-        {/* Профиль */}
-        <MenuItem onClick={handleProfileMenuOpen}>
-          <IconButton
-            aria-label="account of current user"
-            aria-haspopup="true"
-            color="inherit"
-            size="large"
-          >
-            {avatarUrl ? (
-              <Avatar src={avatarUrl} alt={username} sx={{ width: 40, height: 40 }} />
-            ) : (
-              <AccountCircleIcon sx={{ fontSize: 40 }} />
-            )}
-          </IconButton>
-          <p>Профиль</p>
-        </MenuItem>
-      </Menu>
+              </IconButton>
+              <p>Профиль</p>
+            </MenuItem>
+          )}
+        </Menu>
+      )}
     </StyledAppBar>
   );
 };
