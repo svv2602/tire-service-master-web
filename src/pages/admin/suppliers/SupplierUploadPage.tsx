@@ -599,7 +599,13 @@ curl -X POST http://localhost:8000/api/v1/suppliers/${supplier.id}/admin_upload_
 # Для поставщиков (с API ключом):
 curl -X POST http://localhost:8000/api/v1/suppliers/upload_price \\
   -H "X-API-Key: ${supplier.api_key}" \\
-  -F "file=@your_price_file.xml"`}
+  -F "file=@your_price_file.xml"
+
+# Пример с XML в теле запроса (для поставщиков):
+curl -X POST http://localhost:8000/api/v1/suppliers/upload_price \\
+  -H "X-API-Key: ${supplier.api_key}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"xml_content": "<hotline>...</hotline>"}'`}
               </Typography>
             </Paper>
             <Alert severity="info" sx={{ mt: 2 }}>
@@ -617,9 +623,10 @@ curl -X POST http://localhost:8000/api/v1/auth/login \\
             </Alert>
             <Alert severity="warning" sx={{ mt: 1 }}>
               <Typography variant="body2">
-                <strong>Для поставщиков:</strong> Второй пример с API ключом предназначен 
+                <strong>Для поставщиков:</strong> Последние два примера с API ключом предназначены 
                 для поставщиков, загружающих прайсы самостоятельно через endpoint 
-                <code>/api/v1/suppliers/upload_price</code>.
+                <code>/api/v1/suppliers/upload_price</code>. Используйте <code>@</code> 
+                перед путем к файлу при использовании <code>-F</code>.
               </Typography>
             </Alert>
           </CardContent>
