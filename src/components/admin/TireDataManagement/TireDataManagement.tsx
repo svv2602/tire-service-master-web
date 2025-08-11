@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -52,9 +51,7 @@ import {
   Refresh as RefreshIcon,
   Delete as DeleteIcon,
   Restore as RestoreIcon,
-  Visibility as ViewIcon,
   ExpandMore as ExpandMoreIcon,
-  FolderOpen as FolderIcon,
   Description as FileIcon,
   Timeline as StatsIcon,
   History as HistoryIcon,
@@ -62,6 +59,20 @@ import {
   Edit as EditIcon,
   DeleteSweep as ClearAllIcon
 } from '@mui/icons-material';
+
+// Импорт новых API хуков
+import {
+  useGetTireDataStatsQuery,
+  useUploadTireDataFilesMutation,
+  useValidateTireDataFilesMutation,
+  useImportTireDataMutation,
+  useDeleteTireDataVersionMutation,
+  useRollbackTireDataVersionMutation,
+  type TireDataStats,
+  type ValidationResult,
+  type ImportResult,
+  type UploadResult
+} from '../../../api/tireData.api';
 
 // TabPanel компонент
 interface TabPanelProps {
@@ -90,66 +101,33 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-// Типы данных
-interface TireDataStats {
-  configurations_count: number;
-  active_configurations: number;
-  current_version: string;
-  last_update: string;
-  available_versions: Array<{
-    version: string;
-    imported_at: string;
-  }>;
-}
-
-interface FileValidation {
-  valid: boolean;
-  exists: boolean;
-  readable: boolean;
-  errors: string[];
-  warnings: string[];
-  statistics: {
-    rows_count: number;
-    columns_count: number;
-    file_size: number;
-    encoding: string;
-    [key: string]: any;
-  };
-}
-
-interface ValidationResult {
-  valid: boolean;
-  files: Record<string, FileValidation>;
-  errors: string[];
-  warnings: string[];
-  statistics: Record<string, any>;
-}
-
-interface ImportResult {
-  status: 'success' | 'error';
-  message: string;
-  data?: {
-    version: string;
-    statistics: Record<string, number>;
-  };
+// Локальные типы (остальные импортированы из API)
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
 }
 
 const TireDataManagement: React.FC = () => {
-  // Получаем токен аутентификации из Redux
-  const authToken = useSelector((state: any) => state.auth?.accessToken);
+  // RTK Query хуки
+  const { data: statsData, error: statsError, isLoading: statsLoading, refetch: refetchStats } = useGetTireDataStatsQuery();
+  const [uploadFiles, { isLoading: uploading }] = useUploadTireDataFilesMutation();
+  const [validateFiles, { isLoading: validating }] = useValidateTireDataFilesMutation();
+  const [importData, { isLoading: importing }] = useImportTireDataMutation();
+  const [deleteVersion] = useDeleteTireDataVersionMutation();
+  const [rollbackVersion] = useRollbackTireDataVersionMutation();
 
   // Состояние компонента
   const [activeStep, setActiveStep] = useState(0);
-  const [csvPath, setCsvPath] = useState('/home/snisar/mobi_tz/md/auto/auto');
+  const [selectedFiles, setSelectedFiles] = useState<Record<string, File>>({});
+  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [version, setVersion] = useState('');
-  const [stats, setStats] = useState<TireDataStats | null>(null);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   
-  // Состояния загрузки
-  const [loading, setLoading] = useState(false);
-  const [validating, setValidating] = useState(false);
-  const [importing, setImporting] = useState(false);
+  // Состояния для обработки ошибок
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
   // Опции импорта
   const [importOptions, setImportOptions] = useState({
@@ -179,8 +157,8 @@ const TireDataManagement: React.FC = () => {
   // Шаги процесса
   const steps = [
     {
-      label: 'Настройка параметров',
-      description: 'Укажите путь к CSV файлам и версию данных'
+      label: 'Выбор файлов',
+      description: 'Загрузите необходимые CSV файлы и укажите версию данных'
     },
     {
       label: 'Валидация файлов',
@@ -220,129 +198,176 @@ const TireDataManagement: React.FC = () => {
     }
   ];
 
-  // Функция для получения заголовков с авторизацией
-  const getAuthHeaders = () => {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json'
-    };
+  // Функция для обработки ошибок API
+  const handleApiError = (error: any, operation: string) => {
+    console.error(`Ошибка ${operation}:`, error);
     
-    if (authToken) {
-      (headers as any)['Authorization'] = `Bearer ${authToken}`;
+    let errorText = `Ошибка при выполнении операции "${operation}"`;
+    
+    if (error?.data?.message) {
+      errorText = error.data.message;
+    } else if (error?.data?.error) {
+      errorText = error.data.error;
+    } else if (error?.message) {
+      errorText = error.message;
+    } else if (error?.status) {
+      switch (error.status) {
+        case 400:
+          errorText = 'Некорректные данные запроса';
+          break;
+        case 401:
+          errorText = 'Необходима авторизация';
+          break;
+        case 403:
+          errorText = 'Недостаточно прав для выполнения операции';
+          break;
+        case 404:
+          errorText = 'Ресурс не найден';
+          break;
+        case 422:
+          errorText = 'Ошибка валидации данных';
+          break;
+        case 500:
+          errorText = 'Внутренняя ошибка сервера. Попробуйте позже или обратитесь к администратору';
+          break;
+        default:
+          errorText = `Ошибка сервера (${error.status})`;
+      }
     }
     
-    return headers;
+    setErrorMessage(errorText);
+    setSuccessMessage(null);
   };
 
-  // Загрузка статистики при монтировании
-  useEffect(() => {
-    loadStats();
-  }, []);
+  const clearMessages = () => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+  };
 
-  // API функции
-  const loadStats = async () => {
-    setLoading(true);
+  const goToStep = (step: number) => {
+    clearMessages();
+    setActiveStep(step);
+  };
+
+  // Новые функции с RTK Query
+  const handleFileUpload = async () => {
+    if (Object.keys(selectedFiles).length === 0) {
+      setErrorMessage('Необходимо выбрать файлы для загрузки');
+      return;
+    }
+
     try {
-      const response = await fetch('http://localhost:8000/api/v1/admin/tire_data/status', {
-        method: 'GET',
-        credentials: 'include',
-        headers: getAuthHeaders()
-      });
+      clearMessages();
+      const formData = new FormData();
       
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data.data);
+      // Добавляем все выбранные файлы в FormData
+      Object.entries(selectedFiles).forEach(([key, file]) => {
+        formData.append('files[' + key + ']', file);
+      });
+
+      const result = await uploadFiles(formData).unwrap();
+      setUploadResult(result.data);
+      setSuccessMessage(`Файлы успешно загружены: ${Object.keys(result.data.uploaded_files).length} файл(ов)`);
+      setActiveStep(1); // Переход к валидации
+    } catch (error) {
+      handleApiError(error, 'загрузки файлов');
+    }
+  };
+
+  const handleFileSelection = (fileType: string, file: File | null) => {
+    setSelectedFiles(prev => {
+      const newFiles = { ...prev };
+      if (file) {
+        newFiles[fileType] = file;
+      } else {
+        delete newFiles[fileType];
+      }
+      return newFiles;
+    });
+  };
+
+  const handleValidateFiles = async () => {
+    if (!uploadResult?.upload_path) {
+      setErrorMessage('Файлы не загружены. Сначала загрузите файлы на сервер');
+      return;
+    }
+
+    try {
+      clearMessages();
+      const result = await validateFiles({ csv_path: uploadResult.upload_path }).unwrap();
+      setValidationResult(result.data);
+      
+      if (result.status === 'success' || result.status === 'warning') {
+        if (result.data.valid) {
+          setSuccessMessage('Все файлы успешно прошли валидацию');
+          setActiveStep(2); // Переход к импорту
+        } else {
+          setSuccessMessage('Валидация завершена с предупреждениями. Проверьте опции исправления ошибок');
+        }
       }
     } catch (error) {
-      console.error('Ошибка загрузки статистики:', error);
-    } finally {
-      setLoading(false);
+      handleApiError(error, 'валидации файлов');
     }
   };
 
-  const validateFiles = async () => {
-    setValidating(true);
-    setValidationResult(null);
-    
-    try {
-      const response = await fetch('http://localhost:8000/api/v1/admin/tire_data/validate_files', {
-        method: 'POST',
-        credentials: 'include',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ csv_path: csvPath })
-      });
-      
-      const data = await response.json();
-      setValidationResult(data.data);
-      
-      if (data.status === 'success') {
-        setActiveStep(2); // Переход к импорту
-      }
-    } catch (error) {
-      console.error('Ошибка валидации:', error);
-    } finally {
-      setValidating(false);
+  const handleImportData = async () => {
+    if (!uploadResult?.upload_path) {
+      setErrorMessage('Файлы не загружены. Сначала загрузите и валидируйте файлы');
+      return;
     }
-  };
 
-  const importData = async () => {
-    setImporting(true);
-    setImportResult(null);
-    
     try {
-      const response = await fetch('http://localhost:8000/api/v1/admin/tire_data/import', {
-        method: 'POST',
-        credentials: 'include',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ 
-          csv_path: csvPath,
-          version: version || undefined,
-          ...importOptions
-        })
-      });
+      clearMessages();
+      const result = await importData({
+        csv_path: uploadResult.upload_path,
+        version: version || undefined,
+        options: importOptions
+      }).unwrap();
       
-      const data = await response.json();
-      setImportResult(data);
+      setImportResult(result);
       
-      if (data.status === 'success') {
+      if (result.status === 'success' || result.status === 'warning') {
+        const hasErrors = result.data?.has_validation_errors;
+        const errorCount = result.data?.validation_errors?.length || 0;
+        
+        if (hasErrors) {
+          setSuccessMessage(
+            `Импорт завершен с предупреждениями! Версия: ${result.data?.version || 'не указана'}. ` +
+            `Пропущено записей с ошибками: ${errorCount}. Проверьте отчет об ошибках ниже.`
+          );
+        } else {
+          setSuccessMessage(`Данные успешно импортированы! Версия: ${result.data?.version || 'не указана'}`);
+        }
+        
         setActiveStep(3); // Переход к завершению
-        await loadStats(); // Обновляем статистику
+        refetchStats(); // Обновляем статистику
+      } else {
+        setErrorMessage(result.message || 'Импорт завершился с ошибкой');
       }
     } catch (error) {
-      console.error('Ошибка импорта:', error);
-    } finally {
-      setImporting(false);
+      handleApiError(error, 'импорта данных');
     }
   };
 
-  const deleteVersion = async (versionToDelete: string) => {
+  const handleDeleteVersion = async (versionToDelete: string) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/admin/tire_data/version/${versionToDelete}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: getAuthHeaders()
-      });
-      
-      if (response.ok) {
-        await loadStats();
-      }
+      clearMessages();
+      await deleteVersion(versionToDelete).unwrap();
+      setSuccessMessage(`Версия ${versionToDelete} успешно удалена`);
+      refetchStats(); // Обновляем статистику
     } catch (error) {
-      console.error('Ошибка удаления версии:', error);
+      handleApiError(error, `удаления версии ${versionToDelete}`);
     }
   };
 
-  const rollbackToVersion = async (targetVersion: string) => {
+  const handleRollbackToVersion = async (targetVersion: string) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/admin/tire_data/rollback/${targetVersion}`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: getAuthHeaders()
-      });
-      
-      if (response.ok) {
-        await loadStats();
-      }
+      clearMessages();
+      await rollbackVersion(targetVersion).unwrap();
+      setSuccessMessage(`Успешно выполнен откат к версии ${targetVersion}`);
+      refetchStats(); // Обновляем статистику
     } catch (error) {
-      console.error('Ошибка отката версии:', error);
+      handleApiError(error, `отката к версии ${targetVersion}`);
     }
   };
 
@@ -383,13 +408,30 @@ const TireDataManagement: React.FC = () => {
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
-            onClick={loadStats}
-            disabled={loading}
+            onClick={refetchStats}
+            disabled={statsLoading}
           >
             Обновить
           </Button>
         </Box>
       </Box>
+
+      {/* Сообщения об ошибках и успехе */}
+      {errorMessage && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={clearMessages}>
+          <Typography variant="body2">
+            {errorMessage}
+          </Typography>
+        </Alert>
+      )}
+
+      {successMessage && (
+        <Alert severity="success" sx={{ mb: 3 }} onClose={clearMessages}>
+          <Typography variant="body2">
+            {successMessage}
+          </Typography>
+        </Alert>
+      )}
 
       {/* Вкладки */}
       <Paper sx={{ mb: 3 }}>
@@ -418,11 +460,19 @@ const TireDataManagement: React.FC = () => {
       {/* TabPanel для загрузки данных */}
       <TabPanel value={currentTab} index={0}>
         {/* Текущая статистика */}
-      {stats && (
+      {statsData?.data && (
         <Alert severity="info" sx={{ mb: 3 }}>
           <Typography variant="body2">
-            <strong>Текущее состояние:</strong> {stats.configurations_count} конфигураций,
-            версия {stats.current_version}, последнее обновление: {stats.last_update}
+            <strong>Текущее состояние:</strong> {statsData.data.configurations_count} конфигураций,
+            версия {statsData.data.current_version}, последнее обновление: {statsData.data.last_update}
+          </Typography>
+        </Alert>
+      )}
+
+      {statsError && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          <Typography variant="body2">
+            Ошибка загрузки статистики. Проверьте подключение к серверу.
           </Typography>
         </Alert>
       )}
@@ -443,17 +493,6 @@ const TireDataManagement: React.FC = () => {
                   <Box sx={{ mt: 2 }}>
                     <TextField
                       fullWidth
-                      label="Путь к CSV файлам"
-                      value={csvPath}
-                      onChange={(e) => setCsvPath(e.target.value)}
-                      placeholder="/home/user/csv-files"
-                      sx={{ mb: 2 }}
-                      InputProps={{
-                        startAdornment: <FolderIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                      }}
-                    />
-                    <TextField
-                      fullWidth
                       label="Версия данных (опционально)"
                       value={version}
                       onChange={(e) => setVersion(e.target.value)}
@@ -462,9 +501,9 @@ const TireDataManagement: React.FC = () => {
                       helperText="Если не указана, будет создана автоматически"
                     />
                     
-                    {/* Список обязательных файлов */}
+                    {/* Загрузка файлов */}
                     <Typography variant="subtitle2" sx={{ mb: 2 }}>
-                      Обязательные файлы:
+                      Загрузите необходимые CSV файлы:
                     </Typography>
                     <Grid container spacing={2} sx={{ mb: 3 }}>
                       {requiredFiles.map((file) => (
@@ -480,11 +519,46 @@ const TireDataManagement: React.FC = () => {
                               <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
                                 {file.description}
                               </Typography>
-                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
                                 {file.columns.map((col) => (
                                   <Chip key={col} label={col} size="small" variant="outlined" />
                                 ))}
                               </Box>
+                              
+                              {/* File input */}
+                              <input
+                                accept=".csv"
+                                type="file"
+                                id={`file-${file.name}`}
+                                style={{ display: 'none' }}
+                                onChange={(e) => {
+                                  const selectedFile = e.target.files?.[0];
+                                  if (selectedFile && selectedFile.name === file.name) {
+                                    handleFileSelection(file.name, selectedFile);
+                                  } else if (selectedFile) {
+                                    alert(`Пожалуйста, выберите файл с именем ${file.name}`);
+                                    e.target.value = '';
+                                  }
+                                }}
+                              />
+                              <label htmlFor={`file-${file.name}`}>
+                                <Button
+                                  variant={selectedFiles[file.name] ? "contained" : "outlined"}
+                                  component="span"
+                                  size="small"
+                                  startIcon={selectedFiles[file.name] ? <CheckIcon /> : <UploadIcon />}
+                                  color={selectedFiles[file.name] ? "success" : "primary"}
+                                  fullWidth
+                                >
+                                  {selectedFiles[file.name] ? 'Загружен' : 'Выбрать файл'}
+                                </Button>
+                              </label>
+                              
+                              {selectedFiles[file.name] && (
+                                <Typography variant="caption" color="success.main" sx={{ mt: 1, display: 'block' }}>
+                                  {selectedFiles[file.name].name} ({formatFileSize(selectedFiles[file.name].size)})
+                                </Typography>
+                              )}
                             </CardContent>
                           </Card>
                         </Grid>
@@ -494,10 +568,11 @@ const TireDataManagement: React.FC = () => {
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <Button
                         variant="contained"
-                        onClick={() => setActiveStep(1)}
-                        disabled={!csvPath.trim()}
+                        onClick={handleFileUpload}
+                        disabled={Object.keys(selectedFiles).length === 0 || uploading}
+                        startIcon={uploading ? <CircularProgress size={20} /> : <UploadIcon />}
                       >
-                        Далее
+                        {uploading ? 'Загрузка файлов...' : 'Загрузить файлы'}
                       </Button>
                     </Box>
                   </Box>
@@ -508,15 +583,15 @@ const TireDataManagement: React.FC = () => {
                     <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
                       <Button
                         variant="outlined"
-                        onClick={() => setActiveStep(0)}
+                        onClick={() => goToStep(0)}
                       >
                         Назад
                       </Button>
                       <Button
                         variant="contained"
                         startIcon={validating ? <CircularProgress size={20} /> : <CheckIcon />}
-                        onClick={validateFiles}
-                        disabled={validating}
+                        onClick={handleValidateFiles}
+                        disabled={validating || !uploadResult}
                       >
                         {validating ? 'Проверка файлов...' : 'Проверить файлы'}
                       </Button>
@@ -645,14 +720,14 @@ const TireDataManagement: React.FC = () => {
                             <Box sx={{ mt: 3, display: 'flex', gap: 1 }}>
                               <Button
                                 variant="outlined"
-                                onClick={() => setActiveStep(0)}
+                                onClick={() => goToStep(0)}
                               >
                                 Назад к настройкам
                               </Button>
                               <Button
                                 variant="contained"
                                 color="warning"
-                                onClick={() => setActiveStep(2)}
+                                onClick={() => goToStep(2)}
                                 disabled={!importOptions.skip_invalid_rows && !importOptions.fix_suspicious_sizes}
                               >
                                 Импорт с исправлениями
@@ -665,13 +740,13 @@ const TireDataManagement: React.FC = () => {
                           <Box sx={{ mt: 3, display: 'flex', gap: 1 }}>
                             <Button
                               variant="outlined"
-                              onClick={() => setActiveStep(0)}
+                              onClick={() => goToStep(0)}
                             >
                               Назад к настройкам
                             </Button>
                             <Button
                               variant="contained"
-                              onClick={() => setActiveStep(2)}
+                              onClick={() => goToStep(2)}
                             >
                               Продолжить импорт
                             </Button>
@@ -694,7 +769,7 @@ const TireDataManagement: React.FC = () => {
                     <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
                       <Button
                         variant="outlined"
-                        onClick={() => setActiveStep(1)}
+                        onClick={() => goToStep(1)}
                         disabled={importing}
                       >
                         Назад
@@ -703,8 +778,8 @@ const TireDataManagement: React.FC = () => {
                         variant="contained"
                         color="primary"
                         startIcon={importing ? <CircularProgress size={20} /> : <UploadIcon />}
-                        onClick={importData}
-                        disabled={importing}
+                        onClick={handleImportData}
+                        disabled={importing || !uploadResult}
                         size="large"
                       >
                         {importing ? 'Импорт данных...' : 'Начать импорт'}
@@ -748,8 +823,59 @@ const TireDataManagement: React.FC = () => {
                       </Typography>
                     </Alert>
 
+                    {/* Отчет об ошибках валидации */}
+                    {importResult?.data?.validation_errors && importResult.data.validation_errors.length > 0 && (
+                      <Paper sx={{ p: 2, mb: 3 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 2, color: 'warning.main' }}>
+                          ⚠️ Отчет об ошибках валидации ({importResult.data.validation_errors.length} записей пропущено):
+                        </Typography>
+                        
+                        <TableContainer sx={{ maxHeight: 400 }}>
+                          <Table size="small" stickyHeader>
+                            <TableHead>
+                              <TableRow>
+                                <TableCell>№ записи</TableCell>
+                                <TableCell>Бренд</TableCell>
+                                <TableCell>Модель</TableCell>
+                                <TableCell>Размер шин</TableCell>
+                                <TableCell>Ошибка</TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {importResult.data.validation_errors.map((error, index) => (
+                                <TableRow key={index}>
+                                  <TableCell>{error.record_index}</TableCell>
+                                  <TableCell>{error.brand}</TableCell>
+                                  <TableCell>{error.model}</TableCell>
+                                  <TableCell>
+                                    {error.tire_size ? (
+                                      `${error.tire_size.width}/${error.tire_size.height}R${error.tire_size.diameter}`
+                                    ) : (
+                                      error.tire_size_index ? `#${error.tire_size_index}` : '—'
+                                    )}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Typography variant="body2" color="error">
+                                      {error.error}
+                                    </Typography>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                        
+                        <Alert severity="info" sx={{ mt: 2 }}>
+                          <Typography variant="body2">
+                            💡 <strong>Рекомендации:</strong> Проверьте CSV файлы и исправьте указанные ошибки для полного импорта данных. 
+                            Записи с ошибками были пропущены, остальные данные успешно импортированы.
+                          </Typography>
+                        </Alert>
+                      </Paper>
+                    )}
+
                     {/* Управление версиями */}
-                    {stats && stats.available_versions.length > 0 && (
+                    {statsData?.data && statsData.data.available_versions.length > 0 && (
                       <Paper sx={{ p: 2 }}>
                         <Typography variant="subtitle2" sx={{ mb: 2 }}>
                           Доступные версии данных:
@@ -765,17 +891,17 @@ const TireDataManagement: React.FC = () => {
                               </TableRow>
                             </TableHead>
                             <TableBody>
-                              {stats.available_versions.map((ver) => (
+                              {statsData.data.available_versions.map((ver: any) => (
                                 <TableRow key={ver.version}>
                                   <TableCell>{ver.version}</TableCell>
                                   <TableCell>{ver.imported_at}</TableCell>
                                   <TableCell>
-                                    {ver.version === stats.current_version && (
+                                    {ver.version === statsData.data.current_version && (
                                       <Chip label="Активная" color="primary" size="small" />
                                     )}
                                   </TableCell>
                                   <TableCell>
-                                    {ver.version !== stats.current_version && (
+                                    {ver.version !== statsData.data.current_version && (
                                       <Box sx={{ display: 'flex', gap: 1 }}>
                                         <Tooltip title="Откатиться к этой версии">
                                           <IconButton
@@ -784,7 +910,7 @@ const TireDataManagement: React.FC = () => {
                                               open: true,
                                               title: 'Откат версии',
                                               message: `Вы уверены, что хотите откатиться к версии ${ver.version}?`,
-                                              onConfirm: () => rollbackToVersion(ver.version)
+                                              onConfirm: () => handleRollbackToVersion(ver.version)
                                             })}
                                           >
                                             <RestoreIcon />
@@ -798,7 +924,7 @@ const TireDataManagement: React.FC = () => {
                                               open: true,
                                               title: 'Удаление версии',
                                               message: `Вы уверены, что хотите удалить версию ${ver.version}? Это действие нельзя отменить.`,
-                                              onConfirm: () => deleteVersion(ver.version)
+                                              onConfirm: () => handleDeleteVersion(ver.version)
                                             })}
                                           >
                                             <DeleteIcon />
@@ -819,9 +945,11 @@ const TireDataManagement: React.FC = () => {
                       <Button
                         variant="outlined"
                         onClick={() => {
-                          setActiveStep(0);
+                          goToStep(0);
                           setValidationResult(null);
                           setImportResult(null);
+                          setUploadResult(null);
+                          setSelectedFiles({});
                         }}
                       >
                         Новый импорт
@@ -946,12 +1074,12 @@ const TireDataManagement: React.FC = () => {
       <Dialog open={statsDialog} onClose={() => setStatsDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Статистика данных</DialogTitle>
         <DialogContent>
-          {stats ? (
+          {statsData?.data ? (
             <Grid container spacing={2}>
               <Grid item xs={6}>
                 <Paper sx={{ p: 2, textAlign: 'center' }}>
                   <Typography variant="h4" color="primary">
-                    {stats.configurations_count}
+                    {statsData.data.configurations_count}
                   </Typography>
                   <Typography variant="body2">
                     Всего конфигураций
@@ -961,7 +1089,7 @@ const TireDataManagement: React.FC = () => {
               <Grid item xs={6}>
                 <Paper sx={{ p: 2, textAlign: 'center' }}>
                   <Typography variant="h4" color="success.main">
-                    {stats.active_configurations}
+                    {statsData.data.active_configurations}
                   </Typography>
                   <Typography variant="body2">
                     Активных конфигураций
@@ -971,10 +1099,10 @@ const TireDataManagement: React.FC = () => {
               <Grid item xs={12}>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="body2">
-                  <strong>Текущая версия:</strong> {stats.current_version}
+                  <strong>Текущая версия:</strong> {statsData.data.current_version}
                 </Typography>
                 <Typography variant="body2">
-                  <strong>Последнее обновление:</strong> {stats.last_update}
+                  <strong>Последнее обновление:</strong> {statsData.data.last_update}
                 </Typography>
               </Grid>
             </Grid>
@@ -1013,10 +1141,9 @@ const TireDataManagement: React.FC = () => {
 
       {/* TabPanel для редактирования */}
       <TabPanel value={currentTab} index={1}>
-        <TireDataEditingPanel 
-          stats={stats}
-          onRefresh={loadStats}
-          getAuthHeaders={getAuthHeaders}
+                <TireDataEditingPanel
+          statsData={statsData?.data || null}
+          onRefresh={refetchStats}
         />
       </TabPanel>
     </Box>
@@ -1025,13 +1152,16 @@ const TireDataManagement: React.FC = () => {
 
 // Компонент для вкладки редактирования
 interface TireDataEditingPanelProps {
-  stats: TireDataStats | null;
+  statsData: TireDataStats | null;
   onRefresh: () => void;
-  getAuthHeaders: () => Record<string, string>;
 }
 
-const TireDataEditingPanel: React.FC<TireDataEditingPanelProps> = ({ stats, onRefresh, getAuthHeaders }) => {
-  const [loading, setLoading] = useState(false);
+const TireDataEditingPanel: React.FC<TireDataEditingPanelProps> = ({ statsData, onRefresh }) => {
+  // RTK Query хуки для панели редактирования
+  const [deleteVersion] = useDeleteTireDataVersionMutation();
+  const [rollbackVersion] = useRollbackTireDataVersionMutation();
+  const [importData] = useImportTireDataMutation();
+
   const [clearingData, setClearingData] = useState(false);
   const [versions, setVersions] = useState<any[]>([]);
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -1046,50 +1176,39 @@ const TireDataEditingPanel: React.FC<TireDataEditingPanelProps> = ({ stats, onRe
     onConfirm: () => {}
   });
 
-  // Загружаем список версий
-  const loadVersions = async () => {
-    try {
-      const response = await fetch('http://localhost:8000/api/v1/admin/tire_data/status', {
-        credentials: 'include',
-        headers: getAuthHeaders()
-      });
-      const data = await response.json();
-      if (data.status === 'success') {
-        setVersions(data.data.available_versions || []);
-      }
-    } catch (error) {
-      console.error('Ошибка загрузки версий:', error);
+  // Обновляем список версий из statsData
+  React.useEffect(() => {
+    if (statsData?.available_versions) {
+      setVersions(statsData.available_versions);
     }
-  };
+  }, [statsData]);
 
   // Полная очистка данных
   const handleClearAllData = async () => {
     setClearingData(true);
     try {
-      const response = await fetch('http://localhost:8000/api/v1/admin/tire_data/import', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders()
-        },
-        body: JSON.stringify({
-          csv_path: '/dev/null', // Заглушка
-          force_reload: true,
-          clear_only: true // Новый параметр для только очистки
-        })
-      });
+      await importData({
+        csv_path: '/dev/null', // Заглушка
+        options: {
+          force_reload: true
+        }
+      }).unwrap();
       
-      const result = await response.json();
-      if (result.status === 'success') {
-        onRefresh();
-        alert('Данные успешно очищены');
-      } else {
-        alert(`Ошибка: ${result.message}`);
-      }
-    } catch (error) {
+      onRefresh();
+      alert('✅ Данные успешно очищены');
+    } catch (error: any) {
       console.error('Ошибка очистки:', error);
-      alert('Произошла ошибка при очистке данных');
+      
+      let errorMessage = 'Произошла ошибка при очистке данных';
+      if (error?.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error?.status === 403) {
+        errorMessage = 'Полная очистка данных запрещена в продакшене';
+      } else if (error?.status === 500) {
+        errorMessage = 'Внутренняя ошибка сервера. Попробуйте позже';
+      }
+      
+      alert(`❌ ${errorMessage}`);
     } finally {
       setClearingData(false);
     }
@@ -1098,53 +1217,57 @@ const TireDataEditingPanel: React.FC<TireDataEditingPanelProps> = ({ stats, onRe
   // Удаление версии
   const handleDeleteVersion = async (version: string) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/admin/tire_data/version/${version}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: getAuthHeaders()
-      });
-      
-      if (response.ok) {
-        await loadVersions();
-        onRefresh();
-        alert(`Версия ${version} удалена`);
-      }
-    } catch (error) {
+      await deleteVersion(version).unwrap();
+      onRefresh();
+      alert(`✅ Версия ${version} успешно удалена`);
+    } catch (error: any) {
       console.error('Ошибка удаления версии:', error);
+      
+      let errorMessage = `Ошибка при удалении версии ${version}`;
+      if (error?.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error?.status === 404) {
+        errorMessage = `Версия ${version} не найдена`;
+      } else if (error?.status === 500) {
+        errorMessage = 'Внутренняя ошибка сервера. Попробуйте позже';
+      }
+      
+      alert(`❌ ${errorMessage}`);
     }
   };
 
   // Откат к версии
   const handleRollbackToVersion = async (version: string) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/admin/tire_data/rollback/${version}`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: getAuthHeaders()
-      });
-      
-      if (response.ok) {
-        await loadVersions();
-        onRefresh();
-        alert(`Выполнен откат к версии ${version}`);
-      }
-    } catch (error) {
+      await rollbackVersion(version).unwrap();
+      onRefresh();
+      alert(`✅ Успешно выполнен откат к версии ${version}`);
+    } catch (error: any) {
       console.error('Ошибка отката:', error);
+      
+      let errorMessage = `Ошибка при откате к версии ${version}`;
+      if (error?.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error?.status === 404) {
+        errorMessage = `Версия ${version} не найдена`;
+      } else if (error?.status === 500) {
+        errorMessage = 'Внутренняя ошибка сервера. Попробуйте позже';
+      }
+      
+      alert(`❌ ${errorMessage}`);
     }
   };
 
-  React.useEffect(() => {
-    loadVersions();
-  }, []);
+
 
   return (
     <Box>
       {/* Текущее состояние */}
-      {stats && (
+      {statsData && (
         <Alert severity="info" sx={{ mb: 3 }}>
           <Typography variant="body2">
-            <strong>Текущее состояние:</strong> {stats.configurations_count} конфигураций,
-            версия {stats.current_version}, последнее обновление: {stats.last_update}
+            <strong>Текущее состояние:</strong> {statsData.configurations_count} конфигураций,
+            версия {statsData.current_version}, последнее обновление: {statsData.last_update}
           </Typography>
         </Alert>
       )}
@@ -1265,8 +1388,8 @@ const TireDataEditingPanel: React.FC<TireDataEditingPanelProps> = ({ stats, onRe
               <Button
                 variant="outlined"
                 startIcon={<RefreshIcon />}
-                onClick={loadVersions}
-                disabled={loading}
+                onClick={onRefresh}
+                disabled={false}
               >
                 Обновить список
               </Button>
