@@ -631,18 +631,18 @@ const MainLayout: React.FC = () => {
             description: t('navigation.descriptions.systemSettings'),
           },
           {
-            text: 'Конфигурация системы',
-            icon: <SettingsIcon />,
-            path: '/admin/system-settings',
-            roles: [UserRole.ADMIN],
-            description: 'Управление переменными окружения и системными настройками',
-          },
-          {
             text: t('navigation.settingsDiagnostics'),
             icon: <DiagnosticsIcon />,
             path: '/admin/settings/diagnostics',
             roles: [UserRole.ADMIN],
             description: t('navigation.descriptions.settingsDiagnostics'),
+          },
+          {
+            text: t('navigation.llmAndVehicleSettings'),
+            icon: <SettingsIcon />,
+            path: '/admin/system-settings',
+            roles: [UserRole.ADMIN],
+            description: t('navigation.descriptions.llmAndVehicleSettings'),
           },
           {
             text: t('navigation.pushNotifications'),
