@@ -13,6 +13,7 @@
       "rememberMe": "Запомнить меня",
       "loginButton": "Войти",
       "registerButton": "Зарегистрироваться",
+      "registerButtonShort": "Регистрация",
       "alreadyHaveAccount": "Уже есть аккаунт?",
       "dontHaveAccount": "Нет аккаунта?",
       "loginError": "Ошибка входа",

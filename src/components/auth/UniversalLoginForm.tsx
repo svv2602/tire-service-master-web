@@ -16,7 +16,8 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
-  useTheme
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 
 import {
@@ -61,6 +62,7 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [loginType, setLoginType] = useState<'email' | 'phone'>('email');
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
@@ -492,10 +494,14 @@ const UniversalLoginForm: React.FC<UniversalLoginFormProps> = ({
                   py: 1.5,
                   borderRadius: 1.5,
                   fontSize: '1rem',
-                  fontWeight: 600
+                  fontWeight: 600,
+                  minWidth: 0, // Позволяет кнопке сжиматься
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
                 }}
               >
-                {t('forms.auth.registerButton')}
+                {isMobile ? t('auth.registerButtonShort') : t('forms.auth.registerButton')}
               </Button>
             )}
           </Box>
