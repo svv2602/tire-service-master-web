@@ -727,9 +727,14 @@ const NewBookingWithAvailabilityPage: React.FC = () => {
             </Button>
           </Box>
           
-          {/* Stepper */}
+          {/* Stepper - скрыт на мобильных устройствах */}
           {activeStep !== -1 && (
-            <Paper sx={{ ...getCardStyles(theme), mb: 3, p: 3 }}>
+            <Paper sx={{ 
+              ...getCardStyles(theme), 
+              mb: 3, 
+              p: 3,
+              display: { xs: 'none', md: 'block' } // Скрываем на мобильных (xs) и показываем на планшетах и десктопе (md+)
+            }}>
               <Stepper
                 steps={STEPS.map(step => ({
                   label: step.label,
