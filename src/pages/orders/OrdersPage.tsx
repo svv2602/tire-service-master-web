@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+// import { useTranslation } from 'react-i18next'; // Убрано - используем прямые тексты
 import {
   Box,
   TextField,
@@ -39,7 +39,7 @@ import {
 import { Order, OrderFilters } from '../../types/order';
 
 const OrdersPage: React.FC = () => {
-  const { t } = useTranslation();
+  // const { t } = useTranslation(); // Убрано - используем прямые тексты
   const theme = useTheme();
 
   // Стили страницы
@@ -128,44 +128,44 @@ const OrdersPage: React.FC = () => {
   const orderActions: ActionItem<Order>[] = useMemo(() => [
     {
       id: 'view',
-      label: t('admin.orders.actions.view'),
+      label: 'Просмотреть',
       icon: <ViewIcon />,
       onClick: (order: Order) => handleViewOrder(order),
       color: 'primary',
-      tooltip: t('admin.orders.actions.view')
+      tooltip: 'Просмотреть'
     },
     {
       id: 'mark_ready',
-      label: t('admin.orders.actions.markAsReady'),
+      label: 'Отметить готовым',
       icon: <ReadyIcon />,
       onClick: (order: Order) => handleMarkAsReady(order.id),
       color: 'success',
-      tooltip: t('admin.orders.actions.markAsReady'),
+      tooltip: 'Отметить готовым',
       visible: (order: Order) => order.can_mark_as_ready
     },
     {
       id: 'mark_delivered',
-      label: t('admin.orders.actions.markAsDelivered'),
+      label: 'Отметить выданным',
       icon: <DeliveredIcon />,
       onClick: (order: Order) => handleMarkAsDelivered(order.id),
       color: 'primary',
-      tooltip: t('admin.orders.actions.markAsDelivered'),
+      tooltip: 'Отметить выданным',
       visible: (order: Order) => order.can_mark_as_delivered
     },
     {
       id: 'cancel',
-      label: t('admin.orders.actions.cancel'),
+      label: 'Отменить заказ',
       icon: <CancelIcon />,
       onClick: (order: Order) => handleCancelOrder(order.id),
       color: 'error',
-      tooltip: t('admin.orders.actions.cancel'),
+      tooltip: 'Отменить заказ',
       visible: (order: Order) => order.can_cancel,
       requireConfirmation: true,
       confirmationConfig: {
-        title: t('common:confirmAction'),
-        message: t('common:confirmCancelOrder'),
-        confirmLabel: t('admin.orders.actions.cancel'),
-        cancelLabel: t('common:cancel'),
+        title: 'Подтвердите действие',
+        message: 'Вы уверены, что хотите отменить этот заказ?',
+        confirmLabel: 'Отменить заказ',
+        cancelLabel: 'Отменить',
       }
     }
   ], []);
@@ -174,7 +174,7 @@ const OrdersPage: React.FC = () => {
   const columns = [
     {
       id: 'ttn',
-      label: t('admin.orders.columns.ttn'),
+      label: 'ТТН',
       minWidth: 80,
       maxWidth: 150,
       wrap: true,
@@ -200,7 +200,7 @@ const OrdersPage: React.FC = () => {
     },
     {
       id: 'status',
-      label: t('admin.orders.columns.status'),
+      label: 'Статус',
       minWidth: 80,
       maxWidth: 120,
       align: 'center' as const,
@@ -218,7 +218,7 @@ const OrdersPage: React.FC = () => {
     },
     {
       id: 'customer',
-      label: t('admin.orders.columns.customer'),
+      label: 'Клиент',
       minWidth: 140,
       maxWidth: 200,
       wrap: true,
@@ -241,14 +241,14 @@ const OrdersPage: React.FC = () => {
             whiteSpace: 'normal',
             lineHeight: 1.2
           }}>
-            {order.formatted_phone || t('common:notSpecified')}
+            {order.formatted_phone || 'Не указано'}
           </Typography>
         </Box>
       ),
     },
     {
       id: 'service_point',
-      label: t('admin.orders.columns.servicePoint'),
+      label: 'Точка выдачи',
       minWidth: 120,
       maxWidth: 180,
       wrap: true,
@@ -267,7 +267,7 @@ const OrdersPage: React.FC = () => {
           </Box>
           {order.third_party_point && (
             <Chip
-              label={t('admin.orders.thirdParty')}
+              label="Сторонняя"
               size="small"
               color="warning"
               variant="outlined"
@@ -279,7 +279,7 @@ const OrdersPage: React.FC = () => {
     },
     {
       id: 'order_info',
-      label: t('admin.orders.columns.orderInfo'),
+      label: 'Заказ',
       minWidth: 80,
       maxWidth: 110,
       align: 'right' as const,
@@ -292,7 +292,7 @@ const OrdersPage: React.FC = () => {
           lineHeight: 1.2
         }}>
           <Box sx={{ fontSize: '0.9rem' }}>
-            {order.total_quantity} {t('common:units.pieces')}
+            {order.total_quantity} шт.
           </Box>
           <Box sx={{ fontWeight: 'bold', color: 'primary.main' }}>
             {order.total_amount} ₴
@@ -302,7 +302,7 @@ const OrdersPage: React.FC = () => {
     },
     {
       id: 'order_date',
-      label: t('admin.orders.columns.orderDate'),
+      label: 'Дата заказа',
       minWidth: 90,
       maxWidth: 130,
       hideOnMobile: true,
@@ -320,7 +320,7 @@ const OrdersPage: React.FC = () => {
     },
     {
       id: 'supplier',
-      label: t('admin.orders.columns.supplier'),
+      label: 'Поставщик',
       minWidth: 100,
       maxWidth: 150,
       hideOnMobile: true,
@@ -346,7 +346,7 @@ const OrdersPage: React.FC = () => {
             </Box>
           ) : (
             <Box sx={{ fontSize: '0.9rem', color: 'text.secondary', fontStyle: 'italic' }}>
-              {t('admin.orders.supplier.notSpecified')}
+              Не указан
             </Box>
           )}
         </Box>
@@ -354,7 +354,7 @@ const OrdersPage: React.FC = () => {
     },
     {
       id: 'actions',
-      label: t('admin.orders.columns.actions'),
+      label: 'Действия',
       minWidth: 80,
       maxWidth: 120,
       align: 'center' as const,
@@ -380,12 +380,12 @@ const OrdersPage: React.FC = () => {
       await markAsReady(orderId).unwrap();
       setNotification({
         open: true,
-        message: t('admin.orders.messages.markedAsReady'),
+        message: 'Заказ отмечен как готовый к выдаче',
         severity: 'success',
       });
       refetch();
     } catch (error: any) {
-      const errorMessage = error?.data?.error || error?.message || t('admin.orders.messages.actionError');
+      const errorMessage = error?.data?.error || error?.message || 'Ошибка при выполнении действия';
       setNotification({
         open: true,
         message: errorMessage,
@@ -399,12 +399,12 @@ const OrdersPage: React.FC = () => {
       await markAsDelivered(orderId).unwrap();
       setNotification({
         open: true,
-        message: t('admin.orders.messages.markedAsDelivered'),
+        message: 'Заказ отмечен как выданный',
         severity: 'success',
       });
       refetch();
     } catch (error: any) {
-      const errorMessage = error?.data?.error || error?.message || t('admin.orders.messages.actionError');
+      const errorMessage = error?.data?.error || error?.message || 'Ошибка при выполнении действия';
       setNotification({
         open: true,
         message: errorMessage,
@@ -415,15 +415,15 @@ const OrdersPage: React.FC = () => {
 
   const handleCancelOrder = async (orderId: number) => {
     try {
-      await cancelOrder({ id: orderId, reason: t('admin.orders.cancelReason') }).unwrap();
+      await cancelOrder({ id: orderId, reason: 'Отменен оператором' }).unwrap();
       setNotification({
         open: true,
-        message: t('admin.orders.messages.orderCanceled'),
+        message: 'Заказ отменен',
         severity: 'success',
       });
       refetch();
     } catch (error: any) {
-      const errorMessage = error?.data?.error || error?.message || t('admin.orders.messages.actionError');
+      const errorMessage = error?.data?.error || error?.message || 'Ошибка при выполнении действия';
       setNotification({
         open: true,
         message: errorMessage,
@@ -433,12 +433,12 @@ const OrdersPage: React.FC = () => {
   };
 
   const statusOptions = [
-    { value: '', label: t('admin.orders.status.all') },
-    { value: 'received', label: t('admin.orders.status.received') },
-    { value: 'processing', label: t('admin.orders.status.processing') },
-    { value: 'ready', label: t('admin.orders.status.ready') },
-    { value: 'delivered', label: t('admin.orders.status.delivered') },
-    { value: 'canceled', label: t('admin.orders.status.canceled') },
+    { value: '', label: 'Все статусы' },
+    { value: 'received', label: 'Получен' },
+    { value: 'processing', label: 'В обработке' },
+    { value: 'ready', label: 'Готов к выдаче' },
+    { value: 'delivered', label: 'Выдан' },
+    { value: 'canceled', label: 'Отменен' },
   ];
 
   if (isLoading) {
@@ -459,10 +459,10 @@ const OrdersPage: React.FC = () => {
           <OrderIcon sx={pageStyles.titleIcon} />
           <Box>
             <Typography variant="h4" component="h1">
-              {t('admin.orders.title')}
+              Заказы интернет-магазинов
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {totalCount > 0 && `${t('common:total')}: ${totalCount}`}
+              {totalCount > 0 && `Всего: ${totalCount}`}
             </Typography>
           </Box>
         </Box>
@@ -471,7 +471,7 @@ const OrdersPage: React.FC = () => {
       {/* Фильтры */}
       <Box sx={pageStyles.filtersContainer}>
         <TextField
-          placeholder={t('admin.orders.searchPlaceholder')}
+          placeholder="Поиск по ТТН, имени клиента или телефону..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           variant="outlined"
@@ -488,7 +488,7 @@ const OrdersPage: React.FC = () => {
         
         <TextField
           select
-          label={t('admin.orders.columns.status')}
+          label="Статус"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
           variant="outlined"
