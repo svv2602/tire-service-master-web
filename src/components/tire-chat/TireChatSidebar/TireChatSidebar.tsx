@@ -39,6 +39,18 @@ interface Message {
   tireRecommendations?: TireRecommendation[];
   showCarSearchButton?: boolean;
   carSearchQuery?: string;
+  catalogButton?: CatalogButton;
+}
+
+interface CatalogButton {
+  text: string;
+  filters: {
+    width: number;
+    height: number;
+    diameter: string;
+    season: string;
+  };
+  action: string;
 }
 
 interface TireRecommendation {
@@ -63,13 +75,15 @@ interface TireChatSidebarProps {
   onClose: () => void;
   initialMessage?: string;
   onTireRecommendationClick?: (tireData: any) => void;
+  onApplyCatalogFilters?: (filters: any) => void;
 }
 
 const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
   open,
   onClose,
   initialMessage,
-  onTireRecommendationClick
+  onTireRecommendationClick,
+  onApplyCatalogFilters
 }) => {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
@@ -123,9 +137,27 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
     }, 100); // Небольшая задержка для корректной работы
   }, []);
 
+  // Обработчик клика по кнопке каталога
+  const handleCatalogButtonClick = (catalogButton: CatalogButton) => {
+    if (onApplyCatalogFilters) {
+      onApplyCatalogFilters(catalogButton.filters);
+    }
+    // Закрываем чат после применения фильтров
+    onClose();
+  };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
+
+  // Скролл к концу при открытии чата
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => {
+        scrollToBottom();
+      }, 200); // Небольшая задержка для корректного отображения
+    }
+  }, [open, scrollToBottom]);
 
   // Инициализация чата при открытии
   useEffect(() => {
@@ -153,6 +185,8 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
   const handleTireRecommendationClick = (tire: TireRecommendation) => {
     // Передаем полный объект рекомендации для применения фильтров
     onTireRecommendationClick?.(tire);
+    // Закрываем чат после применения фильтров
+    onClose();
   };
 
   // Обработка клика на кнопку поиска по автомобилю
@@ -223,7 +257,8 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
             timestamp: new Date(),
             tireRecommendations: data.response.recommendations || [],
             showCarSearchButton: data.response.action === 'show_car_search_button',
-            carSearchQuery: data.response.car_search_query || ''
+            carSearchQuery: data.response.car_search_query || '',
+            catalogButton: data.response.catalog_button || undefined
           };
           return [...newMessages, assistantMessage];
         });
@@ -533,6 +568,29 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
                       }}
                     >
                       🔍 Поиск шин по автомобилю
+                    </Button>
+                  </Box>
+                )}
+
+                {/* Кнопка каталога */}
+                {message.catalogButton && (
+                  <Box sx={{ mt: 1 }}>
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      onClick={() => handleCatalogButtonClick(message.catalogButton!)}
+                      sx={{
+                        color: '#4CAF50',
+                        borderColor: '#4CAF50',
+                        fontWeight: 600,
+                        py: 1.5,
+                        '&:hover': {
+                          bgcolor: 'rgba(76, 175, 80, 0.1)',
+                          borderColor: '#45a049'
+                        }
+                      }}
+                    >
+                      {message.catalogButton.text}
                     </Button>
                   </Box>
                 )}

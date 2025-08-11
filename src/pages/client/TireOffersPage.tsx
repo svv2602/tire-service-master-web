@@ -435,13 +435,40 @@ const TireOffersPage: React.FC = () => {
     }
     
     // Показываем уведомление о применении фильтров
-    console.log('Фильтры применены из чата:', {
-      search: searchParts.join(' '),
-      width: product.width,
-      height: product.height,
-      diameter: product.diameter,
-      season: product.season
-    });
+  };
+
+  // Обработчик клика по кнопке каталога из чата
+  const handleApplyCatalogFilters = (filters: any) => {
+    console.log('Применение фильтров каталога из чата:', filters);
+    
+    // Создаем новые параметры URL на основе фильтров каталога
+    const newParams = new URLSearchParams();
+    
+    // Применяем размер шины
+    if (filters.width) {
+      newParams.set('width', filters.width.toString());
+    }
+    if (filters.height) {
+      newParams.set('height', filters.height.toString());
+    }
+    if (filters.diameter) {
+      newParams.set('diameter', filters.diameter.toString());
+    }
+    
+    // Применяем сезон
+    if (filters.season) {
+      newParams.set('seasonality', filters.season);
+    }
+    
+    // Обновляем URL параметры
+    setSearchParams(newParams);
+    setPage(1);
+    
+    // Скроллим к таблице
+    const tableElement = document.querySelector('[data-testid="offers-table"]');
+    if (tableElement) {
+      tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   // Рендер заголовка страницы
@@ -1183,6 +1210,7 @@ const TireOffersPage: React.FC = () => {
         onClose={() => setChatOpen(false)}
         initialMessage={tireSize ? `${t('tireChat.helpSizeMessage', 'Помогите подобрать шины размера')} ${tireSize}` : undefined}
         onTireRecommendationClick={handleTireRecommendationClick}
+        onApplyCatalogFilters={handleApplyCatalogFilters}
       />
     </ClientLayout>
   );
