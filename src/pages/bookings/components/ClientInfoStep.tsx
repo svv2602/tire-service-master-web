@@ -18,6 +18,8 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   Person as PersonIcon,
@@ -29,7 +31,6 @@ import {
 } from '@mui/icons-material';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../store';
-import { useTheme } from '@mui/material/styles';
 import { useUpdateProfileMutation } from '../../../api/auth.api';
 import { setCredentials } from '../../../store/slices/authSlice';
 
@@ -59,6 +60,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { isAuthenticated, user, accessToken } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
   const [updateProfile] = useUpdateProfileMutation();
@@ -285,22 +287,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         {t('bookingSteps.clientInfo.title')}
       </Typography>
 
-      {/* Статус пользователя */}
-      {isAuthenticated ? (
-        <Alert severity="info" sx={{ mb: 3 }}>
-          <Typography variant="body2">
-            {t('bookingSteps.clientInfo.status.authenticated')} <strong>{user?.first_name} {user?.last_name}</strong>. 
-            {t('bookingSteps.clientInfo.status.dataPrefilledFromProfile')}
-          </Typography>
-        </Alert>
-      ) : (
-        <Alert severity="info" sx={{ mb: 3 }}>
-          <Typography variant="body2">
-            {t('components:clientInfoStep.guestBookingPrefix')} <strong>{t('bookingSteps.clientInfo.status.guestBooking')}</strong>. 
-            {t('bookingSteps.clientInfo.status.guestBookingInfo')}
-          </Typography>
-        </Alert>
-      )}
+
 
       {/* Секция для авторизованного пользователя */}
       {isAuthenticated && user && (
@@ -555,14 +542,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         </Grid>
       )}
 
-      {/* Информация о конфиденциальности */}
-      <Divider sx={{ my: 3 }} />
-      
-      <Alert severity="info" sx={{ mt: 3 }}>
-        <Typography variant="body2">
-          <strong>{t('bookingSteps.clientInfo.privacy')}:</strong> {t('bookingSteps.clientInfo.privacyText')}
-        </Typography>
-      </Alert>
+
 
       {/* Валидация формы */}
       {(!isFormValid()) && (
@@ -578,7 +558,7 @@ const ClientInfoStep: React.FC<ClientInfoStepProps> = ({
         </Alert>
       )}
 
-      {isFormValid() && (
+      {isFormValid() && !isMobile && (
         <Alert severity="success" sx={{ mt: 3 }}>
           {t('bookingSteps.clientInfo.allRequiredFieldsFilled')}
         </Alert>

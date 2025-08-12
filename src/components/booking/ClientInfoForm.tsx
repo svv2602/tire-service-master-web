@@ -236,12 +236,7 @@ const ClientInfoForm: React.FC<ClientInfoFormProps> = ({ clientInfo, setClientIn
           />
         </Grid>
       </Grid>
-      
-      <Box sx={{ mt: 4, p: 2, bgcolor: colors.backgroundSecondary, borderRadius: 2 }}>
-        <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-          {t('clientInfoForm.privacyNotice')}
-        </Typography>
-      </Box>
+
     </Box>
   );
 };

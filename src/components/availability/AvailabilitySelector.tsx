@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Paper } from '@mui/material';
+import { Box, Paper, useMediaQuery } from '@mui/material';
 import { TimeSlotPicker } from './TimeSlotPicker';
 import { DayDetailsPanel } from './DayDetailsPanel';
 import { AvailabilityCalendar } from './AvailabilityCalendar';
@@ -36,6 +36,7 @@ export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
   isServiceUser = false, // По умолчанию обычный пользователь
 }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   // Загрузка детальной информации о дне с учетом категории
   const { data: dayDetailsData, isLoading: isLoadingDayDetails, error: dayDetailsError } = useGetDayDetailsQuery(
@@ -162,27 +163,29 @@ export const AvailabilitySelector: React.FC<AvailabilitySelectorProps> = ({
           />
         </Paper>
 
-        <Paper 
-          sx={{ 
-            flex: '1 1 300px',
-            p: 2,
-            borderRadius: 2,
-            boxShadow: theme.shadows[1]
-          }}
-        >
-          <DayDetailsPanel
-            selectedDate={selectedDate}
-            selectedTimeSlot={selectedTimeSlot}
-            isLoading={isLoading || isLoadingDayDetails}
-            occupancyPercentage={dayStats.occupancyPercentage}
-            totalPosts={dayStats.totalSlots}
-            availablePosts={dayStats.totalSlots - dayStats.occupiedSlots}
-            servicePointPhone={servicePointPhone}
-            isWorking={dayDetailsData?.is_working}
-            workingMessage={dayDetailsData?.message}
-            scheduleInfo={dayDetailsData?.schedule_info}
-          />
-        </Paper>
+        {!isMobile && (
+          <Paper 
+            sx={{ 
+              flex: '1 1 300px',
+              p: 2,
+              borderRadius: 2,
+              boxShadow: theme.shadows[1]
+            }}
+          >
+            <DayDetailsPanel
+              selectedDate={selectedDate}
+              selectedTimeSlot={selectedTimeSlot}
+              isLoading={isLoading || isLoadingDayDetails}
+              occupancyPercentage={dayStats.occupancyPercentage}
+              totalPosts={dayStats.totalSlots}
+              availablePosts={dayStats.totalSlots - dayStats.occupiedSlots}
+              servicePointPhone={servicePointPhone}
+              isWorking={dayDetailsData?.is_working}
+              workingMessage={dayDetailsData?.message}
+              scheduleInfo={dayDetailsData?.schedule_info}
+            />
+          </Paper>
+        )}
       </Box>
 
       {/* Нижняя строка: выбор времени на всю ширину */}

@@ -23,7 +23,8 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
-  DialogActions
+  DialogActions,
+  useMediaQuery
 } from '@mui/material';
 import {
   LocationOn as LocationIcon,
@@ -593,6 +594,7 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
   const cardStyles = getCardStyles(theme, 'primary');
   const { t } = useTranslation(['components']);
   const getLocalizedName = useLocalizedName();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   const [showDetails, setShowDetails] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
@@ -663,52 +665,85 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
       border: isSelected ? `2px solid ${theme.palette.primary.main}` : '1px solid',
       borderColor: isSelected ? 'primary.main' : 'divider',
       transition: 'all 0.3s ease',
+      position: 'relative', // Для позиционирования кнопки избранного на мобильных
       '&:hover': {
         transform: 'translateY(-2px)',
         boxShadow: theme.shadows[4]
       }
     }}>
-      {/* Фотогалерея сервисной точки с кнопкой избранного */}
-      <Box sx={{ position: 'relative' }}>
-        <PhotoGallery
-          photos={servicePoint.photos || []}
-          height={variant === 'compact' ? 160 : 200}
-          showCounter={true}
-          fallbackIcon="🚗"
-          servicePointName={servicePoint.name}
-          disableGalleryOpen={true}
-        />
-        
-        {/* Кнопка избранного в правом верхнем углу */}
-        {showFavoriteButton && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 8,
-              right: 8,
-              zIndex: 2,
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              borderRadius: '50%',
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-              transition: 'all 0.2s ease',
-              '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 1)',
-                transform: 'scale(1.05)',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
-              }
-            }}
-          >
-            <FavoriteButton
-              servicePointId={servicePoint.id}
-              servicePointName={servicePoint.name}
-              size="medium"
-              showTooltip={true}
-            />
-          </Box>
-        )}
-      </Box>
+      {/* Фотогалерея сервисной точки с кнопкой избранного - скрыта на мобильных устройствах */}
+      {!isMobile && (
+        <Box sx={{ position: 'relative' }}>
+          <PhotoGallery
+            photos={servicePoint.photos || []}
+            height={variant === 'compact' ? 160 : 200}
+            showCounter={true}
+            fallbackIcon="🚗"
+            servicePointName={servicePoint.name}
+            disableGalleryOpen={true}
+          />
+          
+          {/* Кнопка избранного в правом верхнем углу */}
+          {showFavoriteButton && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                zIndex: 2,
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                borderRadius: '50%',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 1)',
+                  transform: 'scale(1.05)',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+                }
+              }}
+            >
+              <FavoriteButton
+                servicePointId={servicePoint.id}
+                servicePointName={servicePoint.name}
+                size="medium"
+                showTooltip={true}
+              />
+            </Box>
+          )}
+        </Box>
+      )}
+      
+      {/* Кнопка избранного для мобильных устройств (в правом верхнем углу карточки) */}
+      {isMobile && showFavoriteButton && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            zIndex: 2,
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            borderRadius: '50%',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 1)',
+              transform: 'scale(1.05)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+            }
+          }}
+        >
+          <FavoriteButton
+            servicePointId={servicePoint.id}
+            servicePointName={servicePoint.name}
+            size="medium"
+            showTooltip={true}
+          />
+        </Box>
+      )}
 
       <CardContent onClick={showSelectButton ? handleSelect : undefined} sx={{ cursor: showSelectButton ? 'pointer' : 'default' }}>
         {/* Основная информация */}
@@ -787,107 +822,111 @@ const ServicePointCard: React.FC<ServicePointCardProps> = ({
         <Collapse in={true}>
           <Divider sx={{ my: 2 }} />
           
-          {/* Доступные категории услуг */}
-          <Paper sx={{ p: 2, mb: 2, bgcolor: colors.backgroundField }}>
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between',
-                cursor: 'pointer' 
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setServicesExpanded(!servicesExpanded);
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <BuildIcon sx={{ color: theme.palette.primary.main }} />
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  {t('components:servicePointCard.availableCategories')} ({isLoadingCategories ? '...' : categories.length})
-                </Typography>
-              </Box>
-              {servicesExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            </Box>
-            
-            <Collapse in={servicesExpanded}>
-              {isLoadingCategories ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-                  <CircularProgress size={24} />
+          {/* Доступные категории услуг - скрыто на мобильных устройствах */}
+          {!isMobile && (
+            <Paper sx={{ p: 2, mb: 2, bgcolor: colors.backgroundField }}>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  cursor: 'pointer' 
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setServicesExpanded(!servicesExpanded);
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <BuildIcon sx={{ color: theme.palette.primary.main }} />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    {t('components:servicePointCard.availableCategories')} ({isLoadingCategories ? '...' : categories.length})
+                  </Typography>
                 </Box>
-              ) : categories.length > 0 ? (
+                {servicesExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </Box>
+              
+              <Collapse in={servicesExpanded}>
+                {isLoadingCategories ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : categories.length > 0 ? (
+                  <List dense sx={{ mt: 1 }}>
+                    {categories.map((category) => (
+                      <ListItem key={category.id} sx={{ py: 0.5 }}>
+                        <ListItemIcon sx={{ minWidth: 36 }}>
+                          <BuildIcon sx={{ fontSize: '1rem', color: colors.textSecondary }} />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={category.localized_name || category.name}
+                          secondary={`${category.localized_description || category.description || t('components:servicePointCard.categoryDescription')} • ${category.services_count || 0} ${t('components:servicePointCard.services')}`}
+                          primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
+                          secondaryTypographyProps={{ variant: 'caption' }}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                ) : (
+                  <Typography variant="body2" sx={{ mt: 1, color: colors.textSecondary }}>
+                    {t('components:servicePointCard.categoriesNotLoaded')}
+                  </Typography>
+                )}
+              </Collapse>
+            </Paper>
+          )}
+
+          {/* График работы - скрыто на мобильных устройствах */}
+          {!isMobile && (
+            <Paper sx={{ p: 2, bgcolor: colors.backgroundField }}>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  cursor: 'pointer' 
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setScheduleExpanded(!scheduleExpanded);
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <ScheduleIcon sx={{ color: theme.palette.primary.main }} />
+                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    {t('components:servicePointCard.workingHours')}
+                  </Typography>
+                </Box>
+                {scheduleExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </Box>
+              
+              <Collapse in={scheduleExpanded}>
                 <List dense sx={{ mt: 1 }}>
-                  {categories.map((category) => (
-                    <ListItem key={category.id} sx={{ py: 0.5 }}>
+                  {mockSchedule.map((schedule, index) => (
+                    <ListItem key={index} sx={{ py: 0.5 }}>
                       <ListItemIcon sx={{ minWidth: 36 }}>
-                        <BuildIcon sx={{ fontSize: '1rem', color: colors.textSecondary }} />
+                        <CalendarIcon 
+                          sx={{ 
+                            fontSize: '1rem', 
+                            color: schedule.isWorkingDay ? theme.palette.success.main : colors.textSecondary 
+                          }} 
+                        />
                       </ListItemIcon>
                       <ListItemText
-                        primary={category.localized_name || category.name}
-                        secondary={`${category.localized_description || category.description || t('components:servicePointCard.categoryDescription')} • ${category.services_count || 0} ${t('components:servicePointCard.services')}`}
+                        primary={schedule.day}
+                        secondary={schedule.time}
                         primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
-                        secondaryTypographyProps={{ variant: 'caption' }}
+                        secondaryTypographyProps={{ 
+                          variant: 'caption',
+                          color: schedule.isWorkingDay ? 'inherit' : 'error'
+                        }}
                       />
                     </ListItem>
                   ))}
                 </List>
-              ) : (
-                <Typography variant="body2" sx={{ mt: 1, color: colors.textSecondary }}>
-                  {t('components:servicePointCard.categoriesNotLoaded')}
-                </Typography>
-              )}
-            </Collapse>
-          </Paper>
-
-          {/* График работы */}
-          <Paper sx={{ p: 2, bgcolor: colors.backgroundField }}>
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between',
-                cursor: 'pointer' 
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setScheduleExpanded(!scheduleExpanded);
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <ScheduleIcon sx={{ color: theme.palette.primary.main }} />
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  {t('components:servicePointCard.workingHours')}
-                </Typography>
-              </Box>
-              {scheduleExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            </Box>
-            
-            <Collapse in={scheduleExpanded}>
-              <List dense sx={{ mt: 1 }}>
-                {mockSchedule.map((schedule, index) => (
-                  <ListItem key={index} sx={{ py: 0.5 }}>
-                    <ListItemIcon sx={{ minWidth: 36 }}>
-                      <CalendarIcon 
-                        sx={{ 
-                          fontSize: '1rem', 
-                          color: schedule.isWorkingDay ? theme.palette.success.main : colors.textSecondary 
-                        }} 
-                      />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={schedule.day}
-                      secondary={schedule.time}
-                      primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
-                      secondaryTypographyProps={{ 
-                        variant: 'caption',
-                        color: schedule.isWorkingDay ? 'inherit' : 'error'
-                      }}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            </Collapse>
-          </Paper>
+              </Collapse>
+            </Paper>
+          )}
         </Collapse>
       </CardContent>
 

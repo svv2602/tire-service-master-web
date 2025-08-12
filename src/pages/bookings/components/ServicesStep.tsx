@@ -17,6 +17,8 @@ import {
   CircularProgress,
   Divider,
   TextField as MuiTextField,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -25,7 +27,6 @@ import {
   AttachMoney as PriceIcon,
   Comment as CommentIcon,
 } from '@mui/icons-material';
-import { useTheme } from '@mui/material/styles';
 
 // Импорт API хуков
 import { useGetServicePointServicesQuery } from '../../../api/servicePoints.api';
@@ -74,6 +75,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   // API хук для получения услуг сервисной точки с фильтрацией по категории
   const { 
@@ -283,12 +285,14 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
       </Typography>
       
       <Grid container spacing={3}>
-        {/* Информационное сообщение */}
-        <Grid item xs={12}>
-          <Alert severity="info" sx={{ mb: 2 }}>
-            {t('bookingSteps.services.optionalInfo')}
-          </Alert>
-        </Grid>
+        {/* Информационное сообщение - скрыто на мобильных устройствах */}
+        {!isMobile && (
+          <Grid item xs={12}>
+            <Alert severity="info" sx={{ mb: 2 }}>
+              {t('bookingSteps.services.optionalInfo')}
+            </Alert>
+          </Grid>
+        )}
         
         {/* Список услуг */}
         <Grid item xs={12} md={8}>

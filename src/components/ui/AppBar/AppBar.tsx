@@ -61,6 +61,8 @@ export interface AppBarProps {
   username?: string;
   /** Дополнительные компоненты для размещения в правой части */
   rightContent?: React.ReactNode;
+  /** Компонент корзины для отображения на мобильных устройствах */
+  mobileCartContent?: React.ReactNode;
   /** Дополнительные стили */
   sx?: SxProps<Theme>;
 }
@@ -88,6 +90,7 @@ export const AppBar: React.FC<AppBarProps> = ({
   avatarUrl,
   username,
   rightContent,
+  mobileCartContent,
   sx,
 }) => {
   const theme = useTheme();
@@ -196,8 +199,11 @@ export const AppBar: React.FC<AppBarProps> = ({
           </IconButton>
         </Box>
         
-        {/* Мобильная иконка */}
-        <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
+        {/* Мобильные иконки */}
+        <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', gap: 1 }}>
+          {/* Корзина на мобильных */}
+          {mobileCartContent}
+          
           <IconButton
             aria-label="show more"
             aria-haspopup="true"

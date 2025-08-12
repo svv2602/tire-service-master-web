@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getProfileActions } from '../ui/AppBar/profileActions';
-import { Box } from '@mui/material';
+import { Box, useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { getThemeColors, getButtonStyles } from '../../styles';
 import { AppBar as CustomAppBar } from '../ui/AppBar/AppBar';
@@ -24,11 +24,13 @@ import {
   Logout as LogoutIcon,
   Calculate as CalculateIcon,
   Search as SearchIcon,
-  LocalOffer as LocalOfferIcon
+  LocalOffer as LocalOfferIcon,
+  GetApp as InstallIcon
 } from '@mui/icons-material';
 import { Button, ListItemIcon, ListItemText, MenuItem, Divider } from '@mui/material';
 import ClientFooter from './ClientFooter';
 import CartIndicator from './CartIndicator';
+import { usePWAInstall } from '../../hooks/usePWAInstall';
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -36,6 +38,7 @@ interface ClientLayoutProps {
 
 const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const colors = getThemeColors(theme);
   const buttonStyles = getButtonStyles(theme, 'secondary');
   const navigate = useNavigate();
@@ -43,6 +46,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const isAdmin = user?.role === UserRole.ADMIN || user?.role === UserRole.MANAGER;
   const { t } = useTranslation();
+  const { isInstallable, isInstalled, showInstallPrompt } = usePWAInstall();
 
   // Автоматическая прокрутка к верху при переходах между страницами (только на мобильных)
   useScrollToTopOnRouteChange({
@@ -156,7 +160,13 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
       label: 'Предложения шин',
       icon: LocalOfferIcon,
       onClick: () => navigate('/client/tire-offers')
-    }
+    },
+    // Показываем кнопку установки PWA только если приложение можно установить и еще не установлено
+    ...(isInstallable && !isInstalled ? [{
+      label: 'Установить приложение',
+      icon: InstallIcon,
+      onClick: showInstallPrompt
+    }] : [])
   ];
 
   return (
@@ -172,11 +182,13 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         rightContent={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {publicLinks}
-            <CartIndicator />
+            {/* Корзина только на десктопе - на мобильных через mobileCartContent */}
+            {!isMobile && <CartIndicator />}
             <ThemeToggle />
             <LanguageSelector />
           </Box>
         }
+        mobileCartContent={<CartIndicator />}
         profileActions={profileActions}
         navigationActions={navigationActions}
         username={user ? `${user.first_name} ${user.last_name}` : ''}

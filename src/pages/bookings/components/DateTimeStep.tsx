@@ -15,14 +15,14 @@ import {
   AccordionDetails,
   Chip,
   Stack,
-  Button
+  Button,
+  useMediaQuery
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { format, parseISO, addDays } from 'date-fns';
 import { useDateLocale } from '../../../hooks/useDateLocale';
 import {
   LocationOn as LocationIcon,
-  ArrowForward as ArrowForwardIcon,
 } from '@mui/icons-material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
@@ -61,6 +61,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
   const theme = useTheme();
   const dateLocale = useDateLocale();
   const localizedName = useLocalizedName();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
@@ -249,7 +250,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
     }
   }, [formData.service_point_id, selectedDate, formData.service_category_id, dayDetailsData, availabilityData, availableTimeSlots, isServiceUser]);
   
-  // Обработчик выбора даты БЕЗ автоматического перехода к выбору времени
+  // Обработчик выбора даты с автоматическим переходом к выбору времени
   const handleDateChange = (date: Date | null) => {
     setSelectedDate(date);
     setSelectedTimeSlot(null);
@@ -258,18 +259,13 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
       booking_date: date ? format(date, 'yyyy-MM-dd') : '',
       start_time: '',
     }));
-    // УБИРАЕМ автоматический переход к выбору времени
-    // if (date) {
-    //   setExpandedPanel('time');
-    // }
-  };
-
-  // Обработчик кнопки "Далее" для перехода к выбору времени
-  const handleProceedToTimeSelection = () => {
-    if (selectedDate) {
+    // Автоматически открываем аккордеон выбора времени при выборе даты
+    if (date) {
       setExpandedPanel('time');
     }
   };
+
+
   
   // Загрузка информации о точке обслуживания
   const { data: servicePointData, isLoading: isLoadingServicePoint } = useGetServicePointBasicInfoQuery(
@@ -316,23 +312,25 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
         )}
       </Typography>
       
-      {/* Информация о выбранной точке обслуживания */}
-      <Paper sx={{ ...getCardStyles(theme), p: 2, mb: 3, bgcolor: 'primary.50' }}>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1 }}>
-          <LocationIcon sx={{ color: 'primary.main', mt: 0.5 }} />
-          <Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-              {isLoadingServicePoint ? t('forms.booking.dateTime.loadingServicePoint') : (servicePointData?.name || `${t('forms.booking.dateTime.servicePoint')} #${formData.service_point_id}`)}
-            </Typography>
-            {servicePointData && (
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                {servicePointData.city && `${t('forms.booking.dateTime.city')} ${localizedName(servicePointData.city)}`}
-                {servicePointData.address && `, ${servicePointData.address}`}
+      {/* Информация о выбранной точке обслуживания - скрыта на мобильных устройствах */}
+      {!isMobile && (
+        <Paper sx={{ ...getCardStyles(theme), p: 2, mb: 3, bgcolor: 'primary.50' }}>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1 }}>
+            <LocationIcon sx={{ color: 'primary.main', mt: 0.5 }} />
+            <Box>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                {isLoadingServicePoint ? t('forms.booking.dateTime.loadingServicePoint') : (servicePointData?.name || `${t('forms.booking.dateTime.servicePoint')} #${formData.service_point_id}`)}
               </Typography>
-            )}
+              {servicePointData && (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                  {servicePointData.city && `${t('forms.booking.dateTime.city')} ${localizedName(servicePointData.city)}`}
+                  {servicePointData.address && `, ${servicePointData.address}`}
+                </Typography>
+              )}
+            </Box>
           </Box>
-        </Box>
-      </Paper>
+        </Paper>
+      )}
 
       {/* Аккордеон выбора даты */}
       <Accordion expanded={expandedPanel === 'date'} onChange={() => setExpandedPanel('date')}>
@@ -376,24 +374,7 @@ const DateTimeStep: React.FC<DateTimeStepProps> = ({
               />
             </Box>
           </Box>
-          
-          {/* Кнопка "Далее" для перехода к выбору времени */}
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-            <Button
-              variant="contained"
-              onClick={handleProceedToTimeSelection}
-              disabled={!selectedDate}
-              endIcon={<ArrowForwardIcon />}
-              sx={{
-                textTransform: 'none',
-                fontWeight: 600,
-                px: 3,
-                py: 1
-              }}
-            >
-              {t('forms.booking.dateTime.proceedToTimeSelection')}
-            </Button>
-          </Box>
+
         </AccordionDetails>
       </Accordion>
       {/* Аккордеон выбора времени */}

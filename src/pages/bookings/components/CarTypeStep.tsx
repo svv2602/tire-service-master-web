@@ -20,6 +20,8 @@ import {
   AccordionSummary,
   AccordionDetails,
   Divider,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   ConfirmationNumber as LicensePlateIcon,
@@ -28,7 +30,6 @@ import {
   MyLocation as MyCarIcon,
   Star as StarIcon,
 } from '@mui/icons-material';
-import { useTheme } from '@mui/material/styles';
 
 // Импорт UI компонентов
 import { TextField } from '../../../components/ui/TextField';
@@ -65,6 +66,7 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   // Получаем информацию о текущем пользователе
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
@@ -639,8 +641,8 @@ const CarTypeStep: React.FC<CarTypeStepProps> = ({
         </Alert>
       )}
       
-      {/* Информационное сообщение */}
-      {isValid && (
+      {/* Информационное сообщение - скрыто на мобильных устройствах */}
+      {isValid && !isMobile && (
         <Alert severity="success" sx={{ mt: 3 }}>
           {t('bookingSteps.carType.allFieldsCompleted')}
         </Alert>

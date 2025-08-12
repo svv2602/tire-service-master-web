@@ -13,6 +13,7 @@ import {
   Alert,
   Card,
   CardContent,
+  useMediaQuery,
 } from '@mui/material';
 import { Info as InfoIcon, LocationOn as LocationIcon, CheckCircle as CheckCircleIcon, Category as CategoryIcon } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
@@ -159,6 +160,7 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
   const theme = useTheme();
   const navigate = useNavigate();
   const localizedName = useLocalizedName();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [autoFilledData, setAutoFilledData] = useState(false);
   
@@ -263,8 +265,8 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
         {t('bookingSteps.cityServicePoint.title')}
       </Typography>
       
-      {/* Информация о выбранной категории */}
-      {selectedCategory && (
+      {/* Информация о выбранной категории - скрыта на мобильных устройствах */}
+      {selectedCategory && !isMobile && (
         <Alert 
           severity="info" 
           icon={<CategoryIcon />}
@@ -399,8 +401,8 @@ const CityServicePointStep: React.FC<CityServicePointStepProps> = ({
         </Alert>
       )}
       
-      {/* Информационное сообщение */}
-      {(isValid) && (
+      {/* Информационное сообщение - скрыто на мобильных устройствах */}
+      {(isValid) && !isMobile && (
         <Alert severity="success" sx={{ mt: 3 }}>
           {t('bookingSteps.cityServicePoint.allFieldsCompleted')}
         </Alert>

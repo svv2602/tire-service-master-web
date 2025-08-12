@@ -74,18 +74,21 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
 
     // Слушаем событие beforeinstallprompt
     const handleBeforeInstallPrompt = (e: Event) => {
+      console.log('[PWA] beforeinstallprompt event fired!', e);
       e.preventDefault();
       const beforeInstallEvent = e as BeforeInstallPromptEvent;
       setDeferredPrompt(beforeInstallEvent);
       
       // Показываем диалог только если приложение не установлено
       if (!isStandalone) {
+        console.log('[PWA] Showing install dialog');
         setShowDialog(true);
       }
     };
 
     // Слушаем событие установки приложения
     const handleAppInstalled = () => {
+      console.log('[PWA] App installed!');
       setIsInstalled(true);
       setShowDialog(false);
       setDeferredPrompt(null);
@@ -94,12 +97,27 @@ const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
       }
     };
 
+    // Для iOS показываем диалог через некоторое время, если нет beforeinstallprompt
+    let iOSTimeout: NodeJS.Timeout;
+    if (/iphone|ipad|ipod/.test(userAgent) && !isStandalone) {
+      console.log('[PWA] iOS detected, will show install instructions after delay');
+      iOSTimeout = setTimeout(() => {
+        if (!deferredPrompt && !isStandalone) {
+          console.log('[PWA] Showing iOS install instructions');
+          setShowDialog(true);
+        }
+      }, 5000); // Показываем через 5 секунд для iOS
+    }
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
+      if (iOSTimeout) {
+        clearTimeout(iOSTimeout);
+      }
     };
   }, [onInstall]);
 

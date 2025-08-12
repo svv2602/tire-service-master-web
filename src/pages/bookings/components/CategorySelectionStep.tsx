@@ -10,7 +10,9 @@ import {
   Skeleton,
   Chip,
   Autocomplete,
-  TextField
+  TextField,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import { LocationOn as LocationOnIcon } from '@mui/icons-material';
 import { useGetServiceCategoriesByCityIdQuery } from '../../../api/serviceCategories.api';
@@ -34,6 +36,8 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
 }) => {
   const { t } = useTranslation();
   const localizedName = useLocalizedName();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   // Загружаем категории услуг по выбранному городу
   const { data: categoriesResponse, isLoading, error } = useGetServiceCategoriesByCityIdQuery(
     { 
@@ -242,8 +246,8 @@ const CategorySelectionStep: React.FC<CategorySelectionStepProps> = ({
         </>
       )}
 
-      {/* Сообщение о выборе категории */}
-      {isValid && (
+      {/* Сообщение о выборе категории - скрыто на мобильных устройствах */}
+      {isValid && !isMobile && (
         <Alert severity="success" sx={{ mt: 3 }}>
           {t('bookingSteps.categorySelection.allRequiredFieldsFilled')}
         </Alert>

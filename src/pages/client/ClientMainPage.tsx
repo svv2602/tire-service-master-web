@@ -16,7 +16,8 @@ import {
   IconButton,
   Autocomplete,
   Fade,
-  useTheme
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import {
   LocationOn as LocationIcon,
@@ -60,6 +61,7 @@ const ClientMainPage: React.FC = () => {
   const colors = getThemeColors(theme);
   const localizedName = useLocalizedName();
   const { useSEOFromAPI } = useSEO();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   const cardStyles = getCardStyles(theme, 'primary');
   const buttonStyles = getButtonStyles(theme, 'primary');
@@ -171,46 +173,61 @@ const ClientMainPage: React.FC = () => {
           <Box sx={{
             bgcolor: colors.backgroundPrimary,
             color: colors.textPrimary,
-            py: 8,
+            py: isMobile ? 4 : 8,
             position: 'relative',
             overflow: 'hidden'
           }}>
             <Container maxWidth="lg">
-              <Grid container spacing={4} alignItems="stretch" sx={{ minHeight: '60vh' }}>
-                <Grid item xs={12} md={6} sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    width: '100%',
-                    height: '100%'
-                  }}>
-                    <Box
-                      component="img"
-                      src="/image_app/serviceman.png" 
-                      alt={t('forms.clientPages.mainPage.servicemanAlt')} 
-                      sx={{
-                        width: '100%',
-                        height: '100%',
-                        maxHeight: '100%',
-                        objectFit: 'cover',
-                        borderRadius: 3,
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-                        transition: 'transform 0.3s ease',
-                        '&:hover': {
-                          transform: 'scale(1.02)'
-                        }
-                      }}
-                    />
-                  </Box>
-                </Grid>
+              <Grid container spacing={4} alignItems="stretch" sx={{ 
+                minHeight: isMobile ? 'auto' : '60vh',
+                py: isMobile ? 4 : 0
+              }}>
+                {/* Картинка - скрыта на мобильных устройствах */}
+                {!isMobile && (
+                  <Grid item xs={12} md={6} sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      width: '100%',
+                      height: '100%'
+                    }}>
+                      <Box
+                        component="img"
+                        src="/image_app/serviceman.png" 
+                        alt={t('forms.clientPages.mainPage.servicemanAlt')} 
+                        sx={{
+                          width: '100%',
+                          height: '100%',
+                          maxHeight: '100%',
+                          objectFit: 'cover',
+                          borderRadius: 3,
+                          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                          transition: 'transform 0.3s ease',
+                          '&:hover': {
+                            transform: 'scale(1.02)'
+                          }
+                        }}
+                      />
+                    </Box>
+                  </Grid>
+                )}
                 
-                <Grid item xs={12} md={6} sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Box sx={{ width: '100%' }}>
-                    <Typography variant="h2" sx={{ fontWeight: 700, mb: 2, fontSize: { xs: '2.5rem', md: '3.5rem' } }}>
+                <Grid item xs={12} md={isMobile ? 12 : 6} sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ width: '100%', textAlign: isMobile ? 'center' : 'left' }}>
+                    <Typography variant="h2" sx={{ 
+                      fontWeight: 700, 
+                      mb: isMobile ? 1.5 : 2, 
+                      fontSize: { xs: '2rem', sm: '2.5rem', md: '3.5rem' } 
+                    }}>
                       {currentHero.title}
                     </Typography>
-                    <Typography variant="h6" sx={{ mb: 4, opacity: 0.8, lineHeight: 1.6 }}>
+                    <Typography variant="h6" sx={{ 
+                      mb: isMobile ? 3 : 4, 
+                      opacity: 0.8, 
+                      lineHeight: 1.6,
+                      fontSize: isMobile ? '1rem' : '1.25rem'
+                    }}>
                       {currentHero.settings?.subtitle || currentHero.content}
                     </Typography>
                     

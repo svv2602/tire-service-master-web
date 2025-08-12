@@ -33,9 +33,24 @@ const CartIndicator: React.FC = () => {
     navigate('/client/cart');
   };
 
-  // Не показываем индикатор для неавторизованных пользователей
+  // Для неавторизованных пользователей показываем пустую корзину
   if (!isAuthenticated) {
-    return null;
+    return (
+      <Tooltip title="Корзина (войдите для просмотра)">
+        <IconButton 
+          color="inherit" 
+          onClick={handleCartClick}
+          sx={{ 
+            color: 'inherit',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.1)'
+            }
+          }}
+        >
+          <ShoppingCartIcon />
+        </IconButton>
+      </Tooltip>
+    );
   }
 
   // Проверяем, является ли ошибка серьезной (не 404 - пустая корзина)

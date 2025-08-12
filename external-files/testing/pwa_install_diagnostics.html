@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Install Diagnostics</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        button:hover { background: #0056b3; }
+        .disabled { background: #6c757d !important; cursor: not-allowed !important; }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 PWA Install Diagnostics</h1>
+        
+        <div id="platform-info"></div>
+        <div id="pwa-support"></div>
+        <div id="install-status"></div>
+        
+        <h3>📱 Actions</h3>
+        <button id="check-prompt" onclick="checkForPrompt()">Проверить событие beforeinstallprompt</button>
+        <button id="trigger-install" onclick="triggerInstall()" class="disabled" disabled>Запустить установку</button>
+        <button id="clear-log" onclick="clearLog()">Очистить лог</button>
+        
+        <h3>📊 Event Log</h3>
+        <div id="log" class="log">Ожидание событий...</div>
+        
+        <h3>ℹ️ Возможные причины отсутствия автоустановки:</h3>
+        <ul>
+            <li><strong>Приложение уже установлено</strong> - проверьте рабочий стол</li>
+            <li><strong>Браузер не поддерживает</strong> - используйте Chrome/Edge на Android/Desktop</li>
+            <li><strong>HTTPS требуется</strong> - на localhost работает, на продакшне нужен SSL</li>
+            <li><strong>Критерии PWA не выполнены</strong> - проверьте manifest.json и Service Worker</li>
+            <li><strong>Пользователь ранее отклонил</strong> - браузер запомнил отказ</li>
+            <li><strong>Недостаточно взаимодействий</strong> - нужно больше действий на сайте</li>
+        </ul>
+    </div>
+
+    <script>
+        let deferredPrompt = null;
+        let installPromptFired = false;
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEl = document.getElementById('log');
+            const colorMap = {
+                info: '#0c5460',
+                success: '#155724', 
+                warning: '#856404',
+                error: '#721c24'
+            };
+            
+            logEl.innerHTML += `<span style="color: ${colorMap[type]};">[${timestamp}] ${message}</span>\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function updateStatus(elementId, message, className) {
+            const el = document.getElementById(elementId);
+            el.innerHTML = `<div class="status ${className}">${message}</div>`;
+        }
+
+        function detectPlatform() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            let platform = 'unknown';
+            
+            if (/android/.test(userAgent)) {
+                platform = 'Android';
+            } else if (/iphone|ipad|ipod/.test(userAgent)) {
+                platform = 'iOS';
+            } else if (/windows/.test(userAgent)) {
+                platform = 'Windows';
+            } else if (/mac/.test(userAgent)) {
+                platform = 'macOS';
+            } else if (/linux/.test(userAgent)) {
+                platform = 'Linux';
+            }
+
+            const browser = getBrowser();
+            updateStatus('platform-info', `🔍 Платформа: ${platform} | Браузер: ${browser}`, 'info');
+            log(`Detected platform: ${platform}, browser: ${browser}`);
+        }
+
+        function getBrowser() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            if (userAgent.includes('chrome') && !userAgent.includes('edg')) {
+                return 'Chrome';
+            } else if (userAgent.includes('firefox')) {
+                return 'Firefox';
+            } else if (userAgent.includes('safari') && !userAgent.includes('chrome')) {
+                return 'Safari';
+            } else if (userAgent.includes('edg')) {
+                return 'Edge';
+            }
+            return 'Unknown';
+        }
+
+        function checkPWASupport() {
+            const hasServiceWorker = 'serviceWorker' in navigator;
+            const hasManifest = document.querySelector('link[rel="manifest"]') !== null;
+            const hasPushManager = 'PushManager' in window;
+            const isSecure = location.protocol === 'https:' || location.hostname === 'localhost';
+
+            if (hasServiceWorker && hasManifest && isSecure) {
+                updateStatus('pwa-support', '✅ PWA поддерживается полностью', 'success');
+                log('PWA fully supported', 'success');
+            } else {
+                const missing = [];
+                if (!hasServiceWorker) missing.push('Service Worker');
+                if (!hasManifest) missing.push('Manifest');
+                if (!isSecure) missing.push('HTTPS');
+                
+                updateStatus('pwa-support', `⚠️ PWA поддержка неполная: отсутствует ${missing.join(', ')}`, 'warning');
+                log(`PWA support incomplete: missing ${missing.join(', ')}`, 'warning');
+            }
+        }
+
+        function checkInstallStatus() {
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                               window.navigator.standalone ||
+                               document.referrer.includes('android-app://');
+
+            if (isStandalone) {
+                updateStatus('install-status', '✅ Приложение уже установлено', 'success');
+                log('App is already installed', 'success');
+            } else {
+                updateStatus('install-status', '📱 Приложение не установлено', 'info');
+                log('App is not installed', 'info');
+            }
+        }
+
+        function checkForPrompt() {
+            log('Checking for install prompt capability...', 'info');
+            
+            if (deferredPrompt) {
+                log('✅ Install prompt is available!', 'success');
+                document.getElementById('trigger-install').disabled = false;
+                document.getElementById('trigger-install').classList.remove('disabled');
+            } else {
+                log('❌ Install prompt is not available', 'warning');
+                log('This could mean:', 'info');
+                log('- App is already installed', 'info');
+                log('- Browser doesn\'t support install prompts', 'info');
+                log('- PWA criteria not met', 'info');
+                log('- User previously dismissed the prompt', 'info');
+            }
+        }
+
+        function triggerInstall() {
+            if (!deferredPrompt) {
+                log('❌ No install prompt available', 'error');
+                return;
+            }
+
+            log('🚀 Triggering install prompt...', 'info');
+            
+            deferredPrompt.prompt();
+            
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    log('✅ User accepted the install prompt', 'success');
+                } else {
+                    log('❌ User dismissed the install prompt', 'warning');
+                }
+                deferredPrompt = null;
+                document.getElementById('trigger-install').disabled = true;
+                document.getElementById('trigger-install').classList.add('disabled');
+            });
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = 'Лог очищен...\n';
+        }
+
+        // Event listeners
+        window.addEventListener('beforeinstallprompt', (e) => {
+            log('🎉 beforeinstallprompt event fired!', 'success');
+            e.preventDefault();
+            deferredPrompt = e;
+            installPromptFired = true;
+            
+            document.getElementById('trigger-install').disabled = false;
+            document.getElementById('trigger-install').classList.remove('disabled');
+            
+            log('Platforms: ' + e.platforms.join(', '), 'info');
+        });
+
+        window.addEventListener('appinstalled', () => {
+            log('🎉 App was installed!', 'success');
+            deferredPrompt = null;
+            checkInstallStatus();
+        });
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            log('🔍 PWA Diagnostics started', 'info');
+            detectPlatform();
+            checkPWASupport();
+            checkInstallStatus();
+            
+            // Check if prompt event has fired after 3 seconds
+            setTimeout(() => {
+                if (!installPromptFired) {
+                    log('⏰ beforeinstallprompt event has NOT fired after 3 seconds', 'warning');
+                    log('This is normal for some browsers/conditions', 'info');
+                }
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

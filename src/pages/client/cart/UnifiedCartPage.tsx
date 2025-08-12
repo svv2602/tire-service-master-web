@@ -26,7 +26,9 @@ import {
   FormControl,
   InputLabel,
   OutlinedInput,
-  InputAdornment
+  InputAdornment,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -64,6 +66,8 @@ import PhoneField from '../../../components/ui/PhoneField';
 const UnifiedCartPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
 
   // Состояния
@@ -331,131 +335,247 @@ const UnifiedCartPage: React.FC = () => {
   };
 
   // Рендер товара
-  const renderCartItem = (item: UnifiedTireCartItem) => (
-    <Card key={item.id} variant="outlined" sx={{ mb: 2 }}>
-      <CardContent>
-        <Grid container spacing={2} alignItems="center">
-          {/* Изображение товара */}
-          <Grid item xs={12} sm={2}>
-            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-              <ProductImagePreview
-                imageUrl={item.product.image_url}
-                productName={item.product.name}
-                brand={item.product.brand}
-                model={item.product.model}
-                size={item.product.size}
-                season={item.product.season}
-                width={100}
-                height={100}
-              />
-            </Box>
-          </Grid>
+  const renderCartItem = (item: UnifiedTireCartItem) => {
+    if (isMobile) {
+      // Компактная версия для мобильных устройств
+      return (
+        <Card key={item.id} variant="outlined" sx={{ mb: 1.5 }}>
+          <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              {/* Изображение товара */}
+              <Box sx={{ flexShrink: 0 }}>
+                <ProductImagePreview
+                  imageUrl={item.product.image_url}
+                  productName={item.product.name}
+                  brand={item.product.brand}
+                  model={item.product.model}
+                  size={item.product.size}
+                  season={item.product.season}
+                  width={60}
+                  height={60}
+                />
+              </Box>
 
-          {/* Информация о товаре */}
-          <Grid item xs={12} sm={5}>
-            <Typography variant="h6" gutterBottom>
-              {item.product.brand} {item.product.model}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {t('cart.items.size')}: {item.product.size}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {t('cart.items.season')}: {item.product.season}
-            </Typography>
-            <Chip 
-              label={item.available ? t('cart.items.inStock') : t('cart.items.outOfStock')} 
-              color={item.available ? 'success' : 'error'}
-              size="small"
-              sx={{ mt: 1 }}
-            />
-          </Grid>
-
-          {/* Цена */}
-          <Grid item xs={12} sm={2}>
-            <Typography variant="h6" color="primary">
-              {item.price_at_add.toFixed(0)} ₴
-            </Typography>
-            {item.current_price !== item.price_at_add && (
-              <Typography variant="body2" color="text.secondary">
-                {t('cart.items.currentPrice')}: {item.current_price.toFixed(0)} ₴
-              </Typography>
-            )}
-          </Grid>
-
-          {/* Количество */}
-          <Grid item xs={12} sm={2}>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                {t('cart.items.quantity')}
-              </Typography>
-              <Stack direction="row" alignItems="center" spacing={1} sx={{ justifyContent: 'center' }}>
-                <IconButton
-                  size="small"
-                  onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                  disabled={item.quantity <= 1}
-                  sx={{
-                    bgcolor: 'primary.100',
-                    color: 'primary.main',
-                    '&:hover': { bgcolor: 'primary.200' },
-                    '&:disabled': { 
-                      bgcolor: 'grey.300',
-                      color: 'grey.500'
-                    }
-                  }}
-                >
-                  <RemoveIcon fontSize="small" />
-                </IconButton>
-                <Box
-                  sx={{
-                    minWidth: 50,
-                    textAlign: 'center',
-                    py: 1,
-                    px: 2,
-                    bgcolor: 'primary.50',
-                    border: '2px solid',
-                    borderColor: 'primary.main',
-                    borderRadius: 1,
-                  }}
-                >
-                  <Typography variant="h6" color="primary.main" sx={{ fontWeight: 'bold' }}>
-                    {item.quantity}
+              {/* Основная информация */}
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 0.5, lineHeight: 1.2 }}>
+                  {item.product.brand} {item.product.model}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                  {item.product.size} • {item.product.season}
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                  <Chip 
+                    label={item.available ? t('cart.items.inStock') : t('cart.items.outOfStock')} 
+                    color={item.available ? 'success' : 'error'}
+                    size="small"
+                  />
+                  <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold' }}>
+                    {item.price_at_add.toFixed(0)} ₴
                   </Typography>
                 </Box>
-                <IconButton
-                  size="small"
-                  onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                  sx={{
-                    bgcolor: 'primary.100',
-                    color: 'primary.main',
-                    '&:hover': { bgcolor: 'primary.200' }
-                  }}
-                >
-                  <AddIcon fontSize="small" />
-                </IconButton>
-              </Stack>
+
+                {/* Управление количеством и действия */}
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                      disabled={item.quantity <= 1}
+                      sx={{
+                        bgcolor: 'primary.100',
+                        color: 'primary.main',
+                        '&:hover': { bgcolor: 'primary.200' },
+                        '&:disabled': { 
+                          bgcolor: 'grey.300',
+                          color: 'grey.500'
+                        },
+                        minWidth: 32,
+                        width: 32,
+                        height: 32
+                      }}
+                    >
+                      <RemoveIcon fontSize="small" />
+                    </IconButton>
+                    <Box
+                      sx={{
+                        minWidth: 40,
+                        textAlign: 'center',
+                        py: 0.5,
+                        px: 1,
+                        bgcolor: 'primary.50',
+                        border: '2px solid',
+                        borderColor: 'primary.main',
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Typography variant="body1" color="primary.main" sx={{ fontWeight: 'bold' }}>
+                        {item.quantity}
+                      </Typography>
+                    </Box>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                      sx={{
+                        bgcolor: 'primary.100',
+                        color: 'primary.main',
+                        '&:hover': { bgcolor: 'primary.200' },
+                        minWidth: 32,
+                        width: 32,
+                        height: 32
+                      }}
+                    >
+                      <AddIcon fontSize="small" />
+                    </IconButton>
+                  </Stack>
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                      {item.total_price.toFixed(0)} ₴
+                    </Typography>
+                    <IconButton
+                      color="error"
+                      size="small"
+                      onClick={() => handleRemoveItem(item.id)}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                </Box>
+              </Box>
             </Box>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // Обычная версия для десктопа
+    return (
+      <Card key={item.id} variant="outlined" sx={{ mb: 2 }}>
+        <CardContent>
+          <Grid container spacing={2} alignItems="center">
+            {/* Изображение товара */}
+            <Grid item xs={12} sm={2}>
+              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <ProductImagePreview
+                  imageUrl={item.product.image_url}
+                  productName={item.product.name}
+                  brand={item.product.brand}
+                  model={item.product.model}
+                  size={item.product.size}
+                  season={item.product.season}
+                  width={100}
+                  height={100}
+                />
+              </Box>
+            </Grid>
+
+            {/* Информация о товаре */}
+            <Grid item xs={12} sm={5}>
+              <Typography variant="h6" gutterBottom>
+                {item.product.brand} {item.product.model}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {t('cart.items.size')}: {item.product.size}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {t('cart.items.season')}: {item.product.season}
+              </Typography>
+              <Chip 
+                label={item.available ? t('cart.items.inStock') : t('cart.items.outOfStock')} 
+                color={item.available ? 'success' : 'error'}
+                size="small"
+                sx={{ mt: 1 }}
+              />
+            </Grid>
+
+            {/* Цена */}
+            <Grid item xs={12} sm={2}>
+              <Typography variant="h6" color="primary">
+                {item.price_at_add.toFixed(0)} ₴
+              </Typography>
+              {item.current_price !== item.price_at_add && (
+                <Typography variant="body2" color="text.secondary">
+                  {t('cart.items.currentPrice')}: {item.current_price.toFixed(0)} ₴
+                </Typography>
+              )}
+            </Grid>
+
+            {/* Количество */}
+            <Grid item xs={12} sm={2}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  {t('cart.items.quantity')}
+                </Typography>
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ justifyContent: 'center' }}>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                    disabled={item.quantity <= 1}
+                    sx={{
+                      bgcolor: 'primary.100',
+                      color: 'primary.main',
+                      '&:hover': { bgcolor: 'primary.200' },
+                      '&:disabled': { 
+                        bgcolor: 'grey.300',
+                        color: 'grey.500'
+                      }
+                    }}
+                  >
+                    <RemoveIcon fontSize="small" />
+                  </IconButton>
+                  <Box
+                    sx={{
+                      minWidth: 50,
+                      textAlign: 'center',
+                      py: 1,
+                      px: 2,
+                      bgcolor: 'primary.50',
+                      border: '2px solid',
+                      borderColor: 'primary.main',
+                      borderRadius: 1,
+                    }}
+                  >
+                    <Typography variant="h6" color="primary.main" sx={{ fontWeight: 'bold' }}>
+                      {item.quantity}
+                    </Typography>
+                  </Box>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                    sx={{
+                      bgcolor: 'primary.100',
+                      color: 'primary.main',
+                      '&:hover': { bgcolor: 'primary.200' }
+                    }}
+                  >
+                    <AddIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
+              </Box>
+            </Grid>
+
+            {/* Действия */}
+            <Grid item xs={12} sm={1}>
+              <IconButton
+                color="error"
+                onClick={() => handleRemoveItem(item.id)}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Grid>
           </Grid>
 
-          {/* Действия */}
-          <Grid item xs={12} sm={1}>
-            <IconButton
-              color="error"
-              onClick={() => handleRemoveItem(item.id)}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Grid>
-        </Grid>
-
-        {/* Общая стоимость товара */}
-        <Box sx={{ mt: 2, textAlign: 'right' }}>
-          <Typography variant="h6">
-            {t('cart.items.total')}: {item.total_price.toFixed(0)} ₴
-          </Typography>
-        </Box>
-      </CardContent>
-    </Card>
-  );
+          {/* Общая стоимость товара */}
+          <Box sx={{ mt: 2, textAlign: 'right' }}>
+            <Typography variant="h6">
+              {t('cart.items.total')}: {item.total_price.toFixed(0)} ₴
+            </Typography>
+          </Box>
+        </CardContent>
+      </Card>
+    );
+  };
 
   // Рендер группы поставщика
   const renderSupplierGroup = (supplierId: string, group: SupplierGroup) => {
@@ -532,22 +652,22 @@ const UnifiedCartPage: React.FC = () => {
 
   return (
     <ClientLayout>
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: isMobile ? 2 : 4, px: isMobile ? 1 : 3 }}>
         {/* Заголовок */}
-        <Box sx={{ mb: 4 }}>
-                      <Typography variant="h4" gutterBottom>
-              <ShoppingCartIcon sx={{ mr: 2, verticalAlign: 'middle' }} />
-              {t('cart.title')}
-            </Typography>
+        <Box sx={{ mb: isMobile ? 2 : 4 }}>
+          <Typography variant={isMobile ? "h5" : "h4"} gutterBottom>
+            <ShoppingCartIcon sx={{ mr: 2, verticalAlign: 'middle' }} />
+            {t('cart.title')}
+          </Typography>
           <Typography variant="body1" color="text.secondary">
-{cart.total_items_count} {t('cart.supplier.totalItems')} {t('cart.supplier.from')} {suppliersCount} {t('cart.summary.suppliers')}
+            {cart.total_items_count} {t('cart.supplier.totalItems')} {t('cart.supplier.from')} {suppliersCount} {t('cart.summary.suppliers')}
           </Typography>
         </Box>
 
-        <Grid container spacing={4}>
+        <Grid container spacing={isMobile ? 2 : 4}>
           {/* Товары в корзине */}
           <Grid item xs={12} md={8}>
-            <Stack spacing={3}>
+            <Stack spacing={isMobile ? 2 : 3}>
               {cart.suppliers.map((group) =>
                 renderSupplierGroup(group.id.toString(), group)
               )}
@@ -556,7 +676,7 @@ const UnifiedCartPage: React.FC = () => {
 
           {/* Сводка заказа */}
           <Grid item xs={12} md={4}>
-            <Paper sx={{ p: 3, position: 'sticky', top: 20 }}>
+            <Paper sx={{ p: isMobile ? 2 : 3, position: isMobile ? 'static' : 'sticky', top: 20 }}>
               <Typography variant="h6" gutterBottom>
                 Сводка заказа
               </Typography>
