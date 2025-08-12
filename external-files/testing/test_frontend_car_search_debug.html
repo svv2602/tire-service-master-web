@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест фронтенда - Поиск шин по автомобилю</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-title {
+            color: #1976d2;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .api-response {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .status-success { border-left-color: #28a745; }
+        .status-warning { border-left-color: #ffc107; }
+        .status-error { border-left-color: #dc3545; }
+        
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+        .log {
+            background: #f1f3f4;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .model-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-block;
+            min-width: 200px;
+        }
+        .model-card:hover {
+            background: #f0f0f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .model-card h4 {
+            margin: 0 0 10px 0;
+            color: #1976d2;
+        }
+        .diameter-group {
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 8px;
+            display: inline-block;
+            min-width: 250px;
+            vertical-align: top;
+        }
+        .diameter-group h3 {
+            margin: 0 0 10px 0;
+            color: #1976d2;
+        }
+        .tire-size {
+            background: #e3f2fd;
+            padding: 5px 10px;
+            margin: 5px;
+            border-radius: 4px;
+            display: inline-block;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 Тест фронтенда - Поиск шин по автомобилю</h1>
+        <p><strong>Цель:</strong> Проверить работу поиска "мерседес жле" на фронтенде</p>
+        
+        <!-- Тест 1: Начальный поиск -->
+        <div class="test-section">
+            <div class="test-title">1. Начальный поиск "мерседес жле"</div>
+            <button onclick="searchCarTires()">🔍 Поиск шин по автомобилю</button>
+            <div id="search-log" class="log">Логи поиска появятся здесь...</div>
+            <div id="search-response" class="api-response">Ответ API появится здесь...</div>
+        </div>
+
+        <!-- Тест 2: Выбор модели -->
+        <div class="test-section">
+            <div class="test-title">2. Выбор модели GLE-Class</div>
+            <div id="models-container">Модели появятся после начального поиска...</div>
+        </div>
+
+        <!-- Тест 3: Результаты размеров -->
+        <div class="test-section">
+            <div class="test-title">3. Размеры шин и группировка по диаметрам</div>
+            <div id="sizes-container">Размеры появятся после выбора модели...</div>
+        </div>
+
+        <!-- Тест 4: Статистика -->
+        <div class="test-section">
+            <div class="test-title">4. Статистика тестирования</div>
+            <div id="stats-container">
+                <p><strong>Время тестирования:</strong> <span id="test-time">-</span></p>
+                <p><strong>Количество запросов:</strong> <span id="request-count">0</span></p>
+                <p><strong>Успешных запросов:</strong> <span id="success-count">0</span></p>
+                <p><strong>Ошибок:</strong> <span id="error-count">0</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let requestCount = 0;
+        let successCount = 0;
+        let errorCount = 0;
+        let currentSearchResult = null;
+
+        // Обновление счетчиков
+        function updateStats() {
+            document.getElementById('request-count').textContent = requestCount;
+            document.getElementById('success-count').textContent = successCount;
+            document.getElementById('error-count').textContent = errorCount;
+            document.getElementById('test-time').textContent = new Date().toLocaleString();
+        }
+
+        // Логирование
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('search-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            logElement.textContent += logEntry;
+            logElement.scrollTop = logElement.scrollHeight;
+            
+            console.log(`[CarSearch] ${message}`);
+        }
+
+        // Начальный поиск автомобиля
+        async function searchCarTires() {
+            requestCount++;
+            updateStats();
+            
+            log('🔍 Начинаем поиск "мерседес жле"...');
+            
+            const searchData = {
+                query: "мерседес жле",
+                locale: "ru"
+            };
+
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/car_tire_search/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(searchData)
+                });
+
+                const result = await response.json();
+                currentSearchResult = result;
+                
+                log(`✅ Получен ответ со статусом: ${result.status}`);
+                
+                // Отображение ответа
+                const responseElement = document.getElementById('search-response');
+                responseElement.textContent = JSON.stringify(result, null, 2);
+                responseElement.className = `api-response status-${result.status === 'model_ambiguous' ? 'warning' : 'success'}`;
+                
+                // Обработка результата
+                if (result.status === 'model_ambiguous') {
+                    log(`⚠️  Найдено ${result.models?.length || 0} моделей для выбора`);
+                    displayModels(result.models || []);
+                    successCount++;
+                } else if (result.status === 'success') {
+                    log(`🎉 Сразу найдены размеры шин: ${result.tire_sizes?.length || 0}`);
+                    displayTireSizes(result);
+                    successCount++;
+                } else {
+                    log(`❌ Неожиданный статус: ${result.status}`);
+                    errorCount++;
+                }
+                
+            } catch (error) {
+                errorCount++;
+                log(`🚫 Ошибка запроса: ${error.message}`);
+                console.error('Search error:', error);
+            }
+            
+            updateStats();
+        }
+
+        // Отображение моделей для выбора
+        function displayModels(models) {
+            const container = document.getElementById('models-container');
+            container.innerHTML = '';
+            
+            if (!models || models.length === 0) {
+                container.innerHTML = '<p>Модели не найдены</p>';
+                return;
+            }
+
+            log(`📋 Отображаем ${models.length} моделей для выбора`);
+            
+            models.forEach(model => {
+                const modelCard = document.createElement('div');
+                modelCard.className = 'model-card';
+                modelCard.onclick = () => selectModel(model.id, model.name);
+                
+                modelCard.innerHTML = `
+                    <h4>${model.name}</h4>
+                    <p><strong>Бренд:</strong> ${model.brand_name}</p>
+                    <p><strong>Размеров:</strong> ${model.configs_count}</p>
+                    <p><strong>ID:</strong> ${model.id}</p>
+                `;
+                
+                container.appendChild(modelCard);
+            });
+        }
+
+        // Выбор конкретной модели
+        async function selectModel(modelId, modelName) {
+            requestCount++;
+            updateStats();
+            
+            log(`🎯 Выбираем модель: ${modelName} (ID: ${modelId})`);
+
+            const resolveData = {
+                model_id: modelId,
+                locale: "ru"
+            };
+
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/car_tire_search/resolve_model', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(resolveData)
+                });
+
+                const result = await response.json();
+                
+                log(`✅ Получены размеры для ${modelName}: ${result.tire_sizes?.length || 0} размеров`);
+                
+                if (result.status === 'success') {
+                    displayTireSizes(result);
+                    successCount++;
+                } else {
+                    log(`❌ Ошибка при получении размеров: ${result.message || result.status}`);
+                    errorCount++;
+                }
+                
+            } catch (error) {
+                errorCount++;
+                log(`🚫 Ошибка выбора модели: ${error.message}`);
+                console.error('Model selection error:', error);
+            }
+            
+            updateStats();
+        }
+
+        // Отображение размеров шин с группировкой по диаметрам
+        function displayTireSizes(result) {
+            const container = document.getElementById('sizes-container');
+            container.innerHTML = '';
+            
+            if (!result.tire_sizes || result.tire_sizes.length === 0) {
+                container.innerHTML = '<p>Размеры шин не найдены</p>';
+                return;
+            }
+
+            log(`📏 Группируем ${result.tire_sizes.length} размеров по диаметрам`);
+            
+            // Группировка по диаметрам
+            const diameterGroups = {};
+            result.tire_sizes.forEach(size => {
+                if (!diameterGroups[size.diameter]) {
+                    diameterGroups[size.diameter] = [];
+                }
+                diameterGroups[size.diameter].push(size);
+            });
+            
+            log(`📊 Найдено ${Object.keys(diameterGroups).length} диаметров`);
+            
+            // Отображение групп
+            Object.keys(diameterGroups).sort((a, b) => parseInt(a) - parseInt(b)).forEach(diameter => {
+                const sizes = diameterGroups[diameter];
+                
+                const diameterGroup = document.createElement('div');
+                diameterGroup.className = 'diameter-group';
+                
+                diameterGroup.innerHTML = `
+                    <h3>Диаметр R${diameter} • ${result.brand?.name} ${result.model?.name}</h3>
+                    <p><strong>${sizes.length} размер${sizes.length > 1 ? 'а' : ''} в наличии</strong></p>
+                    <div>
+                        ${sizes.map(size => 
+                            `<span class="tire-size">${size.width}/${size.height}R${size.diameter}</span>`
+                        ).join('')}
+                    </div>
+                    <p><small>Годы: ${sizes[0].year_from}-${sizes[0].year_to || 'н.в.'}</small></p>
+                `;
+                
+                container.appendChild(diameterGroup);
+            });
+            
+            log(`🎉 Унифицированное отображение готово!`);
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Страница тестирования загружена');
+            log('ℹ️  Нажмите "Поиск шин по автомобилю" для начала тестирования');
+            updateStats();
+        });
+    </script>
+</body>
+</html>

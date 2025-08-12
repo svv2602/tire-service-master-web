@@ -72,6 +72,43 @@ export const groupResultsByDiameter = (results: TireSearchResult[]): TireDiamete
 };
 
 /**
+ * Конвертирует результат CarTireSearchResponse в формат TireSearchResult для группировки по диаметрам
+ * @param carResult - результат поиска автомобиля
+ * @returns массив TireSearchResult для группировки
+ */
+export const convertCarSearchToTireResults = (carResult: any): TireSearchResult[] => {
+  if (!carResult?.tire_sizes || !Array.isArray(carResult.tire_sizes)) {
+    return [];
+  }
+
+  // Создаем единую "конфигурацию" для всех размеров автомобиля
+  const result: TireSearchResult = {
+    id: carResult.model?.id || carResult.brand?.id || 0,
+    brand_id: carResult.brand?.id || 0,
+    model_id: carResult.model?.id || 0,
+    brand_name: carResult.brand?.name || 'Unknown',
+    model_name: carResult.model?.name || 'Unknown',
+    full_name: `${carResult.brand?.name || 'Unknown'} ${carResult.model?.name || 'Unknown'}`,
+    year_from: carResult.tire_sizes[0]?.year_from || new Date().getFullYear(),
+    year_to: carResult.tire_sizes[0]?.year_to || new Date().getFullYear(),
+    years_display: `${carResult.tire_sizes[0]?.year_from || new Date().getFullYear()}-${carResult.tire_sizes[0]?.year_to || 'н.в.'}`,
+    tire_sizes: carResult.tire_sizes.map((size: any) => ({
+      width: size.width,
+      height: size.height,
+      diameter: size.diameter,
+      type: (size.type || 'stock') as 'stock' | 'optional',
+      display: `${size.width}/${size.height}R${size.diameter}`
+    })),
+    search_aliases: [],
+    search_tokens: '',
+    data_version: '1.0',
+    last_updated: new Date().toISOString()
+  };
+
+  return [result];
+};
+
+/**
  * Извлекает параметры поиска из строки запроса или parsed_data
  * @param query - исходный поисковый запрос
  * @param parsedData - разобранные данные поиска

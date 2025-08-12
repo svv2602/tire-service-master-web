@@ -10,7 +10,8 @@ import {
   Alert,
   AlertTitle,
   Stack,
-  Divider
+  Divider,
+  Fade
 } from '@mui/material';
 import {
   DirectionsCar as CarIcon,
@@ -20,6 +21,8 @@ import {
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import type { CarTireSearchResponse, CarBrand, CarModel, TireSize, TireOffer } from '../../../api/carTireSearch.api';
+import SupplierTireDiameterCard from '../SupplierTireDiameterCard/SupplierTireDiameterCard';
+import { convertCarSearchToTireResults, groupResultsByDiameter, extractSearchParams } from '../../../utils/tireSearchUtils';
 
 interface CarTireSearchResultsProps {
   result: CarTireSearchResponse;
@@ -261,44 +264,52 @@ const CarTireSearchResults: React.FC<CarTireSearchResultsProps> = ({
               </Box>
             </Alert>
 
-            {/* Размеры шин */}
-            {result.tire_sizes && result.tire_sizes.length > 0 && (
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-                  <CategoryIcon sx={{ mr: 1 }} />
-                  Доступные размеры ({result.tire_sizes.length})
-                </Typography>
-                <Grid container spacing={2}>
-                  {result.tire_sizes.map((tireSize, index) => (
-                    <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
-                      <Card 
-                        variant="outlined"
-                        sx={{ 
-                          cursor: 'pointer',
-                          '&:hover': { 
-                            bgcolor: 'action.hover',
-                            boxShadow: 2
-                          }
-                        }}
-                        onClick={() => onTireSizeSelect?.(tireSize)}
-                      >
-                        <CardContent sx={{ textAlign: 'center' }}>
-                          <Typography variant="h6" color="primary">
-                            {tireSize.width}/{tireSize.height}R{tireSize.diameter}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {tireSize.type === 'stock' ? 'Стандартный' : tireSize.type}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {tireSize.year_from}-{tireSize.year_to || 'н.в.'}
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            )}
+            {/* Размеры шин сгруппированные по диаметрам */}
+            {result.tire_sizes && result.tire_sizes.length > 0 && (() => {
+              // Конвертируем данные автомобиля в формат для группировки
+              const tireResults = convertCarSearchToTireResults(result);
+              const diameterGroups = groupResultsByDiameter(tireResults);
+              
+              // Извлекаем параметры поиска для передачи в карточки диаметров
+              const searchParams = extractSearchParams(result.query?.original_query || '');
+
+              return (
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
+                    <CategoryIcon sx={{ mr: 1 }} />
+                    Доступные размеры ({diameterGroups.length} диаметров)
+                  </Typography>
+                  <Grid container spacing={3}>
+                    {diameterGroups.map((group) => {
+                      // Извлекаем размеры для данного диаметра
+                      const filterSizes = group.sizes.map(size => ({
+                        width: size.width,
+                        height: size.height
+                      }));
+                      
+                      return (
+                        <Grid item xs={12} md={6} lg={4} key={group.diameter}>
+                          <Fade in timeout={300}>
+                            <div>
+                              <SupplierTireDiameterCard
+                                diameter={group.diameter.toString()}
+                                searchParams={searchParams}
+                                filterSizes={filterSizes}
+                                carInfo={{
+                                  brand: result.brand?.name,
+                                  model: result.model?.name,
+                                  year: result.year
+                                }}
+                              />
+                            </div>
+                          </Fade>
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+                </Box>
+              );
+            })()}
 
             {/* Предложения шин */}
             {result.tire_offers && result.tire_offers.length > 0 && (
