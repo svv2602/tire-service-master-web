@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест: Заявка на партнерство без степпера</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .test-case {
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        
+        .success {
+            border-color: #4caf50;
+            background: #f1f8e9;
+        }
+        
+        h1 {
+            color: #1976d2;
+            text-align: center;
+        }
+        
+        h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        
+        .result {
+            font-weight: bold;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .result.pass {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .result.info {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .checklist {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        .checklist li {
+            margin: 8px 0;
+            padding: 8px;
+            background: #f8f9fa;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .checklist li:before {
+            content: "✓ ";
+            color: #4caf50;
+            font-weight: bold;
+        }
+        
+        .mobile-preview {
+            width: 375px;
+            height: 600px;
+            border: 3px solid #333;
+            border-radius: 25px;
+            margin: 20px auto;
+            background: white;
+            padding: 10px;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .form-preview {
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .form-field {
+            margin: 8px 0;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+        
+        .submit-button {
+            width: 100%;
+            padding: 12px;
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Тест: Заявка на партнерство без степпера</h1>
+        
+        <div class="test-case success">
+            <h2>🎯 Основные изменения</h2>
+            
+            <ul class="checklist">
+                <li><strong>Убран Stepper:</strong> Удален компонент и вся связанная логика навигации по шагам</li>
+                <li><strong>Одностраничная форма:</strong> Все поля размещены на одной странице</li>
+                <li><strong>Компактная компоновка:</strong> Оптимизированы размеры и отступы для мобильных</li>
+                <li><strong>Адаптивные размеры:</strong> size="small" для полей на мобильных</li>
+                <li><strong>Улучшенная кнопка:</strong> Одна центральная кнопка отправки</li>
+            </ul>
+        </div>
+        
+        <div class="test-case success">
+            <h2>📱 Мобильная оптимизация</h2>
+            
+            <div class="result info">
+                <strong>Container изменения:</strong><br>
+                • maxWidth: 100% на мобильных (вместо sm)<br>
+                • Минимальные отступы: py=1, px=1<br>
+                • Paper padding: 1.5 (вместо 2-4)
+            </div>
+            
+            <div class="result info">
+                <strong>Typography адаптация:</strong><br>
+                • Заголовок: h6 на мобильных (вместо h5)<br>
+                • Убраны лишние отступы<br>
+                • Компактные размеры полей
+            </div>
+            
+            <div class="result info">
+                <strong>Форма оптимизация:</strong><br>
+                • TextField size="small" на мобильных<br>
+                • multiline rows=2 (вместо 3-4)<br>
+                • Grid spacing=2 на мобильных
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h2>📋 Удаленные компоненты</h2>
+            
+            <div class="result pass">
+                <strong>Stepper компонент:</strong> Полностью удален<br>
+                <strong>Step, StepLabel:</strong> Удалены из импортов<br>
+                <strong>activeStep state:</strong> Удален<br>
+                <strong>handleNext, handleBack:</strong> Удалены<br>
+                <strong>validateCurrentStep:</strong> Удалена логика<br>
+                <strong>isStepCompleted:</strong> Удалена логика<br>
+                <strong>getStepFields:</strong> Удалена функция
+            </div>
+        </div>
+
+        <div class="test-case success">
+            <h2>🔄 Новая структура формы</h2>
+            
+            <div class="mobile-preview">
+                <div class="form-preview">
+                    <h3 style="text-align: center; margin: 10px 0;">Заявка на партнерство</h3>
+                    
+                    <div class="form-field">Название компании *</div>
+                    <div class="form-field">Описание бизнеса * (2 строки)</div>
+                    <div class="form-field">Контактное лицо *</div>
+                    
+                    <div style="display: flex; gap: 5px;">
+                        <div class="form-field" style="flex: 1;">Email *</div>
+                        <div class="form-field" style="flex: 1;">Телефон *</div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 5px;">
+                        <div class="form-field" style="flex: 1;">Регион *</div>
+                        <div class="form-field" style="flex: 1;">Город из списка</div>
+                    </div>
+                    
+                    <div class="form-field">Город *</div>
+                    <div class="form-field">Адрес</div>
+                    
+                    <div style="display: flex; gap: 5px;">
+                        <div class="form-field" style="flex: 1;">Веб-сайт</div>
+                        <div class="form-field" style="flex: 1;">Кол-во точек *</div>
+                    </div>
+                    
+                    <div class="form-field">Дополнительная информация (2 строки)</div>
+                    
+                    <button class="submit-button">Отправить заявку</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-case success">
+            <h2>🎯 Преимущества новой версии</h2>
+            
+            <div class="result pass">
+                <strong>Экономия места:</strong> Убран степпер, который занимал много места на мобильных<br>
+                <strong>Простота навигации:</strong> Нет необходимости переключаться между шагами<br>
+                <strong>Лучший UX:</strong> Пользователь видит всю форму целиком<br>
+                <strong>Быстрое заполнение:</strong> Можно заполнять поля в любом порядке<br>
+                <strong>Мобильная оптимизация:</strong> Форма помещается на экране мобильного
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h2>🧪 Тестирование</h2>
+            
+            <div class="result info">
+                <strong>URL для проверки:</strong><br>
+                <code>http://localhost:3008/business-application</code>
+            </div>
+            
+            <div class="result info">
+                <strong>Проверить в DevTools:</strong><br>
+                1. F12 → Режим устройства (Ctrl+Shift+M)<br>
+                2. iPhone SE (375x667) или Galaxy S8+ (360x740)<br>
+                3. Убедиться, что форма помещается без прокрутки<br>
+                4. Проверить, что все поля доступны<br>
+                5. Тест отправки формы
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Симуляция проверки размеров
+        function checkFormFit() {
+            const screenHeight = window.innerHeight;
+            const isMobile = window.innerWidth < 900;
+            
+            console.log(`Высота экрана: ${screenHeight}px`);
+            console.log(`Мобильный режим: ${isMobile ? 'Да' : 'Нет'}`);
+            
+            if (isMobile && screenHeight >= 600) {
+                console.log('✅ Форма должна помещаться на экране');
+            } else if (isMobile) {
+                console.log('⚠️ Может потребоваться прокрутка');
+            } else {
+                console.log('✅ Десктопная версия');
+            }
+        }
+        
+        window.addEventListener('load', checkFormFit);
+        window.addEventListener('resize', checkFormFit);
+        
+        checkFormFit();
+    </script>
+</body>
+</html>

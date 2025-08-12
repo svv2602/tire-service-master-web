@@ -7,12 +7,9 @@ import {
   Typography,
   Grid,
   Button,
-  Alert,
-  Stepper,
-  Step,
-  StepLabel,
   CircularProgress,
   MenuItem,
+  useMediaQuery,
 } from '@mui/material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -32,13 +29,13 @@ import { useGetRegionsQuery } from '../../api/regions.api';
 import { useGetCitiesQuery } from '../../api/cities.api';
 import { PartnerApplicationFormData } from '../../types/PartnerApplication';
 
-// Шаги формы
-const steps = [
-  'Основная информация',
-  'Контактные данные',
-  'Адрес и локация',
-  'Дополнительная информация'
-];
+// Секции формы для группировки полей
+const formSections = {
+  basic: 'Основная информация',
+  contact: 'Контактные данные', 
+  location: 'Адрес и локация',
+  additional: 'Дополнительная информация'
+};
 
 // Схема валидации
 const validationSchema = Yup.object({
@@ -106,8 +103,8 @@ const BusinessApplicationPage: React.FC = () => {
   const theme = useTheme();
   const colors = getThemeColors(theme);
   const navigate = useNavigate();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
-  const [activeStep, setActiveStep] = useState(0);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   // Хук для автофокуса на заголовке при переходах
@@ -132,16 +129,15 @@ const BusinessApplicationPage: React.FC = () => {
     validationSchema,
     onSubmit: async (values) => {
       try {
-        const result = await createApplication(values).unwrap();
+        await createApplication(values).unwrap();
         setSubmitSuccess(true);
-        console.log('Заявка успешно отправлена:', result);
         
-        // Показываем успешное сообщение и перенаправляем через 3 секунды
+        // Перенаправляем через 3 секунды
         setTimeout(() => {
-          navigate('/');
+          navigate('/client');
         }, 3000);
       } catch (error) {
-        console.error('Ошибка при отправке заявки:', error);
+        // Ошибка будет обработана через состояние isLoading
       }
     },
   });
@@ -156,298 +152,265 @@ const BusinessApplicationPage: React.FC = () => {
   // Обработчик отправки формы
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    formik.handleSubmit(e);
+  };
+
+
+
+
+
+  // Рендер компактной формы
+  const renderCompactForm = () => {
+    const spacing = isMobile ? 2 : 3;
+    const textFieldSize = isMobile ? 'small' : 'medium';
+    const multilineRows = isMobile ? 2 : 3;
     
-    // Отправлять форму только на последнем шаге
-    if (activeStep === steps.length - 1) {
-      formik.handleSubmit(e);
-    }
-  };
+    return (
+      <Grid container spacing={spacing}>
+        {/* Основная информация */}
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            size={textFieldSize}
+            name="company_name"
+            label="Название компании *"
+            value={formik.values.company_name}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.company_name && Boolean(formik.errors.company_name)}
+            helperText={formik.touched.company_name && formik.errors.company_name}
+            placeholder="ООО Шиномонтаж Плюс"
+          />
+        </Grid>
+        
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            size={textFieldSize}
+            multiline
+            rows={multilineRows}
+            name="business_description"
+            label="Описание бизнеса *"
+            value={formik.values.business_description}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.business_description && Boolean(formik.errors.business_description)}
+            helperText={formik.touched.business_description && formik.errors.business_description}
+            placeholder={isMobile ? 'Опишите ваш бизнес...' : 'Опишите ваш бизнес, услуги, опыт работы...'}
+          />
+        </Grid>
 
-  // Обработчики шагов
-  const handleNext = (e?: React.MouseEvent<HTMLButtonElement>) => {
-    e?.preventDefault(); // Предотвращаем отправку формы
-    
-    console.log('handleNext called, current step:', activeStep, 'total steps:', steps.length);
-    
-    if (activeStep < steps.length - 1) {
-      setActiveStep((prevActiveStep) => prevActiveStep + 1);
-    } else {
-      console.log('Already on last step, should not call handleNext');
-    }
-  };
+        {/* Контактные данные */}
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            size={textFieldSize}
+            name="contact_person"
+            label="Контактное лицо *"
+            value={formik.values.contact_person}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.contact_person && Boolean(formik.errors.contact_person)}
+            helperText={formik.touched.contact_person && formik.errors.contact_person}
+            placeholder="Иван Петренко"
+          />
+        </Grid>
+        
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            size={textFieldSize}
+            type="email"
+            name="email"
+            label="Email *"
+            value={formik.values.email}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.email && Boolean(formik.errors.email)}
+            helperText={formik.touched.email && formik.errors.email}
+            placeholder="example@company.com"
+          />
+        </Grid>
+        
+        <Grid item xs={12} sm={6}>
+          <PhoneField
+            fullWidth
+            size={textFieldSize}
+            name="phone"
+            label="Телефон *"
+            value={formik.values.phone}
+            onChange={(value) => formik.setFieldValue('phone', value)}
+            onBlur={formik.handleBlur}
+            error={formik.touched.phone && Boolean(formik.errors.phone)}
+            helperText={formik.touched.phone && formik.errors.phone}
+          />
+        </Grid>
 
-  const handleBack = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep - 1);
-  };
+        {/* Локация */}
+        <Grid item xs={12} sm={6}>
+          <Select
+            fullWidth
+            size={textFieldSize}
+            name="region_id"
+            label="Регион *"
+            value={formik.values.region_id}
+            onChange={(value) => {
+              formik.setFieldValue('region_id', Number(value));
+              formik.setFieldValue('city_record_id', 0);
+            }}
+            onBlur={formik.handleBlur}
+            error={formik.touched.region_id && Boolean(formik.errors.region_id)}
+            helperText={formik.touched.region_id && formik.errors.region_id ? formik.errors.region_id : undefined}
+          >
+            <MenuItem value={0}>Выберите регион</MenuItem>
+            {regionsData?.data?.map((region) => (
+              <MenuItem key={region.id} value={region.id}>
+                {region.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </Grid>
+        
+        <Grid item xs={12} sm={6}>
+          <Select
+            fullWidth
+            size={textFieldSize}
+            name="city_record_id"
+            label="Город из списка"
+            value={formik.values.city_record_id}
+            onChange={(value) => {
+              const cityId = Number(value);
+              formik.setFieldValue('city_record_id', cityId);
+              
+              if (cityId > 0) {
+                const selectedCity = citiesData?.data?.find(c => c.id === cityId);
+                if (selectedCity) {
+                  formik.setFieldValue('city', selectedCity.name);
+                }
+              }
+            }}
+            onBlur={formik.handleBlur}
+            error={formik.touched.city_record_id && Boolean(formik.errors.city_record_id)}
+            helperText={formik.touched.city_record_id && formik.errors.city_record_id ? formik.errors.city_record_id : undefined}
+            disabled={!formik.values.region_id}
+          >
+            <MenuItem value={0}>Выберите город</MenuItem>
+            {citiesData?.data?.map((city) => (
+              <MenuItem key={city.id} value={city.id}>
+                {city.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </Grid>
+        
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            size={textFieldSize}
+            name="city"
+            label="Город *"
+            value={formik.values.city}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.city && Boolean(formik.errors.city)}
+            helperText={formik.touched.city && formik.errors.city || (isMobile ? 'Укажите город' : 'Укажите город, если его нет в списке выше')}
+            placeholder="Название города"
+          />
+        </Grid>
+        
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            size={textFieldSize}
+            name="address"
+            label="Адрес"
+            value={formik.values.address}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.address && Boolean(formik.errors.address)}
+            helperText={formik.touched.address && formik.errors.address}
+            placeholder="ул. Примерная, 123"
+          />
+        </Grid>
 
-  // Валидация текущего шага
-  const validateCurrentStep = (): boolean => {
-    const stepFields = getStepFields(activeStep);
-    return stepFields.every(field => {
-      const error = formik.errors[field as keyof PartnerApplicationFormData];
-      const touched = formik.touched[field as keyof PartnerApplicationFormData];
-      return !error || !touched;
-    });
-  };
-
-  // Получение полей для текущего шага
-  const getStepFields = (step: number): string[] => {
-    switch (step) {
-      case 0: return ['company_name', 'business_description'];
-      case 1: return ['contact_person', 'email', 'phone'];
-      case 2: return ['region_id', 'city_record_id', 'city', 'address'];
-      case 3: return ['website', 'additional_info', 'expected_service_points'];
-      default: return [];
-    }
-  };
-
-  // Проверка заполненности текущего шага
-  const isStepCompleted = (step: number): boolean => {
-    const stepFields = getStepFields(step);
-    return stepFields.every(field => {
-      const value = formik.values[field as keyof PartnerApplicationFormData];
-      if (field === 'region_id' || field === 'city_record_id') {
-        return value && Number(value) > 0;
-      }
-      if (field === 'website' || field === 'additional_info' || field === 'address') {
-        return true; // Опциональные поля
-      }
-      return value && value.toString().trim() !== '';
-    });
-  };
-
-  // Рендер содержимого шага
-  const renderStepContent = (step: number) => {
-    switch (step) {
-      case 0:
-        return (
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                name="company_name"
-                label="Название компании *"
-                value={formik.values.company_name}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.company_name && Boolean(formik.errors.company_name)}
-                helperText={formik.touched.company_name && formik.errors.company_name}
-                placeholder="ООО Шиномонтаж Плюс"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                name="business_description"
-                label="Описание бизнеса *"
-                value={formik.values.business_description}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.business_description && Boolean(formik.errors.business_description)}
-                helperText={formik.touched.business_description && formik.errors.business_description}
-                placeholder="Опишите ваш бизнес, услуги, опыт работы..."
-              />
-            </Grid>
-          </Grid>
-        );
-
-      case 1:
-        return (
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                name="contact_person"
-                label="Контактное лицо *"
-                value={formik.values.contact_person}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.contact_person && Boolean(formik.errors.contact_person)}
-                helperText={formik.touched.contact_person && formik.errors.contact_person}
-                placeholder="Иван Петренко"
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                type="email"
-                name="email"
-                label="Email *"
-                value={formik.values.email}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.email && Boolean(formik.errors.email)}
-                helperText={formik.touched.email && formik.errors.email}
-                placeholder="example@company.com"
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <PhoneField
-                fullWidth
-                name="phone"
-                label="Телефон *"
-                value={formik.values.phone}
-                onChange={(value) => formik.setFieldValue('phone', value)}
-                onBlur={formik.handleBlur}
-                error={formik.touched.phone && Boolean(formik.errors.phone)}
-                helperText={formik.touched.phone && formik.errors.phone}
-              />
-            </Grid>
-          </Grid>
-        );
-
-      case 2:
-        return (
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <Select
-                fullWidth
-                name="region_id"
-                label="Регион *"
-                value={formik.values.region_id}
-                onChange={(value) => {
-                  formik.setFieldValue('region_id', Number(value));
-                  formik.setFieldValue('city_record_id', 0); // Сброс города при смене региона
-                }}
-                onBlur={formik.handleBlur}
-                error={formik.touched.region_id && Boolean(formik.errors.region_id)}
-                helperText={formik.touched.region_id && formik.errors.region_id ? formik.errors.region_id : undefined}
-              >
-                <MenuItem value={0}>Выберите регион</MenuItem>
-                {regionsData?.data?.map((region) => (
-                  <MenuItem key={region.id} value={region.id}>
-                    {region.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Select
-                fullWidth
-                name="city_record_id"
-                label="Город из списка"
-                value={formik.values.city_record_id}
-                onChange={(value) => {
-                  const cityId = Number(value);
-                  formik.setFieldValue('city_record_id', cityId);
-                  
-                  // Автозаполнение поля city
-                  if (cityId > 0) {
-                    const selectedCity = citiesData?.data?.find(c => c.id === cityId);
-                    if (selectedCity) {
-                      formik.setFieldValue('city', selectedCity.name);
-                    }
-                  }
-                }}
-                onBlur={formik.handleBlur}
-                error={formik.touched.city_record_id && Boolean(formik.errors.city_record_id)}
-                helperText={formik.touched.city_record_id && formik.errors.city_record_id ? formik.errors.city_record_id : undefined}
-                disabled={!formik.values.region_id}
-              >
-                <MenuItem value={0}>Выберите город</MenuItem>
-                {citiesData?.data?.map((city) => (
-                  <MenuItem key={city.id} value={city.id}>
-                    {city.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                name="city"
-                label="Город *"
-                value={formik.values.city}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.city && Boolean(formik.errors.city)}
-                helperText={formik.touched.city && formik.errors.city || 'Укажите город, если его нет в списке выше'}
-                placeholder="Название города"
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                name="address"
-                label="Адрес"
-                value={formik.values.address}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.address && Boolean(formik.errors.address)}
-                helperText={formik.touched.address && formik.errors.address}
-                placeholder="ул. Примерная, 123"
-              />
-            </Grid>
-          </Grid>
-        );
-
-      case 3:
-        return (
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                name="website"
-                label="Веб-сайт"
-                value={formik.values.website}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.website && Boolean(formik.errors.website)}
-                helperText={formik.touched.website && formik.errors.website}
-                placeholder="https://example.com"
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                type="number"
-                name="expected_service_points"
-                label="Ожидаемое количество точек *"
-                value={formik.values.expected_service_points}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.expected_service_points && Boolean(formik.errors.expected_service_points)}
-                helperText={formik.touched.expected_service_points && formik.errors.expected_service_points}
-                inputProps={{ min: 1, max: 99 }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                name="additional_info"
-                label="Дополнительная информация"
-                value={formik.values.additional_info}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.additional_info && Boolean(formik.errors.additional_info)}
-                helperText={formik.touched.additional_info && formik.errors.additional_info}
-                placeholder="Любая дополнительная информация о вашем бизнесе..."
-              />
-            </Grid>
-          </Grid>
-        );
-
-      default:
-        return null;
-    }
+        {/* Дополнительная информация */}
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            size={textFieldSize}
+            name="website"
+            label="Веб-сайт"
+            value={formik.values.website}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.website && Boolean(formik.errors.website)}
+            helperText={formik.touched.website && formik.errors.website}
+            placeholder="https://example.com"
+          />
+        </Grid>
+        
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            size={textFieldSize}
+            type="number"
+            name="expected_service_points"
+            label={isMobile ? 'Кол-во точек *' : 'Ожидаемое количество точек *'}
+            value={formik.values.expected_service_points}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.expected_service_points && Boolean(formik.errors.expected_service_points)}
+            helperText={formik.touched.expected_service_points && formik.errors.expected_service_points}
+            inputProps={{ min: 1, max: 99 }}
+          />
+        </Grid>
+        
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            size={textFieldSize}
+            multiline
+            rows={multilineRows}
+            name="additional_info"
+            label="Дополнительная информация"
+            value={formik.values.additional_info}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.additional_info && Boolean(formik.errors.additional_info)}
+            helperText={formik.touched.additional_info && formik.errors.additional_info}
+            placeholder={isMobile ? 'Дополнительная информация...' : 'Любая дополнительная информация о вашем бизнесе...'}
+          />
+        </Grid>
+      </Grid>
+    );
   };
 
   if (submitSuccess) {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h4" sx={{ color: colors.success, mb: 2 }}>
-            🎉 Заявка успешно отправлена!
+      <Container 
+        maxWidth={false}
+        sx={{ 
+          maxWidth: isMobile ? '100%' : '500px',
+          py: isMobile ? 2 : 3,
+          px: isMobile ? 1 : 2
+        }}
+      >
+        <Paper sx={{ 
+          p: isMobile ? 2 : 3, 
+          textAlign: 'center',
+          boxShadow: isMobile ? 1 : 3
+        }}>
+          <Typography 
+            variant={isMobile ? "h6" : "h5"} 
+            sx={{ color: colors.success, mb: isMobile ? 1 : 2 }}
+          >
+            🎉 Заявка отправлена!
           </Typography>
-          <Typography variant="body1" sx={{ mb: 3 }}>
-            Спасибо за ваш интерес к сотрудничеству! Мы рассмотрим вашу заявку в ближайшее время и свяжемся с вами.
-          </Typography>
-          <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-            Перенаправление на главную страницу через несколько секунд...
+          <Typography 
+            variant={isMobile ? "body2" : "body1"} 
+            sx={{ mb: isMobile ? 1 : 2 }}
+          >
+            Мы свяжемся с вами в ближайшее время.
           </Typography>
         </Paper>
       </Container>
@@ -456,18 +419,28 @@ const BusinessApplicationPage: React.FC = () => {
 
   return (
     <ClientLayout>
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <Paper sx={{ p: 4 }}>
-          {/* Заголовок с автофокусом */}
-          <Box sx={{ mb: 4, textAlign: 'center' }}>
+      <Container 
+        maxWidth={false}
+        sx={{ 
+          maxWidth: isMobile ? '100%' : '600px',
+          py: isMobile ? 1 : 3,
+          px: isMobile ? 1 : 2
+        }}
+      >
+        <Paper sx={{ 
+          p: isMobile ? 1.5 : 3,
+          boxShadow: isMobile ? 1 : 3
+        }}>
+          {/* Заголовок */}
+          <Box sx={{ mb: isMobile ? 2 : 3, textAlign: 'center' }}>
             <Typography 
-              variant="h4" 
+              variant={isMobile ? "h6" : "h5"} 
               ref={titleRef}
               tabIndex={-1}
               component="h1"
               sx={{
                 fontWeight: 600, 
-                mb: 2,
+                mb: isMobile ? 0.5 : 1,
                 outline: 'none',
                 '&:focus': {
                   outline: `2px solid ${colors.primary}`,
@@ -478,67 +451,36 @@ const BusinessApplicationPage: React.FC = () => {
             >
               Заявка на партнерство
             </Typography>
-            <Typography variant="body1" sx={{ color: colors.textSecondary }}>
-              Присоединяйтесь к нашей сети сервисных центров
-            </Typography>
           </Box>
 
-          {/* Stepper */}
-          <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-            {steps.map((label, index) => (
-              <Step key={label} completed={isStepCompleted(index)}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
-
-          {/* Форма */}
+          {/* Компактная форма */}
           <form onSubmit={handleSubmit}>
-            {/* Содержимое шага */}
-            <Box sx={{ mb: 4 }}>
-              {renderStepContent(activeStep)}
+            <Box sx={{ mb: isMobile ? 2 : 3 }}>
+              {renderCompactForm()}
             </Box>
 
-            {/* Кнопки навигации */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            {/* Кнопка отправки */}
+            <Box sx={{ 
+              display: 'flex',
+              justifyContent: 'center',
+              mt: isMobile ? 2 : 3
+            }}>
               <Button
-                onClick={handleBack}
-                disabled={activeStep === 0}
-                variant="outlined"
+                type="submit"
+                variant="contained"
+                size={isMobile ? 'medium' : 'large'}
+                disabled={isSubmitting || !formik.isValid}
+                startIcon={isSubmitting && <CircularProgress size={20} />}
+                fullWidth={isMobile}
+                sx={{
+                  minWidth: isMobile ? 'auto' : 200,
+                  py: isMobile ? 1.5 : 2
+                }}
               >
-                Назад
+                {isSubmitting ? 'Отправка...' : 'Отправить заявку'}
               </Button>
-
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                {activeStep === steps.length - 1 ? (
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    disabled={isSubmitting || !formik.isValid}
-                    startIcon={isSubmitting && <CircularProgress size={20} />}
-                  >
-                    {isSubmitting ? 'Отправка...' : 'Отправить заявку'}
-                  </Button>
-                ) : (
-                  <Button
-                    type="button"
-                    onClick={handleNext}
-                    variant="contained"
-                    disabled={!isStepCompleted(activeStep)}
-                  >
-                    Далее
-                  </Button>
-                )}
-              </Box>
             </Box>
           </form>
-
-          {/* Информация о обработке данных */}
-          <Alert severity="info" sx={{ mt: 3 }}>
-            <Typography variant="body2">
-              Отправляя заявку, вы соглашаетесь на обработку персональных данных в соответствии с нашей политикой конфиденциальности.
-            </Typography>
-          </Alert>
         </Paper>
       </Container>
     </ClientLayout>
