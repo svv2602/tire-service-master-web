@@ -94,7 +94,7 @@ export const AppBar: React.FC<AppBarProps> = ({
   sx,
 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('lg')); // Изменено с 'md' на 'lg' для включения планшетов
   
   const [profileAnchorEl, setProfileAnchorEl] = useState<null | HTMLElement>(null);
   const [notificationsAnchorEl, setNotificationsAnchorEl] = useState<null | HTMLElement>(null);
@@ -169,7 +169,7 @@ export const AppBar: React.FC<AppBarProps> = ({
         </Box>
         
         {/* Десктопные иконки */}
-        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2 }}>
+        <Box sx={{ display: { xs: 'none', lg: 'flex' }, alignItems: 'center', gap: 2 }}>
           {/* Уведомления */}
           {notificationActions.length > 0 && (
             <IconButton
@@ -199,8 +199,8 @@ export const AppBar: React.FC<AppBarProps> = ({
           </IconButton>
         </Box>
         
-        {/* Мобильные иконки */}
-        <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', gap: 1 }}>
+        {/* Мобильные и планшетные иконки */}
+        <Box sx={{ display: { xs: 'flex', lg: 'none' }, alignItems: 'center', gap: 1 }}>
           {/* Корзина на мобильных */}
           {mobileCartContent}
           

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест: Навигация для планшетов</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .test-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .test-case {
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        
+        .success {
+            border-color: #4caf50;
+            background: #f1f8e9;
+        }
+        
+        h1 {
+            color: #1976d2;
+            text-align: center;
+        }
+        
+        h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        
+        .result {
+            font-weight: bold;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .result.pass {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .result.info {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .checklist {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        .checklist li {
+            margin: 8px 0;
+            padding: 8px;
+            background: #f8f9fa;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .checklist li:before {
+            content: "✓ ";
+            color: #4caf50;
+            font-weight: bold;
+        }
+        
+        .device-preview {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .device {
+            border: 3px solid #333;
+            border-radius: 15px;
+            background: white;
+            padding: 10px;
+            position: relative;
+        }
+        
+        .tablet {
+            width: 300px;
+            height: 400px;
+        }
+        
+        .desktop {
+            width: 400px;
+            height: 250px;
+        }
+        
+        .device-label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .navbar-preview {
+            background: #1976d2;
+            color: white;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        .navbar-mobile {
+            background: #1976d2;
+            color: white;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        .nav-icons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+        }
+        
+        .menu-button {
+            width: 24px;
+            height: 24px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+        }
+        
+        .breakpoint-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .breakpoint-table th,
+        .breakpoint-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .breakpoint-table th {
+            background: #f5f5f5;
+        }
+        
+        .old-breakpoint {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .new-breakpoint {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Тест: Адаптация навигации для планшетов</h1>
+        
+        <div class="test-case success">
+            <h2>🎯 Цель изменений</h2>
+            
+            <div class="result pass">
+                <strong>Проблема:</strong> Планшеты (768-1200px) использовали десктопную навигацию, но места было недостаточно<br>
+                <strong>Решение:</strong> Изменен breakpoint с 'md' (900px) на 'lg' (1200px) для включения планшетов в мобильную версию
+            </div>
+        </div>
+        
+        <div class="test-case success">
+            <h2>📊 Таблица breakpoints</h2>
+            
+            <table class="breakpoint-table">
+                <thead>
+                    <tr>
+                        <th>Устройство</th>
+                        <th>Разрешение</th>
+                        <th>Старый breakpoint</th>
+                        <th>Новый breakpoint</th>
+                        <th>Интерфейс</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Мобильные</td>
+                        <td>< 600px</td>
+                        <td class="old-breakpoint">Мобильный</td>
+                        <td class="new-breakpoint">Мобильный</td>
+                        <td>Гамбургер меню</td>
+                    </tr>
+                    <tr>
+                        <td>Планшеты портрет</td>
+                        <td>600-900px</td>
+                        <td class="old-breakpoint">Мобильный</td>
+                        <td class="new-breakpoint">Мобильный</td>
+                        <td>Гамбургер меню</td>
+                    </tr>
+                    <tr class="new-breakpoint">
+                        <td><strong>Планшеты ландшафт</strong></td>
+                        <td><strong>900-1200px</strong></td>
+                        <td class="old-breakpoint"><strong>Десктопный</strong></td>
+                        <td class="new-breakpoint"><strong>Мобильный</strong></td>
+                        <td><strong>Гамбургер меню</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Десктоп</td>
+                        <td>> 1200px</td>
+                        <td class="old-breakpoint">Десктопный</td>
+                        <td class="new-breakpoint">Десктопный</td>
+                        <td>Иконки в панели</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="test-case success">
+            <h2>🔧 Внесенные изменения</h2>
+            
+            <ul class="checklist">
+                <li><strong>AppBar.tsx:</strong> изменен useMediaQuery с 'md' на 'lg'</li>
+                <li><strong>ClientLayout.tsx:</strong> изменен useMediaQuery с 'md' на 'lg'</li>
+                <li><strong>Десктопные иконки:</strong> display: { xs: 'none', lg: 'flex' }</li>
+                <li><strong>Мобильные иконки:</strong> display: { xs: 'flex', lg: 'none' }</li>
+                <li><strong>Корзина:</strong> автоматически адаптируется через isMobile переменную</li>
+            </ul>
+        </div>
+
+        <div class="test-case">
+            <h2>📱 Визуальное сравнение</h2>
+            
+            <div class="device-preview">
+                <div class="device tablet">
+                    <div class="device-label">iPad (768x1024)</div>
+                    <div class="navbar-mobile">
+                        <div>🚗 Твоя Шина</div>
+                        <div class="nav-icons">
+                            <div class="nav-icon" title="Корзина"></div>
+                            <div class="menu-button" title="Меню"></div>
+                        </div>
+                    </div>
+                    <div style="padding: 10px; font-size: 12px;">
+                        <strong>НОВОЕ:</strong> Мобильная навигация<br>
+                        • Гамбургер меню<br>
+                        • Корзина в мобильном стиле<br>
+                        • Все ссылки в выпадающем меню<br>
+                        • Оптимизировано для тач-интерфейса
+                    </div>
+                </div>
+                
+                <div class="device desktop">
+                    <div class="device-label">Desktop (1400x900)</div>
+                    <div class="navbar-preview">
+                        <div>🚗 Твоя Шина</div>
+                        <div class="nav-icons">
+                            <div style="background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px; font-size: 10px; margin-right: 8px;">Ссылки</div>
+                            <div class="nav-icon" title="Корзина"></div>
+                            <div class="nav-icon" title="Тема"></div>
+                            <div class="nav-icon" title="Язык"></div>
+                            <div class="nav-icon" title="Профиль"></div>
+                        </div>
+                    </div>
+                    <div style="padding: 10px; font-size: 12px;">
+                        <strong>БЕЗ ИЗМЕНЕНИЙ:</strong> Десктопная навигация<br>
+                        • Все иконки в панели<br>
+                        • Публичные ссылки видны<br>
+                        • Корзина в основной панели<br>
+                        • Оптимизировано для мыши
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-case success">
+            <h2>✅ Преимущества изменений</h2>
+            
+            <div class="result pass">
+                <strong>Для планшетов iPad (768-1024px):</strong><br>
+                • Удобное гамбургер меню вместо тесной панели<br>
+                • Все функции доступны через выпадающее меню<br>
+                • Оптимизация для тач-интерфейса<br>
+                • Нет переполнения элементов навигации
+            </div>
+            
+            <div class="result pass">
+                <strong>Для планшетов в ландшафте (1024-1200px):</strong><br>
+                • Мобильная навигация более удобна чем переполненная десктопная<br>
+                • Большие тач-элементы для пальцевого управления<br>
+                • Единообразный UX на всех планшетах
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h2>🧪 Тестирование</h2>
+            
+            <div class="result info">
+                <strong>Устройства для проверки:</strong><br>
+                • iPad (768x1024)<br>
+                • iPad Pro (834x1194)<br>
+                • Galaxy Tab (800x1280)<br>
+                • Surface Pro (912x1368)
+            </div>
+            
+            <div class="result info">
+                <strong>Проверить в DevTools:</strong><br>
+                1. F12 → Режим устройства (Ctrl+Shift+M)<br>
+                2. Выбрать iPad или установить 1000px ширину<br>
+                3. Убедиться что показывается гамбургер меню<br>
+                4. Проверить работу выпадающего меню<br>
+                5. Убедиться что корзина в мобильном стиле
+            </div>
+            
+            <div class="result info">
+                <strong>URL для тестирования:</strong><br>
+                <code>http://localhost:3008/client</code><br>
+                <code>http://localhost:3008/business-application</code>
+            </div>
+        </div>
+
+        <div class="test-case success">
+            <h2>📈 Ожидаемые результаты</h2>
+            
+            <div class="result pass">
+                <strong>Планшеты теперь используют мобильную навигацию:</strong><br>
+                • Breakpoint изменен с 900px на 1200px<br>
+                • Все планшеты получают оптимизированный интерфейс<br>
+                • Единообразный UX на мобильных и планшетах<br>
+                • Десктопы (>1200px) сохраняют полную навигацию
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Проверка текущего breakpoint
+        function checkCurrentBreakpoint() {
+            const width = window.innerWidth;
+            let category, navigation;
+            
+            if (width < 600) {
+                category = 'Мобильный';
+                navigation = 'Гамбургер меню';
+            } else if (width < 1200) {
+                category = 'Планшет (НОВОЕ)';
+                navigation = 'Гамбургер меню';
+            } else {
+                category = 'Десктоп';
+                navigation = 'Полная панель';
+            }
+            
+            console.log(`Ширина: ${width}px`);
+            console.log(`Категория: ${category}`);
+            console.log(`Навигация: ${navigation}`);
+            
+            // Обновляем информацию на странице
+            const info = document.getElementById('current-info');
+            if (info) {
+                info.innerHTML = `
+                    <strong>Текущие параметры:</strong><br>
+                    Ширина: ${width}px<br>
+                    Категория: ${category}<br>
+                    Навигация: ${navigation}
+                `;
+            }
+        }
+        
+        // Добавляем информационный блок
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.test-container');
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'test-case';
+            infoDiv.innerHTML = `
+                <h2>📊 Текущее состояние</h2>
+                <div id="current-info" class="result info">Загрузка...</div>
+            `;
+            container.appendChild(infoDiv);
+            
+            checkCurrentBreakpoint();
+        });
+        
+        window.addEventListener('resize', checkCurrentBreakpoint);
+    </script>
+</body>
+</html>

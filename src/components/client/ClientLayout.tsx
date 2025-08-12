@@ -38,7 +38,7 @@ interface ClientLayoutProps {
 
 const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('lg')); // Изменено с 'md' на 'lg' для включения планшетов
   const colors = getThemeColors(theme);
   const buttonStyles = getButtonStyles(theme, 'secondary');
   const navigate = useNavigate();
@@ -71,7 +71,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   // Публичные ссылки для AppBar
   // Навигационные ссылки для десктопа
   const publicLinks = (
-    <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 2, alignItems: 'center' }}>
+    <Box sx={{ display: { xs: 'none', lg: 'flex' }, gap: 2, alignItems: 'center' }}>
       <Button
         color="inherit"
         component={Link}
