@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Тест исправления Mercedes GLE</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .test-button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        .result-box {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #4ecdc4;
+        }
+        .success { border-left-color: #2ecc71; }
+        .warning { border-left-color: #f39c12; }
+        .error { border-left-color: #e74c3c; }
+        .code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .model-card {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px;
+            display: inline-block;
+            min-width: 200px;
+        }
+        .model-card.correct { border: 2px solid #2ecc71; }
+        .model-card.wrong { border: 2px solid #e74c3c; }
+        .timestamp {
+            color: #bdc3c7;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        h1 { text-align: center; margin-bottom: 30px; }
+        h2 { color: #4ecdc4; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 Тест исправления поиска Mercedes GLE</h1>
+        
+        <div class="result-box">
+            <h2>🎯 Цель теста</h2>
+            <p>Проверить, что запрос <strong>"мерседес гле"</strong> теперь:</p>
+            <ul>
+                <li>✅ Возвращает <code>status: "success"</code> (не model_ambiguous)</li>
+                <li>✅ Находит правильные GLE модели (не A-Class)</li>
+                <li>✅ Использует LLM для распознавания фонетического "гле" → "GLE"</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center;">
+            <button class="test-button" onclick="testOriginalQuery()">🔍 Тест: "мерседес жле"</button>
+            <button class="test-button" onclick="testAlternative()">🔍 Тест: "мерседес гле"</button>
+            <button class="test-button" onclick="testDirect()">🔍 Тест: "mercedes gle"</button>
+            <button class="test-button" onclick="clearResults()">🗑️ Очистить</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let testCount = 0;
+
+        function addTimestamp() {
+            return `<div class="timestamp">${new Date().toLocaleString()}</div>`;
+        }
+
+        async function testCarSearch(query, description) {
+            testCount++;
+            const resultsDiv = document.getElementById('results');
+            
+            resultsDiv.innerHTML += `
+                <div class="result-box">
+                    ${addTimestamp()}
+                    <h2>🧪 Тест ${testCount}: ${description}</h2>
+                    <p><strong>Запрос:</strong> "${query}"</p>
+                    <div id="loading-${testCount}">⏳ Выполняется запрос к API...</div>
+                </div>
+            `;
+
+            try {
+                // Добавляем случайный параметр для обхода кэша
+                const cacheBuster = Date.now();
+                const response = await fetch(`http://localhost:8000/api/v1/car_tire_search/search?_=${cacheBuster}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    },
+                    body: JSON.stringify({ 
+                        query: query, 
+                        locale: "ru",
+                        timestamp: cacheBuster
+                    })
+                });
+
+                const data = await response.json();
+                
+                document.getElementById(`loading-${testCount}`).innerHTML = '';
+                
+                // Анализ результата
+                let resultClass = 'result-box ';
+                let analysis = '';
+                
+                if (data.status === 'success') {
+                    resultClass += 'success';
+                    analysis = `
+                        <h3>✅ УСПЕХ! API исправлен</h3>
+                        <p><strong>Статус:</strong> ${data.status}</p>
+                        <p><strong>Размеров шин:</strong> ${data.tire_sizes?.length || 0}</p>
+                        <p><strong>Предложений:</strong> ${data.tire_offers?.length || 0}</p>
+                        <p><strong>LLM использован:</strong> ${data.query?.llm_used ? '✅ ДА' : '❌ НЕТ'}</p>
+                        <p><strong>Уверенность LLM:</strong> ${data.query?.llm_confidence || 'N/A'}</p>
+                    `;
+                } else if (data.status === 'model_ambiguous') {
+                    const hasCorrectModels = data.models?.some(m => m.name.includes('GLE'));
+                    const hasWrongModels = data.models?.some(m => m.name.includes('A-Class'));
+                    
+                    if (hasCorrectModels && !hasWrongModels) {
+                        resultClass += 'success';
+                        analysis = `
+                            <h3>✅ ЧАСТИЧНО ИСПРАВЛЕНО</h3>
+                            <p><strong>Статус:</strong> ${data.status} (но модели правильные)</p>
+                            <p><strong>Найдено моделей:</strong> ${data.models?.length || 0}</p>
+                        `;
+                    } else if (hasWrongModels) {
+                        resultClass += 'error';
+                        analysis = `
+                            <h3>❌ ПРОБЛЕМА НЕ ИСПРАВЛЕНА</h3>
+                            <p><strong>Статус:</strong> ${data.status}</p>
+                            <p><strong>Найдены неправильные модели!</strong></p>
+                        `;
+                    } else {
+                        resultClass += 'warning';
+                        analysis = `
+                            <h3>⚠️ НЕОЖИДАННЫЙ РЕЗУЛЬТАТ</h3>
+                            <p><strong>Статус:</strong> ${data.status}</p>
+                        `;
+                    }
+                    
+                    // Показать модели
+                    if (data.models && data.models.length > 0) {
+                        analysis += '<h4>Найденные модели:</h4>';
+                        data.models.forEach(model => {
+                            const isCorrect = model.name.includes('GLE');
+                            analysis += `
+                                <div class="model-card ${isCorrect ? 'correct' : 'wrong'}">
+                                    ${isCorrect ? '✅' : '❌'} <strong>${model.name}</strong><br>
+                                    <small>Конфигураций: ${model.configs_count}</small>
+                                </div>
+                            `;
+                        });
+                    }
+                } else {
+                    resultClass += 'error';
+                    analysis = `
+                        <h3>❌ ОШИБКА</h3>
+                        <p><strong>Статус:</strong> ${data.status}</p>
+                        <p><strong>Сообщение:</strong> ${data.message || 'Нет сообщения'}</p>
+                    `;
+                }
+                
+                resultsDiv.lastElementChild.className = resultClass;
+                resultsDiv.lastElementChild.innerHTML += analysis;
+                
+                // Показать полный JSON для отладки
+                resultsDiv.lastElementChild.innerHTML += `
+                    <details style="margin-top: 20px;">
+                        <summary>🔍 Полный ответ API (для отладки)</summary>
+                        <div class="code">${JSON.stringify(data, null, 2)}</div>
+                    </details>
+                `;
+                
+            } catch (error) {
+                document.getElementById(`loading-${testCount}`).innerHTML = `
+                    <div class="result-box error">
+                        <h3>🚫 ОШИБКА СЕТИ</h3>
+                        <p><strong>Ошибка:</strong> ${error.message}</p>
+                        <p>Возможно, сервер не запущен или есть проблемы с CORS.</p>
+                    </div>
+                `;
+            }
+            
+            // Автоскролл к результату
+            resultsDiv.lastElementChild.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function testOriginalQuery() {
+            await testCarSearch("мерседес жле", "Исходный запрос");
+        }
+
+        async function testAlternative() {
+            await testCarSearch("мерседес гле", "Альтернативное написание");
+        }
+
+        async function testDirect() {
+            await testCarSearch("mercedes gle", "Латиница");
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            testCount = 0;
+        }
+
+        // Автотест при загрузке
+        window.onload = function() {
+            console.log('🚀 Страница тестирования загружена');
+            console.log('💡 Нажмите любую кнопку для начала тестирования');
+        };
+    </script>
+</body>
+</html>
