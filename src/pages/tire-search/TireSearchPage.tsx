@@ -398,7 +398,39 @@ const TireSearchPage: React.FC = () => {
         await handleSupplierProductsSearch(result.parsed_data);
       }
       
+      // Проверяем на умный fallback: если tire search не нашёл результаты,
+      // но распознал автомобиль, переключаемся на car search
       if ((!result?.results || result.results.length === 0) && !isConversationMode) {
+        // Проверяем, есть ли распознанная информация об автомобиле
+        const hasCarInfo = result?.car_info?.brand && result?.car_info?.model;
+        const hasParsedCar = result?.parsed_data?.brand && result?.parsed_data?.model;
+        
+        if (hasCarInfo || hasParsedCar) {
+          console.log('Tire search не нашёл результаты, но распознал автомобиль. Переключаемся на car search...');
+          
+          // Формируем запрос для car search (убираем диаметр)
+          const carSearchQuery = `${result?.car_info?.brand || result?.parsed_data?.brand} ${result?.car_info?.model || result?.parsed_data?.model}`;
+          
+          try {
+            const carSearchResponse = await searchCarTires({
+              query: carSearchQuery,
+              locale: 'ru'
+            }).unwrap();
+            
+            console.log('Fallback car search result:', carSearchResponse);
+            
+            setCarSearchResult(carSearchResponse);
+            setIsCarSearchMode(true);
+            setIsConversationMode(false);
+            setConversationData(null);
+            
+            return; // Выходим, чтобы не показывать уведомление "ничего не найдено"
+          } catch (error) {
+            console.error('Fallback car search error:', error);
+            // Продолжаем выполнение, чтобы показать обычное уведомление
+          }
+        }
+        
         setNotification({
           open: true,
           message: 'По вашему запросу ничего не найдено. Попробуйте другие ключевые слова.',
