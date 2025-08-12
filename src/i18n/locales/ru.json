@@ -1892,6 +1892,11 @@
       "sizeRecommendation": "Какой размер выбрать?",
       "brandComparison": "Сравнить бренды",
       "fuelEfficiency": "Экономичные шины"
+    },
+    "brandComparison": {
+      "clarification": "Отлично! Я помогу вам сравнить бренды шин.\n\nПожалуйста, укажите какие бренды или конкретные модели шин вы хотите сравнить?\n\nНапример:\n• \"Сравни Bridgestone и Michelin\"\n• \"Continental PremiumContact 6 против Pirelli P Zero\"\n• \"Nokian Hakkapeliitta и Gislaved Nord Frost\"",
+      "needMoreBrands": "Пожалуйста, укажите минимум 2 бренда или модели шин для сравнения.\n\nНапример:\n• \"Michelin и Bridgestone\"\n• \"Continental ContiSportContact 5 и Pirelli P Zero\"\n• \"Сравни Nokian, Gislaved и Cordiant\"",
+      "query": "Сравни следующие бренды/модели шин: {brands}. Проведи детальное сравнение по следующим критериям: качество, цена, долговечность, сцепление, комфорт, топливная экономичность. Укажи преимущества и недостатки каждого варианта."
     }
   }
 }
