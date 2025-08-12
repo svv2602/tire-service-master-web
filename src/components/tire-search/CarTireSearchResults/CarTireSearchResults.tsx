@@ -10,13 +10,11 @@ import {
   Alert,
   AlertTitle,
   Stack,
-  Divider,
   Fade
 } from '@mui/material';
 import {
   DirectionsCar as CarIcon,
   Settings as SettingsIcon,
-  LocalOffer as OfferIcon,
   Category as CategoryIcon
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
@@ -311,48 +309,7 @@ const CarTireSearchResults: React.FC<CarTireSearchResultsProps> = ({
               );
             })()}
 
-            {/* Предложения шин */}
-            {result.tire_offers && result.tire_offers.length > 0 && (
-              <Box>
-                <Divider sx={{ my: 3 }} />
-                <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
-                  <OfferIcon sx={{ mr: 1 }} />
-                  Доступные предложения ({result.tire_offers.length})
-                </Typography>
-                <Grid container spacing={2}>
-                  {result.tire_offers.map((offer) => (
-                    <Grid item xs={12} sm={6} md={4} key={offer.id}>
-                      <Card 
-                        variant="outlined"
-                        sx={{ 
-                          cursor: 'pointer',
-                          '&:hover': { 
-                            bgcolor: 'action.hover',
-                            boxShadow: 2
-                          }
-                        }}
-                        onClick={() => onTireOfferSelect?.(offer)}
-                      >
-                        <CardContent>
-                          <Typography variant="h6" color="primary" noWrap>
-                            {offer.brand} {offer.model}
-                          </Typography>
-                          <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                            {offer.size}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {getSeasonLabel(offer.season)}
-                          </Typography>
-                          <Typography variant="h6" color="success.main" sx={{ mt: 1 }}>
-                            {offer.price?.toLocaleString()} грн
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            )}
+
           </Box>
         );
 
