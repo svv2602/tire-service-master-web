@@ -90,6 +90,7 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
   const colors = getThemeColors(theme);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastAssistantMessageRef = useRef<HTMLDivElement>(null);
   
   // Функция для получения локализованного названия сезона
   const getSeasonLabel = (season: string): string => {
@@ -112,6 +113,17 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [showQuickQuestions, setShowQuickQuestions] = useState(true);
+  
+  // Состояние для многоэтапного диалога сравнения брендов
+  const [brandComparisonState, setBrandComparisonState] = useState<{
+    isActive: boolean;
+    stage: 'waiting_brands' | 'ready_to_compare';
+    brands: string[];
+  }>({
+    isActive: false,
+    stage: 'waiting_brands',
+    brands: []
+  });
 
   // Быстрые вопросы в зависимости от языка
   const quickQuestions = [
@@ -130,11 +142,22 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  // Фокус на поле ввода
+  // Фокус на поле ввода (используется только при клике пользователя)
   const focusInput = useCallback(() => {
     setTimeout(() => {
       inputRef.current?.focus();
     }, 100); // Небольшая задержка для корректной работы
+  }, []);
+
+  // Фокус на последний ответ системы
+  const focusLastAssistantMessage = useCallback(() => {
+    setTimeout(() => {
+      lastAssistantMessageRef.current?.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+      lastAssistantMessageRef.current?.focus();
+    }, 100);
   }, []);
 
   // Обработчик клика по кнопке каталога
@@ -206,6 +229,12 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
     const textToSend = messageText || inputMessage.trim();
     if (!textToSend) return;
 
+    // Проверяем, находимся ли в режиме сравнения брендов
+    if (brandComparisonState.isActive && brandComparisonState.stage === 'waiting_brands') {
+      await handleBrandComparisonInput(textToSend);
+      return;
+    }
+
     // Скрываем быстрые вопросы после первого сообщения
     if (showQuickQuestions) {
       setShowQuickQuestions(false);
@@ -265,8 +294,8 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
         
         setConversationId(data.conversation_id);
         
-        // Фокусируем поле ввода после получения ответа
-        focusInput();
+        // Фокусируем последний ответ системы вместо поля ввода
+        focusLastAssistantMessage();
       } else {
         throw new Error(data.error || 'Ошибка сервера');
       }
@@ -284,8 +313,8 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
         return [...newMessages, errorMessage];
       });
       
-      // Фокусируем поле ввода после ошибки
-      focusInput();
+      // Фокусируем последний ответ системы (ошибку) вместо поля ввода
+      focusLastAssistantMessage();
     } finally {
       setIsLoading(false);
     }
@@ -306,6 +335,13 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
     setInputMessage('');
     setShowQuickQuestions(true);
     
+    // Сбрасываем состояние сравнения брендов
+    setBrandComparisonState({
+      isActive: false,
+      stage: 'waiting_brands',
+      brands: []
+    });
+    
     const welcomeMessage: Message = {
       id: 'welcome-new',
       role: 'assistant',
@@ -320,6 +356,22 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
 
   // Обработка клика на быстрый вопрос
   const handleQuickQuestionClick = (question: string) => {
+    // Проверяем, если это вопрос "Сравнить бренды"
+    const brandComparisonText = t('tireChat.quickQuestions.brandComparison', 'Сравнить бренды');
+    
+    if (question === brandComparisonText) {
+      // Запускаем многоэтапный диалог сравнения брендов
+      initiateBrandComparison();
+      return;
+    }
+    
+    // Сбрасываем состояние сравнения брендов для других вопросов
+    setBrandComparisonState({
+      isActive: false,
+      stage: 'waiting_brands',
+      brands: []
+    });
+    
     // Сбрасываем разговор для нового поиска
     setMessages([]);
     setConversationId(null);
@@ -338,11 +390,259 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
     handleSendMessage(question, true); // true = quick question (reset filters)
   };
 
+  // Инициализация диалога сравнения брендов
+  const initiateBrandComparison = () => {
+    // Сбрасываем разговор
+    setMessages([]);
+    setConversationId(null);
+    setInputMessage('');
+    
+    // Устанавливаем состояние сравнения брендов
+    setBrandComparisonState({
+      isActive: true,
+      stage: 'waiting_brands',
+      brands: []
+    });
+    
+    // Скрываем быстрые вопросы
+    setShowQuickQuestions(false);
+    
+    // Добавляем уточняющий вопрос от системы
+    const clarificationMessage: Message = {
+      id: 'brand-comparison-init',
+      role: 'assistant',
+      content: t('tireChat.brandComparison.clarification', 
+        'Отлично! Я помогу вам сравнить бренды шин.\n\nПожалуйста, укажите какие бренды или конкретные модели шин вы хотите сравнить?\n\nНапример:\n• "Сравни Bridgestone и Michelin"\n• "Continental PremiumContact 6 против Pirelli P Zero"\n• "Nokian Hakkapeliitta и Gislaved Nord Frost"'),
+      timestamp: new Date()
+    };
+    
+    setMessages([clarificationMessage]);
+    
+    // Фокусируем последний ответ системы
+    setTimeout(() => {
+      focusLastAssistantMessage();
+    }, 100);
+  };
+
+  // Обработка ввода брендов для сравнения
+  const handleBrandComparisonInput = async (textToSend: string) => {
+    // Добавляем сообщение пользователя
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: textToSend,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage('');
+
+    // Извлекаем бренды из текста пользователя
+    const extractedBrands = extractBrandsFromText(textToSend);
+    
+    if (extractedBrands.length >= 2) {
+      // Достаточно брендов для сравнения
+      setBrandComparisonState({
+        isActive: true,
+        stage: 'ready_to_compare',
+        brands: extractedBrands
+      });
+
+      // Формируем структурированный запрос для LLM
+      const comparisonQuery = `ЗАДАНИЕ: Провести детальное сравнение шин
+
+ЗАПРОС ПОЛЬЗОВАТЕЛЯ: "${textToSend}"
+
+ИНСТРУКЦИЯ: Проведи подробное сравнение указанных брендов/моделей шин по следующим критериям:
+1. Качество и надежность
+2. Цена и соотношение цена/качество  
+3. Долговечность и износостойкость
+4. Сцепление с дорогой (сухая/мокрая/зимняя)
+5. Комфорт и уровень шума
+6. Топливная экономичность
+7. Особенности и технологии
+
+Для каждого варианта укажи:
+- Основные преимущества
+- Возможные недостатки
+- Рекомендации по применению
+
+Дай конкретный ответ с фактической информацией и четкими выводами.`;
+
+      // Отправляем сформированный запрос к LLM с оригинальным текстом пользователя
+      await sendToLLM(comparisonQuery, true, textToSend);
+    } else {
+      // Недостаточно брендов, просим уточнить
+      const clarificationMessage: Message = {
+        id: `clarification-${Date.now()}`,
+        role: 'assistant',
+        content: t('tireChat.brandComparison.needMoreBrands', 
+          'Пожалуйста, укажите минимум 2 бренда или модели шин для сравнения.\n\nНапример:\n• "Michelin и Bridgestone"\n• "Continental ContiSportContact 5 и Pirelli P Zero"\n• "Сравни Nokian, Gislaved и Cordiant"'),
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, clarificationMessage]);
+      
+      // Фокусируем последний ответ системы
+      setTimeout(() => {
+        focusLastAssistantMessage();
+      }, 100);
+    }
+  };
+
+  // Функция извлечения брендов из текста
+  const extractBrandsFromText = (text: string): string[] => {
+    // Известные бренды шин
+    const knownBrands = [
+      'Michelin', 'Bridgestone', 'Continental', 'Pirelli', 'Goodyear', 
+      'Dunlop', 'Nokian', 'Yokohama', 'Hankook', 'Toyo', 'Kumho',
+      'Gislaved', 'Cordiant', 'Vredestein', 'Falken', 'Nitto',
+      'BFGoodrich', 'Maxxis', 'Cooper', 'General', 'Uniroyal'
+    ];
+
+    const brands: string[] = [];
+    const normalizedText = text.toLowerCase();
+
+    // Ищем бренды в тексте
+    knownBrands.forEach(brand => {
+      if (normalizedText.includes(brand.toLowerCase())) {
+        brands.push(brand);
+      }
+    });
+
+    // Если не нашли известные бренды, пытаемся извлечь из текста
+    if (brands.length === 0) {
+      // Простая эвристика: слова, начинающиеся с заглавной буквы
+      const words = text.split(/[\s,]+/);
+      words.forEach(word => {
+        const cleanWord = word.replace(/[^\w\s]/gi, '');
+        if (cleanWord.length > 2 && /^[A-ZА-Я]/.test(cleanWord)) {
+          brands.push(cleanWord);
+        }
+      });
+    }
+
+    // Убираем дубликаты и возвращаем
+    return Array.from(new Set(brands));
+  };
+
+  // Отправка запроса к LLM
+  const sendToLLM = async (query: string, isBrandComparison: boolean = false, userInput?: string) => {
+    // Отладочная информация
+    console.log('=== sendToLLM Debug ===');
+    console.log('query:', query);
+    console.log('isBrandComparison:', isBrandComparison);
+    console.log('userInput:', userInput);
+    console.log('brandComparisonState:', brandComparisonState);
+    
+    const loadingMessage: Message = {
+      id: `loading-${Date.now()}`,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(),
+      isLoading: true
+    };
+
+    setMessages(prev => [...prev, loadingMessage]);
+    setIsLoading(true);
+
+    try {
+      const requestBody = {
+        message: query,
+        conversation_id: conversationId,
+        locale: i18n.language,
+        is_quick_question: false,
+        is_brand_comparison: isBrandComparison,
+        brands_to_compare: isBrandComparison ? {
+          user_input: userInput || '',
+          extracted_brands: brandComparisonState.brands
+        } : undefined
+      };
+      
+      console.log('Request body:', JSON.stringify(requestBody, null, 2));
+      
+      const response = await fetch(`${config.API_URL}/api/v1/tire_chat/message`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(requestBody)
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessages(prev => {
+          const newMessages = prev.filter(msg => !msg.isLoading);
+          const assistantMessage: Message = {
+            id: `assistant-${Date.now()}`,
+            role: 'assistant',
+            content: data.response.message || t('tireChat.errorMessage'),
+            timestamp: new Date(),
+            tireRecommendations: data.response.recommendations || [],
+            showCarSearchButton: data.response.action === 'show_car_search_button',
+            carSearchQuery: data.response.car_search_query || '',
+            catalogButton: data.response.catalog_button || undefined
+          };
+          return [...newMessages, assistantMessage];
+        });
+        
+        setConversationId(data.conversation_id);
+        
+        // Завершаем сравнение брендов
+        if (isBrandComparison) {
+          setBrandComparisonState({
+            isActive: false,
+            stage: 'waiting_brands',
+            brands: []
+          });
+        }
+        
+        // Фокусируем последний ответ системы вместо поля ввода
+        focusLastAssistantMessage();
+      } else {
+        throw new Error(data.error || 'Ошибка сервера');
+      }
+    } catch (error) {
+      console.error('Ошибка отправки сообщения:', error);
+      
+      setMessages(prev => {
+        const newMessages = prev.filter(msg => !msg.isLoading);
+        const errorMessage: Message = {
+          id: `error-${Date.now()}`,
+          role: 'assistant',
+          content: t('tireChat.errorMessage'),
+          timestamp: new Date()
+        };
+        return [...newMessages, errorMessage];
+      });
+      
+      // Фокусируем последний ответ системы (ошибку) вместо поля ввода
+      focusLastAssistantMessage();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Обработчик закрытия чата с сбросом состояния
+  const handleClose = () => {
+    // Сбрасываем состояние сравнения брендов
+    setBrandComparisonState({
+      isActive: false,
+      stage: 'waiting_brands',
+      brands: []
+    });
+    
+    // Вызываем оригинальный onClose
+    onClose();
+  };
+
   return (
     <Drawer
       anchor="right"
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       variant="temporary"
       sx={{
         '& .MuiDrawer-paper': {
@@ -385,7 +685,7 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
           </IconButton>
           <IconButton
             size="small"
-            onClick={onClose}
+            onClick={handleClose}
             sx={{ color: 'white' }}
           >
             <CloseIcon />
@@ -451,16 +751,24 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
           gap: 1
         }}
       >
-        {messages.map((message) => (
-          <Fade key={message.id} in timeout={300}>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
-                alignItems: 'flex-start',
-                gap: 1
-              }}
-            >
+        {messages.map((message, index) => {
+          // Определяем, является ли это последним сообщением системы
+          const isLastAssistantMessage = message.role === 'assistant' && 
+            index === messages.length - 1;
+          
+          return (
+            <Fade key={message.id} in timeout={300}>
+              <Box
+                ref={isLastAssistantMessage ? lastAssistantMessageRef : undefined}
+                tabIndex={isLastAssistantMessage ? 0 : undefined}
+                sx={{
+                  display: 'flex',
+                  justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
+                  alignItems: 'flex-start',
+                  gap: 1,
+                  outline: 'none' // Убираем видимый outline при фокусе
+                }}
+              >
               {message.role === 'assistant' && (
                 <Avatar
                   sx={{
@@ -624,9 +932,10 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
                   <PersonIcon sx={{ fontSize: 16 }} />
                 </Avatar>
               )}
-            </Box>
-          </Fade>
-        ))}
+              </Box>
+            </Fade>
+          );
+        })}
         <div ref={messagesEndRef} />
       </Box>
 
@@ -669,6 +978,7 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
+            onClick={focusInput} // Фокусируем поле ввода только при клике пользователя
             placeholder={t('tireChat.placeholder')}
             variant="outlined"
             size="small"

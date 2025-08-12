@@ -55,6 +55,7 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
   const colors = getThemeColors(theme);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastAssistantMessageRef = useRef<HTMLDivElement>(null);
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -66,11 +67,22 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Фокус на поле ввода
+  // Фокус на поле ввода (используется только при клике пользователя)
   const focusInput = () => {
     setTimeout(() => {
       inputRef.current?.focus();
     }, 100); // Небольшая задержка для корректной работы
+  };
+
+  // Фокус на последний ответ системы
+  const focusLastAssistantMessage = () => {
+    setTimeout(() => {
+      lastAssistantMessageRef.current?.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+      lastAssistantMessageRef.current?.focus();
+    }, 100);
   };
 
   useEffect(() => {
@@ -167,8 +179,8 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
         
         setConversationId(data.conversation_id);
         
-        // Фокусируем поле ввода после получения ответа
-        focusInput();
+        // Фокусируем последний ответ системы вместо поля ввода
+        focusLastAssistantMessage();
       } else {
         throw new Error(data.error || 'Ошибка сервера');
       }
@@ -187,8 +199,8 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
         return [...newMessages, errorMessage];
       });
       
-      // Фокусируем поле ввода после ошибки
-      focusInput();
+      // Фокусируем последний ответ системы (ошибку) вместо поля ввода
+      focusLastAssistantMessage();
     } finally {
       setIsLoading(false);
     }
@@ -292,16 +304,24 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
             gap: 2
           }}
         >
-          {messages.map((message) => (
-            <Fade key={message.id} in timeout={300}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
-                  alignItems: 'flex-start',
-                  gap: 1
-                }}
-              >
+          {messages.map((message, index) => {
+            // Определяем, является ли это последним сообщением системы
+            const isLastAssistantMessage = message.role === 'assistant' && 
+              index === messages.length - 1;
+            
+            return (
+              <Fade key={message.id} in timeout={300}>
+                <Box
+                  ref={isLastAssistantMessage ? lastAssistantMessageRef : undefined}
+                  tabIndex={isLastAssistantMessage ? 0 : undefined}
+                  sx={{
+                    display: 'flex',
+                    justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
+                    alignItems: 'flex-start',
+                    gap: 1,
+                    outline: 'none' // Убираем видимый outline при фокусе
+                  }}
+                >
                 {message.role === 'assistant' && (
                   <Avatar
                     sx={{
@@ -371,9 +391,10 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
                     <PersonIcon sx={{ fontSize: 18 }} />
                   </Avatar>
                 )}
-              </Box>
-            </Fade>
-          ))}
+                </Box>
+              </Fade>
+            );
+          })}
           <div ref={messagesEndRef} />
         </Box>
       </DialogContent>
@@ -395,6 +416,7 @@ const TireChatWidget: React.FC<TireChatWidgetProps> = ({
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
+            onClick={focusInput} // Фокусируем поле ввода только при клике пользователя
             placeholder={t('tireChat.placeholder')}
             variant="outlined"
             size="small"
