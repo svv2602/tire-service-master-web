@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест: Многоэтапный диалог "Сравнить бренды"</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        
+        .test-section h2 {
+            color: #34495e;
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        .test-steps {
+            background: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .test-steps ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .test-steps li {
+            margin-bottom: 8px;
+        }
+        
+        .expected-result {
+            background: #e8f5e8;
+            padding: 15px;
+            border-left: 4px solid #27ae60;
+            margin: 15px 0;
+        }
+        
+        .expected-result h4 {
+            color: #27ae60;
+            margin-top: 0;
+        }
+        
+        .scenario {
+            background: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #f39c12;
+            margin: 15px 0;
+        }
+        
+        .scenario h4 {
+            color: #e67e22;
+            margin-top: 0;
+        }
+        
+        .note {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .note strong {
+            color: #1976d2;
+        }
+        
+        .code-example {
+            background: #263238;
+            color: #81c784;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .flow-number {
+            background: #3498db;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        
+        .flow-content {
+            flex: 1;
+        }
+        
+        .brands-list {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .improvement-highlight {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .improvement-highlight h4 {
+            color: #155724;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎯 Тест: Многоэтапный диалог "Сравнить бренды"</h1>
+        
+        <div class="note">
+            <strong>Новая функциональность:</strong> При выборе быстрого вопроса "Сравнить бренды" система теперь сначала уточняет, какие именно бренды пользователь хочет сравнить, и только после получения ответа формирует детальный запрос для LLM.
+        </div>
+
+        <div class="test-section">
+            <h2>1. Подготовка к тестированию</h2>
+            
+            <div class="test-steps">
+                <h4>Настройка:</h4>
+                <ol>
+                    <li>Убедитесь, что фронтенд запущен: <code>http://localhost:3008</code></li>
+                    <li>Убедитесь, что бэкенд запущен: <code>http://localhost:8000</code></li>
+                    <li>Откройте страницу: <a href="http://localhost:3008/client/tire-offers" target="_blank">/client/tire-offers</a></li>
+                    <li>Откройте боковую панель чата (справа)</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>2. Схема нового многоэтапного диалога</h2>
+            
+            <div class="flow-step">
+                <div class="flow-number">1</div>
+                <div class="flow-content">
+                    <strong>Пользователь нажимает "Сравнить бренды"</strong><br>
+                    Система инициализирует состояние brandComparisonState
+                </div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="flow-number">2</div>
+                <div class="flow-content">
+                    <strong>Система задает уточняющий вопрос</strong><br>
+                    "Пожалуйста, укажите какие бренды или конкретные модели шин вы хотите сравнить?"
+                </div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="flow-number">3</div>
+                <div class="flow-content">
+                    <strong>Пользователь указывает бренды</strong><br>
+                    Например: "Michelin и Bridgestone" или "Continental ContiSportContact 5 против Pirelli P Zero"
+                </div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="flow-number">4</div>
+                <div class="flow-content">
+                    <strong>Система извлекает бренды из текста</strong><br>
+                    Функция extractBrandsFromText() анализирует ввод пользователя
+                </div>
+            </div>
+            
+            <div class="flow-step">
+                <div class="flow-number">5</div>
+                <div class="flow-content">
+                    <strong>Формирование детального запроса для LLM</strong><br>
+                    "Сравни следующие бренды/модели шин: [извлеченные бренды]. Проведи детальное сравнение..."
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>3. Тестовые сценарии</h2>
+            
+            <div class="scenario">
+                <h4>Сценарий 1: Успешное сравнение популярных брендов</h4>
+                <div class="test-steps">
+                    <ol>
+                        <li>Нажмите чип "Сравнить бренды"</li>
+                        <li>Дождитесь уточняющего вопроса системы</li>
+                        <li>Введите: "Michelin и Bridgestone"</li>
+                        <li>Отправьте сообщение</li>
+                    </ol>
+                </div>
+                
+                <div class="expected-result">
+                    <h4>✅ Ожидаемый результат:</h4>
+                    <ul>
+                        <li>Система извлекает бренды: ["Michelin", "Bridgestone"]</li>
+                        <li>Формируется детальный запрос с конкретными брендами</li>
+                        <li>LLM получает структурированное задание для сравнения</li>
+                        <li>Состояние brandComparisonState сбрасывается после ответа</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="scenario">
+                <h4>Сценарий 2: Сравнение конкретных моделей</h4>
+                <div class="test-steps">
+                    <ol>
+                        <li>Нажмите чип "Сравнить бренды"</li>
+                        <li>Дождитесь уточняющего вопроса</li>
+                        <li>Введите: "Continental PremiumContact 6 против Pirelli P Zero"</li>
+                        <li>Отправьте сообщение</li>
+                    </ol>
+                </div>
+                
+                <div class="expected-result">
+                    <h4>✅ Ожидаемый результат:</h4>
+                    <ul>
+                        <li>Система извлекает: ["Continental", "Pirelli"] + полные названия моделей</li>
+                        <li>Запрос включает конкретные модели шин</li>
+                        <li>LLM получает детальную информацию для точного сравнения</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="scenario">
+                <h4>Сценарий 3: Недостаточно информации</h4>
+                <div class="test-steps">
+                    <ol>
+                        <li>Нажмите чип "Сравнить бренды"</li>
+                        <li>Дождитесь уточняющего вопроса</li>
+                        <li>Введите: "Michelin" (только один бренд)</li>
+                        <li>Отправьте сообщение</li>
+                    </ol>
+                </div>
+                
+                <div class="expected-result">
+                    <h4>✅ Ожидаемый результат:</h4>
+                    <ul>
+                        <li>Система определяет недостаточно брендов (< 2)</li>
+                        <li>Показывает дополнительное уточнение с примерами</li>
+                        <li>Остается в режиме ожидания брендов</li>
+                        <li>Пользователь может ввести дополнительные бренды</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="scenario">
+                <h4>Сценарий 4: Множественное сравнение</h4>
+                <div class="test-steps">
+                    <ol>
+                        <li>Нажмите чип "Сравнить бренды"</li>
+                        <li>Дождитесь уточняющего вопроса</li>
+                        <li>Введите: "Сравни Nokian, Gislaved и Cordiant"</li>
+                        <li>Отправьте сообщение</li>
+                    </ol>
+                </div>
+                
+                <div class="expected-result">
+                    <h4>✅ Ожидаемый результат:</h4>
+                    <ul>
+                        <li>Система извлекает: ["Nokian", "Gislaved", "Cordiant"]</li>
+                        <li>Формируется запрос для тройного сравнения</li>
+                        <li>LLM получает задание сравнить все три бренда</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>4. Функция извлечения брендов</h2>
+            
+            <div class="brands-list">
+                <strong>Поддерживаемые бренды:</strong><br>
+                Michelin, Bridgestone, Continental, Pirelli, Goodyear,<br>
+                Dunlop, Nokian, Yokohama, Hankook, Toyo, Kumho,<br>
+                Gislaved, Cordiant, Vredestein, Falken, Nitto,<br>
+                BFGoodrich, Maxxis, Cooper, General, Uniroyal
+            </div>
+            
+            <div class="note">
+                <strong>Алгоритм извлечения:</strong>
+                <ol>
+                    <li>Поиск известных брендов в тексте (регистронезависимый)</li>
+                    <li>Если бренды не найдены - эвристический анализ слов с заглавной буквы</li>
+                    <li>Удаление дубликатов</li>
+                    <li>Возврат массива уникальных брендов</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>5. Проверка состояния и сброса</h2>
+            
+            <div class="test-steps">
+                <h4>Тестирование сброса состояния:</h4>
+                <ol>
+                    <li><strong>При закрытии чата:</strong> Нажмите кнопку закрытия чата (X)</li>
+                    <li><strong>При новом разговоре:</strong> Нажмите кнопку обновления (⟳)</li>
+                    <li><strong>При выборе другого быстрого вопроса:</strong> Выберите любой другой чип</li>
+                </ol>
+            </div>
+            
+            <div class="expected-result">
+                <h4>✅ Ожидаемый результат:</h4>
+                <ul>
+                    <li>brandComparisonState сбрасывается во всех случаях</li>
+                    <li>Состояние: isActive = false, stage = 'waiting_brands', brands = []</li>
+                    <li>Последующие сообщения обрабатываются в обычном режиме</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>6. Проверка API запроса</h2>
+            
+            <div class="code-example">
+// Новые поля в API запросе:
+{
+  "message": "Сравни следующие бренды/модели шин: Michelin, Bridgestone...",
+  "conversation_id": "...",
+  "locale": "ru",
+  "is_quick_question": false,
+  "is_brand_comparison": true,  // ← НОВОЕ ПОЛЕ
+  "brands_to_compare": ["Michelin", "Bridgestone"]  // ← НОВОЕ ПОЛЕ
+}
+            </div>
+            
+            <div class="note">
+                <strong>Проверьте в Network Tab:</strong> Убедитесь, что при отправке запроса на сравнение брендов в теле запроса присутствуют новые поля is_brand_comparison и brands_to_compare.
+            </div>
+        </div>
+
+        <div class="improvement-highlight">
+            <h4>🚀 Преимущества новой реализации:</h4>
+            <ul>
+                <li><strong>Интерактивность:</strong> Пользователь активно участвует в формировании запроса</li>
+                <li><strong>Точность:</strong> LLM получает конкретные бренды вместо общего запроса</li>
+                <li><strong>Гибкость:</strong> Поддержка как брендов, так и конкретных моделей</li>
+                <li><strong>Валидация:</strong> Проверка достаточности информации перед отправкой</li>
+                <li><strong>UX:</strong> Примеры и подсказки для пользователя</li>
+                <li><strong>Состояние:</strong> Правильное управление многоэтапным диалогом</li>
+            </ul>
+        </div>
+
+        <div class="note">
+            <strong>Техническая реализация:</strong>
+            <br>• Файлы: <code>TireChatSidebar.tsx</code>, <code>ru.json</code>
+            <br>• Состояние: <code>brandComparisonState</code> с этапами диалога
+            <br>• Функции: <code>initiateBrandComparison()</code>, <code>handleBrandComparisonInput()</code>, <code>extractBrandsFromText()</code>
+            <br>• API: новые поля <code>is_brand_comparison</code> и <code>brands_to_compare</code>
+        </div>
+    </div>
+</body>
+</html>
