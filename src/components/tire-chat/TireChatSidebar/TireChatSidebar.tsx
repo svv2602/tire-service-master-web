@@ -469,6 +469,13 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
 
 Дай конкретный ответ с фактической информацией и четкими выводами.`;
 
+      // Сбрасываем состояние сравнения брендов СРАЗУ после формирования запроса
+      setBrandComparisonState({
+        isActive: false,
+        stage: 'waiting_brands',
+        brands: []
+      });
+
       // Отправляем сформированный запрос к LLM с оригинальным текстом пользователя
       await sendToLLM(comparisonQuery, true, textToSend);
     } else {
@@ -589,15 +596,6 @@ const TireChatSidebar: React.FC<TireChatSidebarProps> = ({
         });
         
         setConversationId(data.conversation_id);
-        
-        // Завершаем сравнение брендов
-        if (isBrandComparison) {
-          setBrandComparisonState({
-            isActive: false,
-            stage: 'waiting_brands',
-            brands: []
-          });
-        }
         
         // Фокусируем последний ответ системы вместо поля ввода
         focusLastAssistantMessage();
