@@ -1,11 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Box,
-  Typography,
-  Avatar,
-  Chip
-} from '@mui/material';
+import { Box, Typography, Avatar, Chip } from '../../components/ui';;
 import { useTranslation } from 'react-i18next';
 import {
   Add as AddIcon,

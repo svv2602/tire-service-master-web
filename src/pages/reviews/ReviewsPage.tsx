@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Box, Typography as MuiTypography, useTheme } from '@mui/material';
+import { Box, Typography as MuiTypography } from '../../components/ui';
+import { useTheme } from '@mui/material';;
 import { useTranslation } from 'react-i18next';
 import {
   Search as SearchIcon,

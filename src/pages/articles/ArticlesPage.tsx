@@ -2,18 +2,8 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
-import {
-  Box,
-  Container,
-  Typography,
-  Grid,
-  CircularProgress,
-  IconButton,
-  Tooltip,
-  useTheme,
-  InputAdornment,
-  Alert,
-} from '@mui/material';
+import { Box, Container, Typography, Grid, CircularProgress, IconButton, Tooltip, Alert } from '../../components/ui';
+import { useTheme, InputAdornment } from '@mui/material';;
 import { useTranslation } from 'react-i18next';
 import {
   Add as AddIcon,

@@ -15,12 +15,8 @@
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
-import {
-  Avatar,
-  IconButton,
-  Tooltip,
-  useTheme,
-} from '@mui/material';
+import { Avatar, IconButton, Tooltip } from '../../components/ui';
+import { useTheme } from '@mui/material';;
 import { useTranslation } from 'react-i18next';
 import {
   Add as AddIcon,

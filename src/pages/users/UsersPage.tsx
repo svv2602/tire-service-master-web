@@ -16,13 +16,8 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
-import {
-  Box,
-  Typography,
-  Avatar,
-  Tooltip,
-  useTheme
-} from '@mui/material';
+import { Box, Typography, Avatar, Tooltip } from '../../components/ui';
+import { useTheme } from '@mui/material';;
 import { useTranslation } from 'react-i18next';
 import {
   Edit as EditIcon,

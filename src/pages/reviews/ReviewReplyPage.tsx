@@ -1,16 +1,5 @@
 import React from 'react';
-import {
-  Box,
-  Typography,
-  Button,
-  TextField,
-  Paper,
-  CircularProgress,
-  Alert,
-  Rating,
-  Avatar,
-  Divider,
-} from '@mui/material';
+import { Box, Typography, Button, TextField, Paper, CircularProgress, Alert, Rating, Avatar, Divider } from '../../components/ui';;
 import {
   ArrowBack as ArrowBackIcon,
   Reply as ReplyIcon,

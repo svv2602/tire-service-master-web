@@ -1,13 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Box,
-  Typography,
-  Avatar,
-  Rating,
-  Chip,
-  Alert
-} from '@mui/material';
+import { Box, Typography, Avatar, Rating, Chip, Alert } from '../../components/ui';;
 import {
   Add as AddIcon,
   Edit as EditIcon,

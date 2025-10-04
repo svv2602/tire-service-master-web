@@ -1,20 +1,6 @@
 import React from 'react';
-import {
-  Box,
-  Typography,
-  Paper,
-  Button,
-  Rating,
-  TextField,
-  Alert,
-  CircularProgress,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  FormHelperText,
-  useTheme,
-} from '@mui/material';
+import { Box, Typography, Paper, Button, Rating, TextField, Alert, CircularProgress, Select, MenuItem } from '../../components/ui';
+import { FormControl, InputLabel, FormHelperText, useTheme } from '@mui/material';;
 import {
   ArrowBack as ArrowBackIcon,
   Star as StarIcon,

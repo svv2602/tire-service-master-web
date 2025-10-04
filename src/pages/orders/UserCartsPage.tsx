@@ -1,21 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import {
-  Box,
-  TextField,
-  InputAdornment,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Typography,
-  Card,
-  CardContent,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-} from '@mui/material';
+import { Box, TextField, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Card, CardContent, Divider, List, ListItem, ListItemText } from '../../components/ui';
+import { InputAdornment } from '@mui/material';;
 import {
   Search as SearchIcon,
   ShoppingCart as CartIcon,

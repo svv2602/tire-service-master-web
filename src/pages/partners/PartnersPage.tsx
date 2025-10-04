@@ -13,20 +13,8 @@
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
-import {
-  Avatar,
-  IconButton,
-  Tooltip,
-  useTheme,
-  FormControlLabel,
-  Switch,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  CircularProgress,
-} from '@mui/material';
+import { Avatar, IconButton, Tooltip, Switch, Dialog, DialogTitle, DialogContent, DialogActions, Button, CircularProgress } from '../../components/ui';
+import { useTheme, FormControlLabel } from '@mui/material';;
 import { useTranslation } from 'react-i18next';
 import {
   Edit as EditIcon,

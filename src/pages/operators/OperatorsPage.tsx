@@ -1,35 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Typography,
-  Button,
-  Paper,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Chip,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Alert,
-  CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Card,
-  CardContent,
-  Grid,
-  useTheme,
-} from '@mui/material';
+import { Box, Typography, Button, Paper, TextField, Select, MenuItem, Chip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Alert, CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Card, CardContent, Grid } from '../../components/ui';
+import { FormControl, InputLabel, useTheme } from '@mui/material';;
 import {
   Add as AddIcon,
   Edit as EditIcon,

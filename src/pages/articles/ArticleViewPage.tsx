@@ -1,23 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  Container,
-  Typography,
-  Box,
-  Button,
-  Chip,
-  Paper,
-  Alert,
-  CircularProgress,
-  IconButton,
-  Tooltip,
-  Grid,
-  Fade,
-  Divider,
-  Card,
-  CardContent,
-  CardMedia
-} from '@mui/material';
+import { Container, Typography, Box, Button, Chip, Paper, Alert, CircularProgress, IconButton, Tooltip, Grid, Divider, Card, CardContent, CardMedia } from '../../components/ui';
+import { Fade } from '@mui/material'; // TODO: Проверить доступность в UI библиотеке;
 import {
   ArrowBack as ArrowBackIcon,
   Edit as EditIcon,

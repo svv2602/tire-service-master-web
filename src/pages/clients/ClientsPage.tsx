@@ -4,11 +4,8 @@
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
-import {
-  Avatar,
-  Chip,
-  useTheme,
-} from '@mui/material';
+import { Avatar, Chip } from '../../components/ui';
+import { useTheme } from '@mui/material';;
 import {
   Add as AddIcon,
   Edit as EditIcon,

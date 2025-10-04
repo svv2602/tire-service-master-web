@@ -4,10 +4,8 @@
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
-import {
-  Chip,
-  useTheme,
-} from '@mui/material';
+import { Chip } from '../../components/ui';
+import { useTheme } from '@mui/material';;
 import {
   Add as AddIcon,
   Edit as EditIcon,

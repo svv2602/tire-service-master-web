@@ -3,21 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { 
-  Box, 
-  Typography, 
-  Alert, 
-  useTheme, 
-  AppBar, 
-  Toolbar,
-  FormControl,
-  FormLabel,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-  InputAdornment,
-  Divider
-} from '@mui/material';
+import { Box, Typography, Alert, RadioGroup, Radio, Divider } from '../../components/ui';
+import { useTheme, Toolbar, FormControl, FormLabel, FormControlLabel, InputAdornment } from '@mui/material';
+import { AppBar } from '@mui/material'; // TODO: Проверить доступность в UI библиотеке;
 import { Button, TextField, PhoneField } from '../../components/ui';
 import { useRegisterClientMutation } from '../../api/clientAuth.api';
 import { typography, spacing } from '../../styles/theme/tokens';

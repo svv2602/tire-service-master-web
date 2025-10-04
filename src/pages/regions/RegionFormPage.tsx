@@ -13,17 +13,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Box,
-  Typography,
-  TextField,
-  FormControlLabel,
-  Switch,
-  Grid,
-  Alert,
-  CircularProgress,
-  useTheme,
-} from '@mui/material';
+import { Box, Typography, TextField, Switch, Grid, Alert, CircularProgress } from '../../components/ui';
+import { FormControlLabel, useTheme } from '@mui/material';;
 import {
   Save as SaveIcon,
   ArrowBack as ArrowBackIcon,

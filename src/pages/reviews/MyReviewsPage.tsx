@@ -1,19 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Typography,
-  CircularProgress,
-  IconButton,
-  Tooltip,
-  Rating,
-  Alert,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-} from '@mui/material';
+import { Box, Typography, CircularProgress, IconButton, Tooltip, Rating, Alert, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '../../components/ui';;
 import { Table, Column } from '../../components/ui/Table';
 import { Pagination } from '../../components/ui/Pagination';
 import {

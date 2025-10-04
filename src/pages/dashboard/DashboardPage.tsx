@@ -2,26 +2,8 @@ import React, { useState } from 'react';
 import { useTheme } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Typography,
-  CircularProgress,
-  Alert,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
-  Button,
-  Chip,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider,
-  LinearProgress,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
+import { Box, Typography, CircularProgress, Alert, Grid, Card, CardContent, CardActions, Button, Chip, List, ListItem, ListItemText, ListItemIcon, Divider, IconButton, Tooltip } from '../../components/ui';
+import { LinearProgress } from '@mui/material';;
 import {
   DirectionsCar as CarIcon,
   Business as BusinessIcon,

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Box, Typography, useTheme, MenuItem, Select, SelectChangeEvent, FormControl } from '@mui/material';
+import { Box, Typography, MenuItem, Select } from '../../components/ui';
+import { useTheme, FormControl } from '@mui/material';
+import { SelectChangeEvent } from '@mui/material'; // TODO: Проверить доступность в UI библиотеке;
 import { useTranslation } from 'react-i18next';
 import { useGetRegionsQuery } from '../../api/regions.api';
 import { getTablePageStyles } from '../../styles/components';

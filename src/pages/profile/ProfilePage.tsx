@@ -1,17 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Avatar,
-  Divider,
-  CircularProgress,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  useTheme,
-  Alert,
-} from '@mui/material';
+import { Box, Typography, Avatar, Divider, CircularProgress, List, ListItem, ListItemText, ListItemIcon, Alert } from '../../components/ui';
+import { useTheme } from '@mui/material';;
 import {
   Save as SaveIcon,
   Email as EmailIcon,

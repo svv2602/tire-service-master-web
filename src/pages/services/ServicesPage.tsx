@@ -1,31 +1,8 @@
 // filepath: /home/snisar/mobi_tz/tire-service-master-web/src/pages/services/ServicesPage.tsx
 import React, { useState } from 'react';
-import {
-  Box,
-  Typography,
-  Button,
-  TextField,
-  InputAdornment,
-  CircularProgress,
-  Alert,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Card,
-  CardContent,
-  CardActions,
-  Grid,
-  Chip,
-  IconButton,
-  Tooltip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  DialogContentText,
-  useTheme,
-} from '@mui/material';
+import { Box, Typography, Button, TextField, CircularProgress, Alert, Select, MenuItem, Card, CardContent, CardActions, Grid, Chip, IconButton, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions } from '../../components/ui';
+import { InputAdornment, FormControl, InputLabel, useTheme } from '@mui/material';
+import { DialogContentText } from '@mui/material'; // TODO: Проверить доступность в UI библиотеке;
 import { useTranslation } from 'react-i18next';
 import {
   Add as AddIcon,

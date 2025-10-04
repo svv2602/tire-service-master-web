@@ -62,8 +62,12 @@
     "test": "craco test",
     "eject": "react-scripts eject",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx src",
+    "lint:fix": "eslint --ext .js,.jsx,.ts,.tsx src --fix",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "migrate": "node external-files/scripts/migration/migrate-mui-imports.js",
+    "migrate:dry": "node external-files/scripts/migration/migrate-mui-imports.js --dry-run",
+    "migrate:check": "npm run lint"
   },
   "eslintConfig": {
     "extends": [

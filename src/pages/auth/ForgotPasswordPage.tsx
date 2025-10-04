@@ -1,5 +1,6 @@
 import React from 'react';
-import { Container, Paper, Typography, Box, Link } from '@mui/material';
+import { Container, Paper, Typography, Box } from '../../components/ui';
+import { Link } from '@mui/material';;
 import { ForgotPasswordForm } from '../../components/auth/ForgotPasswordForm';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';

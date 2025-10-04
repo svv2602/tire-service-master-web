@@ -1,31 +1,6 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Typography,
-  Paper,
-  Button,
-  TextField,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  useTheme,
-  Stack,
-  Alert,
-  CircularProgress,
-  Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem
-} from '@mui/material';
+import { Box, Typography, Paper, Button, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Stack, Alert, CircularProgress, Chip, Select, MenuItem } from '../../components/ui';
+import { useTheme, FormControl, InputLabel } from '@mui/material';;
 import {
   Add as AddIcon,
   Edit as EditIcon,

@@ -245,10 +245,28 @@ export const ANIMATIONS = {
   pulse: '@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }',
 };
 
-// Утилита для получения цветов темы
+// =====================================================
+// ОПТИМИЗАЦИЯ ПРОИЗВОДИТЕЛЬНОСТИ
+// =====================================================
+
+// Кэш для мемоизации стилевых функций
+const themeColorsCache = new WeakMap<Theme, typeof THEME_COLORS.dark>();
+const tableStylesCache = new WeakMap<Theme, ReturnType<typeof getTableStylesInternal>>();
+const buttonStylesCache = new Map<string, any>(); // key: theme.palette.mode + variant
+const navigationStylesCache = new WeakMap<Theme, ReturnType<typeof getNavigationStylesInternal>>();
+
+/**
+ * Утилита для получения цветов темы с кэшированием
+ * ОПТИМИЗИРОВАНО: Использует WeakMap для автоматической очистки памяти
+ */
 export const getThemeColors = (theme: Theme) => {
-  const isDark = theme.palette.mode === 'dark';
-  return isDark ? THEME_COLORS.dark : THEME_COLORS.light;
+  // Проверяем кэш
+  if (!themeColorsCache.has(theme)) {
+    const isDark = theme.palette.mode === 'dark';
+    const colors = isDark ? THEME_COLORS.dark : THEME_COLORS.light;
+    themeColorsCache.set(theme, colors);
+  }
+  return themeColorsCache.get(theme)!;
 };
 
 // Типы градиентов
@@ -277,8 +295,8 @@ export const getGradient = (theme: Theme, type: GradientType = 'primary') => {
   return colors.gradientSecondary;
 };
 
-// Стили для кнопок
-export const getButtonStyles = (theme: Theme, variant: 'primary' | 'secondary' | 'success' | 'error' = 'primary') => {
+// Внутренняя функция без кэширования (для первоначального вычисления)
+const getButtonStylesInternal = (theme: Theme, variant: 'primary' | 'secondary' | 'success' | 'error' = 'primary') => {
   const colors = getThemeColors(theme);
   
   const baseStyles = {
@@ -335,8 +353,27 @@ export const getButtonStyles = (theme: Theme, variant: 'primary' | 'secondary' |
   return styles[variant] || styles.primary;
 };
 
-// Стили для навигации с улучшениями
-export const getNavigationStyles = (theme: Theme) => {
+/**
+ * Стили для кнопок с кэшированием
+ * ОПТИМИЗИРОВАНО: Кэширует результаты по ключу theme.mode + variant
+ */
+export const getButtonStyles = (theme: Theme, variant: 'primary' | 'secondary' | 'success' | 'error' = 'primary') => {
+  const cacheKey = `${theme.palette.mode}-${variant}`;
+  
+  if (!buttonStylesCache.has(cacheKey)) {
+    buttonStylesCache.set(cacheKey, getButtonStylesInternal(theme, variant));
+  }
+  
+  return buttonStylesCache.get(cacheKey);
+};
+
+// Очистка кэша кнопок (вызывать при смене темы)
+export const clearButtonStylesCache = () => {
+  buttonStylesCache.clear();
+};
+
+// Внутренняя функция для навигации
+const getNavigationStylesInternal = (theme: Theme) => {
   const colors = getThemeColors(theme);
   
   return {
@@ -444,6 +481,17 @@ export const getNavigationStyles = (theme: Theme) => {
   };
 };
 
+/**
+ * Стили для навигации с кэшированием
+ * ОПТИМИЗИРОВАНО: Использует WeakMap для автоматической очистки
+ */
+export const getNavigationStyles = (theme: Theme) => {
+  if (!navigationStylesCache.has(theme)) {
+    navigationStylesCache.set(theme, getNavigationStylesInternal(theme));
+  }
+  return navigationStylesCache.get(theme)!;
+};
+
 // Улучшенные стили для кнопки пользователя
 export const getUserButtonStyles = (theme: Theme) => {
   const colors = getThemeColors(theme);
@@ -538,8 +586,8 @@ export const getInteractiveStyles = (theme: Theme) => {
   };
 };
 
-// Стили для таблиц в темной теме "мокрый асфальт"
-export const getTableStyles = (theme: Theme) => {
+// Внутренняя функция для таблиц
+const getTableStylesInternal = (theme: Theme) => {
   const colors = getThemeColors(theme);
   
   return {
@@ -692,6 +740,17 @@ export const getTableStyles = (theme: Theme) => {
       color: colors.warning,
     },
   };
+};
+
+/**
+ * Стили для таблиц с кэшированием
+ * ОПТИМИЗИРОВАНО: Использует WeakMap для автоматической очистки памяти
+ */
+export const getTableStyles = (theme: Theme) => {
+  if (!tableStylesCache.has(theme)) {
+    tableStylesCache.set(theme, getTableStylesInternal(theme));
+  }
+  return tableStylesCache.get(theme)!;
 };
 
 // Адаптивная функция для таблиц с горизонтальной прокруткой
